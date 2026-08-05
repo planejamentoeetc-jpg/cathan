@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum ModalidadeQuiosque {
+  ALIMENTACAO
+  BEBIDAS
+  BRINCADEIRAS
+}
+
+enum TipoQuiosque {
+  DO_EVENTO
+  INDEPENDENTE
+}
+
+enum PerfilUsuario {
+  GESTOR
+  QUIOSQUE
+  CAIXA
+  TELA_PEDIDOS
+  ADMIN
+}
+
+enum StatusSubPedido {
+  RECEBIDO
+  // fluxo alimentação/bebidas
+  ACEITO
+  EM_PRODUCAO
+  PRONTO
+  RETIRADO
+  // fluxo brincadeiras (substitui aceito/em_producao/pronto/retirado)
+  CHAMADO
+  APROVEITANDO
+  CONCLUIDO
+  CANCELADO
+}
+
+// ---------------------------------------------------------------------------
+// Evento
+// ---------------------------------------------------------------------------
+
+model Evento {
+  id                String   @id @default(cuid())
+  nome              String
+  local             String
+  data              DateTime
+  // null = sem geofencing ("não aplicável")
+  raioPedidosMetros Int?     @map("raio_pedidos_metros")
+  // ponto central do raio de pedidos; obrigatório junto com raioPedidosMetros (ver CHECK na migration)
+  latitude          Float?
+  longitude         Float?
+  criadoEm          DateTime @default(now()) @map("criado_em")
+  atualizadoEm      DateTime @updatedAt @map("atualizado_em")
+
+  quiosques Quiosque[]
+  usuarios  Usuario[]
+  pedidos   Pedido[]
+
+  @@map("eventos")
+}
+
+// ---------------------------------------------------------------------------
+// Quiosque
+// ---------------------------------------------------------------------------
+
+model Quiosque {
+  id           String             @id @default(cuid())
+  eventoId     String             @map("evento_id")
+  evento       Evento             @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  nome         String
+  modalidade   ModalidadeQuiosque
+  cor          String
+  tipo         TipoQuiosque
+  // obrigatórios somente quando tipo = INDEPENDENTE (ver CHECK na migration)
+  cnpj         String?
+  chavePix     String?            @map("chave_pix")
+  criadoEm     DateTime           @default(now()) @map("criado_em")
+  atualizadoEm DateTime           @updatedAt @map("atualizado_em")
+
+  produtos   Produto[]
+  subPedidos SubPedido[]
+  usuarios   Usuario[]
+
+  @@map("quiosques")
+}
+
+// ---------------------------------------------------------------------------
+// Produto
+// ---------------------------------------------------------------------------
+
+model Produto {
+  id                   String   @id @default(cuid())
+  quiosqueId           String   @map("quiosque_id")
+  quiosque             Quiosque @relation(fields: [quiosqueId], references: [id], onDelete: Cascade)
+  nome                 String
+  preco                Decimal  @db.Decimal(10, 2)
+  // tempo de produção (alimentação/bebidas) ou duração da atividade (brincadeiras); 0 = pronta entrega
+  tempoProducaoMinutos Int      @default(0) @map("tempo_producao_minutos")
+  // null = estoque "não aplicável" (ilimitado); número = esgota automaticamente ao zerar
+  estoque              Int?
+  // permite ao próprio quiosque "esgotar" o produto sem depender do gestor
+  ativo                Boolean  @default(true)
+  criadoEm             DateTime @default(now()) @map("criado_em")
+  atualizadoEm         DateTime @updatedAt @map("atualizado_em")
+
+  itensSubPedido ItemSubPedido[]
+
+  @@map("produtos")
+}
+
+// ---------------------------------------------------------------------------
+// Cliente (identidade leve do comprador — nome + celular, sem login/perfil)
+// ---------------------------------------------------------------------------
+
+model Cliente {
+  id       String   @id @default(cuid())
+  nome     String
+  celular  String   @unique
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  pedidos Pedido[]
+
+  @@map("clientes")
+}
+
+// ---------------------------------------------------------------------------
+// Pedido (carrinho único do cliente) e SubPedido (uma fatia por quiosque)
+// ---------------------------------------------------------------------------
+
+model Pedido {
+  id        String   @id @default(cuid())
+  eventoId  String   @map("evento_id")
+  evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Restrict)
+  clienteId String   @map("cliente_id")
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  subPedidos SubPedido[]
+
+  @@map("pedidos")
+}
+
+model SubPedido {
+  id             String          @id @default(cuid())
+  pedidoId       String          @map("pedido_id")
+  pedido         Pedido          @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  quiosqueId     String          @map("quiosque_id")
+  quiosque       Quiosque        @relation(fields: [quiosqueId], references: [id], onDelete: Restrict)
+  codigoRetirada String          @map("codigo_retirada") @db.VarChar(4)
+  status         StatusSubPedido @default(RECEBIDO)
+
+  // --- fluxo alimentação/bebidas ---
+  aceitoPorUsuarioId String?   @map("aceito_por_usuario_id")
+  aceitoPorUsuario   Usuario?  @relation("SubPedidosAceitos", fields: [aceitoPorUsuarioId], references: [id], onDelete: SetNull)
+  aceitoEm           DateTime? @map("aceito_em")
+
+  prontoEm DateTime? @map("pronto_em")
+
+  retiradoPorUsuarioId String?   @map("retirado_por_usuario_id")
+  retiradoPorUsuario   Usuario?  @relation("SubPedidosRetirados", fields: [retiradoPorUsuarioId], references: [id], onDelete: SetNull)
+  retiradoEm           DateTime? @map("retirado_em")
+
+  // --- fluxo brincadeiras ---
+  chamadoEm              DateTime? @map("chamado_em")
+  inicioAproveitamentoEm DateTime? @map("inicio_aproveitamento_em")
+  concluidoEm            DateTime? @map("concluido_em")
+
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  itens ItemSubPedido[]
+
+  // código de retirada único dentro do mesmo quiosque
+  @@unique([quiosqueId, codigoRetirada])
+  @@map("sub_pedidos")
+}
+
+model ItemSubPedido {
+  id            String    @id @default(cuid())
+  subPedidoId   String    @map("sub_pedido_id")
+  subPedido     SubPedido @relation(fields: [subPedidoId], references: [id], onDelete: Cascade)
+  produtoId     String    @map("produto_id")
+  produto       Produto   @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  quantidade    Int
+  // snapshot do preço no momento do pedido (não segue alterações futuras do produto)
+  precoUnitario Decimal   @map("preco_unitario") @db.Decimal(10, 2)
+  observacao    String?
+  // um nome por unidade (tamanho = quantidade); só usado quando quiosque.modalidade = BRINCADEIRAS
+  nomesCriancas String[]  @map("nomes_criancas")
+
+  @@map("itens_sub_pedido")
+}
+
+// ---------------------------------------------------------------------------
+// Usuario (contas de equipe — cliente final NÃO é Usuario, é Cliente)
+// ---------------------------------------------------------------------------
+
+model Usuario {
+  id           String        @id @default(cuid())
+  // null somente para perfil ADMIN (atua sobre a plataforma, não um evento só)
+  eventoId     String?       @map("evento_id")
+  evento       Evento?       @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  // obrigatório somente quando perfil = QUIOSQUE (ver CHECK na migration)
+  quiosqueId   String?       @map("quiosque_id")
+  quiosque     Quiosque?     @relation(fields: [quiosqueId], references: [id], onDelete: SetNull)
+  nome         String
+  email        String        @unique
+  senhaHash    String        @map("senha_hash")
+  perfil       PerfilUsuario
+  ativo        Boolean       @default(true)
+  criadoEm     DateTime      @default(now()) @map("criado_em")
+  atualizadoEm DateTime      @updatedAt @map("atualizado_em")
+
+  subPedidosAceitos   SubPedido[] @relation("SubPedidosAceitos")
+  subPedidosRetirados SubPedido[] @relation("SubPedidosRetirados")
+
+  @@map("usuarios")
+}
