@@ -1,9 +1,17 @@
 "use client";
 
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 export default function EntrarPainel() {
+  return (
+    <Suspense fallback={null}>
+      <EntrarPainelConteudo />
+    </Suspense>
+  );
+}
+
+function EntrarPainelConteudo() {
   const router = useRouter();
   const params = useParams<{ eventoId: string }>();
   const searchParams = useSearchParams();

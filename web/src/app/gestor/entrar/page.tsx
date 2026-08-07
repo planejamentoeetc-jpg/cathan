@@ -1,9 +1,17 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 export default function EntrarGestor() {
+  return (
+    <Suspense fallback={null}>
+      <EntrarGestorConteudo />
+    </Suspense>
+  );
+}
+
+function EntrarGestorConteudo() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [senha, setSenha] = useState("");

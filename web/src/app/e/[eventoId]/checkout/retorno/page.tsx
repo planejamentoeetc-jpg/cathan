@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 type StatusResposta = {
   status: "PENDENTE" | "CONFIRMADO" | "EXPIRADO";
@@ -17,6 +17,14 @@ const INTERVALO_MS = 2000;
 // existe depois que o webhook confirma o pagamento, então esta tela faz
 // polling até isso acontecer.
 export default function RetornoCheckout() {
+  return (
+    <Suspense fallback={null}>
+      <RetornoCheckoutConteudo />
+    </Suspense>
+  );
+}
+
+function RetornoCheckoutConteudo() {
   const router = useRouter();
   const { eventoId } = useParams<{ eventoId: string }>();
   const searchParams = useSearchParams();
