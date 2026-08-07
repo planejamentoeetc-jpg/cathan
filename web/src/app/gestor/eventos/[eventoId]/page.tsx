@@ -46,12 +46,15 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         <p style={{ marginBottom: 6 }}>
           <b>Data:</b> {formatarData(evento.data)}
         </p>
-        <p>
+        <p style={{ marginBottom: 12 }}>
           <b>Geofencing:</b>{" "}
           {evento.raioPedidosMetros !== null
             ? `raio de ${evento.raioPedidosMetros}m`
             : "não aplicável"}
         </p>
+        <Link href={`/gestor/eventos/${evento.id}/editar`} className="btn btn-secundario btn-bloco">
+          Editar evento / recalibrar raio
+        </Link>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>

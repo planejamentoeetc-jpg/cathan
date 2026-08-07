@@ -1,4 +1,4 @@
-import { CriarEventoForm } from "@/components/CriarEventoForm";
+import { FormularioEvento } from "@/components/FormularioEvento";
 
 export default function NovoEvento() {
   return (
@@ -6,7 +6,7 @@ export default function NovoEvento() {
       <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
         Criar evento
       </div>
-      <CriarEventoForm />
+      <FormularioEvento />
     </main>
   );
 }
