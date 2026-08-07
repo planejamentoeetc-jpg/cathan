@@ -1,7 +1,8 @@
-import { ModalidadeQuiosque, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { Preference } from "mercadopago";
 import { NextRequest, NextResponse } from "next/server";
-import { criarSubPedidoComCodigoUnico } from "@/lib/codigoRetirada";
 import { distanciaMetros } from "@/lib/geo";
+import { ehAmbienteSandbox, mercadoPagoClient } from "@/lib/mercadoPago";
 import { prisma } from "@/lib/prisma";
 
 type ItemRequisicao = {
@@ -21,8 +22,15 @@ type CorpoRequisicao = {
   itens: ItemRequisicao[];
 };
 
-// Fluxo de pagamento é simulado nesta fase: todo pedido é criado já como aprovado.
+// Cria a intenção de compra (PedidoPendente) e uma preferência de pagamento no
+// Mercado Pago. O Pedido/SubPedido reais só são criados quando o pagamento é
+// confirmado pelo webhook (ver /api/webhooks/mercado-pago e lib/criarPedido.ts).
 export async function POST(req: NextRequest) {
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) {
+    return NextResponse.json({ erro: "APP_URL não configurada no servidor." }, { status: 500 });
+  }
+
   let corpo: CorpoRequisicao;
   try {
     corpo = await req.json();
@@ -108,85 +116,69 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const itensPorQuiosque = new Map<string, ItemRequisicao[]>();
-  for (const item of corpo.itens) {
+  // preço travado agora — é o valor que efetivamente vai para a preferência de pagamento
+  const itensValidados = corpo.itens.map((item) => {
     const produto = produtosPorId.get(item.produtoId)!;
-    const grupo = itensPorQuiosque.get(produto.quiosqueId) ?? [];
-    grupo.push(item);
-    itensPorQuiosque.set(produto.quiosqueId, grupo);
-  }
+    return {
+      produtoId: item.produtoId,
+      quantidade: item.quantidade,
+      precoUnitario: Number(produto.preco),
+      observacao: item.observacao,
+      nomesCriancas:
+        produto.quiosque.modalidade === "BRINCADEIRAS"
+          ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
+          : [],
+    };
+  });
 
   try {
-    const resultado = await prisma.$transaction(async (tx) => {
-      const cliente = await tx.cliente.upsert({
-        where: { celular: corpo.clienteCelular.trim() },
-        update: { nome: corpo.clienteNome.trim() },
-        create: { nome: corpo.clienteNome.trim(), celular: corpo.clienteCelular.trim() },
-      });
-
-      const pedido = await tx.pedido.create({
-        data: { eventoId: evento.id, clienteId: cliente.id },
-      });
-
-      const subPedidosCriados = [];
-
-      for (const [quiosqueId, itensDoGrupo] of itensPorQuiosque) {
-        const quiosque = produtosPorId.get(itensDoGrupo[0].produtoId)!.quiosque;
-
-        const subPedido = await criarSubPedidoComCodigoUnico((codigo) =>
-          tx.subPedido.create({
-            data: {
-              pedidoId: pedido.id,
-              quiosqueId,
-              codigoRetirada: codigo,
-              itens: {
-                create: itensDoGrupo.map((item) => {
-                  const produto = produtosPorId.get(item.produtoId)!;
-                  return {
-                    produtoId: item.produtoId,
-                    quantidade: item.quantidade,
-                    precoUnitario: produto.preco,
-                    observacao: item.observacao,
-                    nomesCriancas:
-                      quiosque.modalidade === ModalidadeQuiosque.BRINCADEIRAS
-                        ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
-                        : [],
-                  };
-                }),
-              },
-            },
-          })
-        );
-
-        subPedidosCriados.push({
-          id: subPedido.id,
-          quiosqueId,
-          quiosqueNome: quiosque.nome,
-          codigoRetirada: subPedido.codigoRetirada,
-          status: subPedido.status,
-        });
-      }
-
-      for (const [produtoId, quantidade] of quantidadePorProduto) {
-        const produto = produtosPorId.get(produtoId)!;
-        if (produto.estoque !== null) {
-          await tx.produto.update({
-            where: { id: produtoId },
-            data: { estoque: { decrement: quantidade } },
-          });
-        }
-      }
-
-      return { pedidoId: pedido.id, subPedidos: subPedidosCriados };
+    const pedidoPendente = await prisma.pedidoPendente.create({
+      data: {
+        eventoId: evento.id,
+        clienteNome: corpo.clienteNome.trim(),
+        clienteCelular: corpo.clienteCelular.trim(),
+        itens: itensValidados as unknown as Prisma.InputJsonValue,
+      },
     });
 
-    return NextResponse.json(resultado, { status: 201 });
+    const retornoUrl = `${appUrl}/e/${evento.id}/checkout/retorno?pedidoPendenteId=${pedidoPendente.id}`;
+
+    const preference = await new Preference(mercadoPagoClient).create({
+      body: {
+        items: itensValidados.map((item) => ({
+          id: item.produtoId,
+          title: produtosPorId.get(item.produtoId)!.nome,
+          quantity: item.quantidade,
+          unit_price: item.precoUnitario,
+          currency_id: "BRL",
+        })),
+        payer: { name: corpo.clienteNome.trim() },
+        back_urls: {
+          success: retornoUrl,
+          failure: retornoUrl,
+          pending: retornoUrl,
+        },
+        // auto_return exige back_url https — sem efeito (e sem erro) em ambientes http locais
+        ...(appUrl.startsWith("https://") ? { auto_return: "approved" as const } : {}),
+        notification_url: `${appUrl}/api/webhooks/mercado-pago`,
+        external_reference: pedidoPendente.id,
+      },
+    });
+
+    await prisma.pedidoPendente.update({
+      where: { id: pedidoPendente.id },
+      data: { mpPreferenceId: preference.id },
+    });
+
+    const checkoutUrl = ehAmbienteSandbox() ? preference.sandbox_init_point : preference.init_point;
+
+    if (!checkoutUrl) {
+      throw new Error("Mercado Pago não retornou uma URL de checkout.");
+    }
+
+    return NextResponse.json({ pedidoPendenteId: pedidoPendente.id, checkoutUrl }, { status: 201 });
   } catch (erro) {
-    console.error("Falha ao criar pedido", erro);
-    const mensagem =
-      erro instanceof Prisma.PrismaClientKnownRequestError
-        ? "Não foi possível concluir o pedido."
-        : "Erro inesperado ao criar o pedido.";
-    return NextResponse.json({ erro: mensagem }, { status: 500 });
+    console.error("Falha ao iniciar checkout", erro);
+    return NextResponse.json({ erro: "Não foi possível iniciar o pagamento." }, { status: 500 });
   }
 }

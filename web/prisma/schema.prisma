@@ -30,6 +30,12 @@ enum PerfilUsuario {
   ADMIN
 }
 
+enum StatusPedidoPendente {
+  PENDENTE
+  CONFIRMADO
+  EXPIRADO
+}
+
 enum StatusSubPedido {
   RECEBIDO
   // fluxo alimentação/bebidas
@@ -61,9 +67,10 @@ model Evento {
   criadoEm          DateTime @default(now()) @map("criado_em")
   atualizadoEm      DateTime @updatedAt @map("atualizado_em")
 
-  quiosques Quiosque[]
-  usuarios  Usuario[]
-  pedidos   Pedido[]
+  quiosques        Quiosque[]
+  usuarios         Usuario[]
+  pedidos          Pedido[]
+  pedidosPendentes PedidoPendente[]
 
   @@map("eventos")
 }
@@ -133,6 +140,32 @@ model Cliente {
 }
 
 // ---------------------------------------------------------------------------
+// PedidoPendente (carrinho + checkout do Mercado Pago, antes da confirmação de
+// pagamento). Pedido/SubPedido só passam a existir quando o webhook confirma
+// o pagamento — ver lib/criarPedido.ts.
+// ---------------------------------------------------------------------------
+
+model PedidoPendente {
+  id             String               @id @default(cuid())
+  eventoId       String               @map("evento_id")
+  evento         Evento               @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  clienteNome    String               @map("cliente_nome")
+  clienteCelular String               @map("cliente_celular")
+  // snapshot dos itens validados no momento do checkout: produtoId, quantidade,
+  // precoUnitario, observacao?, nomesCriancas? (mesmo formato do body de POST /api/pedidos)
+  itens          Json
+  status         StatusPedidoPendente @default(PENDENTE)
+  mpPreferenceId String?              @map("mp_preference_id")
+  mpPaymentId    String?              @map("mp_payment_id")
+  pedidoId       String?              @unique @map("pedido_id")
+  pedido         Pedido?              @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
+  criadoEm       DateTime             @default(now()) @map("criado_em")
+  atualizadoEm   DateTime             @updatedAt @map("atualizado_em")
+
+  @@map("pedidos_pendentes")
+}
+
+// ---------------------------------------------------------------------------
 // Pedido (carrinho único do cliente) e SubPedido (uma fatia por quiosque)
 // ---------------------------------------------------------------------------
 
@@ -144,7 +177,8 @@ model Pedido {
   cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Restrict)
   criadoEm  DateTime @default(now()) @map("criado_em")
 
-  subPedidos SubPedido[]
+  subPedidos     SubPedido[]
+  pedidoPendente PedidoPendente?
 
   @@map("pedidos")
 }

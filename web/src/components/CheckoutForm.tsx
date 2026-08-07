@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
@@ -16,7 +15,6 @@ export function CheckoutForm({
   eventoId: string;
   exigeLocalizacao: boolean;
 }) {
-  const router = useRouter();
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
 
@@ -114,7 +112,7 @@ export function CheckoutForm({
 
       salvarClienteLocal({ nome: nome.trim(), celular: celular.trim() });
       limparCarrinho(eventoId);
-      router.push(`/e/${eventoId}/pedido/${dados.pedidoId}`);
+      window.location.href = dados.checkoutUrl;
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro inesperado.");
       setEnviando(false);
@@ -206,7 +204,7 @@ export function CheckoutForm({
           disabled={enviando || itens.length === 0}
           onClick={confirmar}
         >
-          {enviando ? "Confirmando…" : "Confirmar pedido (pagamento simulado)"}
+          {enviando ? "Redirecionando para pagamento…" : "Ir para pagamento"}
         </button>
       </div>
     </>

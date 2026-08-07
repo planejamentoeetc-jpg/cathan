@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
+import { FormularioProduto } from "@/components/FormularioProduto";
 
-export default async function ProdutosDoQuiosque({
+export default async function NovoProduto({
   params,
 }: {
   params: { eventoId: string; quiosqueId: string };
 }) {
   const quiosque = await prisma.quiosque.findFirst({
     where: { id: params.quiosqueId, eventoId: params.eventoId },
-    include: { produtos: { orderBy: { nome: "asc" } } },
   });
 
   if (!quiosque) notFound();
+
+  const rotuloTempo =
+    quiosque.modalidade === "BRINCADEIRAS"
+      ? "Duração da atividade (min)"
+      : "Tempo de produção (min)";
 
   return (
     <main className="tela">
@@ -27,24 +31,19 @@ export default async function ProdutosDoQuiosque({
           alignItems: "center",
         }}
       >
-        <span>{quiosque.nome} — produtos</span>
+        <span>Novo produto</span>
         <Link
-          href={`/painel/${params.eventoId}/q/${params.quiosqueId}`}
+          href={`/painel/${params.eventoId}/q/${params.quiosqueId}/produtos`}
           style={{ fontSize: 12.5, color: "#BFD4DA" }}
         >
-          Voltar à fila
+          Cancelar
         </Link>
       </div>
 
-      <ListaProdutosPainel
+      <FormularioProduto
         eventoId={params.eventoId}
         quiosqueId={params.quiosqueId}
-        produtos={quiosque.produtos.map((p) => ({
-          id: p.id,
-          nome: p.nome,
-          preco: Number(p.preco),
-          ativo: p.ativo,
-        }))}
+        rotuloTempo={rotuloTempo}
       />
     </main>
   );

@@ -1,0 +1,99 @@
+import {
+  InvalidWebhookSignatureError,
+  Payment,
+  WebhookSignatureValidator,
+} from "mercadopago";
+import { NextRequest, NextResponse } from "next/server";
+import { ItemPedidoValidado, PedidoInvalidoError, criarPedidoAPartirDeItensValidados } from "@/lib/criarPedido";
+import { mercadoPagoClient } from "@/lib/mercadoPago";
+import { prisma } from "@/lib/prisma";
+
+// Endpoint público (sem autenticação de sessão) — a autenticidade é garantida
+// pela validação de assinatura abaixo, não pelo gate de senha do painel.
+export async function POST(req: NextRequest) {
+  const tipo = req.nextUrl.searchParams.get("type") ?? req.nextUrl.searchParams.get("topic");
+  const dataId = req.nextUrl.searchParams.get("data.id") ?? req.nextUrl.searchParams.get("id");
+
+  // Só nos importa a notificação de pagamento; outros tópicos (merchant_order etc.) são ignorados.
+  if (tipo !== "payment" || !dataId) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error("MP_WEBHOOK_SECRET não configurada no servidor.");
+    return NextResponse.json({ erro: "Webhook não configurado." }, { status: 500 });
+  }
+
+  try {
+    WebhookSignatureValidator.validate({
+      xSignature: req.headers.get("x-signature"),
+      xRequestId: req.headers.get("x-request-id"),
+      dataId,
+      secret,
+    });
+  } catch (erro) {
+    if (erro instanceof InvalidWebhookSignatureError) {
+      console.error("Assinatura de webhook inválida", erro.reason, erro.requestId);
+      return NextResponse.json({ erro: "Assinatura inválida." }, { status: 401 });
+    }
+    throw erro;
+  }
+
+  const payment = await new Payment(mercadoPagoClient).get({ id: dataId });
+
+  if (payment.status !== "approved") {
+    // pagamentos pendentes/rejeitados não geram pedido; uma futura notificação avisa se aprovar depois
+    return NextResponse.json({ ok: true });
+  }
+
+  const pedidoPendenteId = payment.external_reference;
+  if (!pedidoPendenteId) {
+    console.error("Pagamento aprovado sem external_reference", payment.id);
+    return NextResponse.json({ ok: true });
+  }
+
+  const pedidoPendente = await prisma.pedidoPendente.findUnique({ where: { id: pedidoPendenteId } });
+  if (!pedidoPendente) {
+    console.error("PedidoPendente não encontrado para o pagamento", payment.id, pedidoPendenteId);
+    return NextResponse.json({ ok: true });
+  }
+
+  // idempotência: o MP pode reenviar a mesma notificação várias vezes
+  if (pedidoPendente.status === "CONFIRMADO") {
+    return NextResponse.json({ ok: true });
+  }
+
+  try {
+    const itens = pedidoPendente.itens as unknown as ItemPedidoValidado[];
+    const resultado = await criarPedidoAPartirDeItensValidados({
+      eventoId: pedidoPendente.eventoId,
+      clienteNome: pedidoPendente.clienteNome,
+      clienteCelular: pedidoPendente.clienteCelular,
+      itens,
+    });
+
+    await prisma.pedidoPendente.update({
+      where: { id: pedidoPendente.id },
+      data: {
+        status: "CONFIRMADO",
+        pedidoId: resultado.pedidoId,
+        mpPaymentId: String(payment.id),
+      },
+    });
+  } catch (erro) {
+    if (erro instanceof PedidoInvalidoError) {
+      // pagamento já foi aprovado pelo MP mas não conseguimos honrar o carrinho
+      // (ex: estoque esgotou enquanto o cliente pagava) — requer reconciliação manual
+      console.error("Pagamento aprovado mas pedido não pôde ser criado; requer reconciliação manual", {
+        pedidoPendenteId: pedidoPendente.id,
+        paymentId: payment.id,
+        motivo: erro.message,
+      });
+    } else {
+      throw erro;
+    }
+  }
+
+  return NextResponse.json({ ok: true });
+}
