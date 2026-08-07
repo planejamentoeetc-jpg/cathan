@@ -3,8 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // pooled (PgBouncer) — usada em runtime, evita esgotar conexões do Postgres
+  // quando várias funções serverless abrem conexão ao mesmo tempo
+  url       = env("DATABASE_URL")
+  // direta (sem pooler) — só o Prisma Migrate usa, PgBouncer em modo
+  // transaction não suporta os comandos de sessão que migration precisa
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
