@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { IconeModalidade } from "@/components/IconeModalidade";
+import { LinkCopiavel } from "@/components/LinkCopiavel";
 
 const NOME_MODALIDADE: Record<string, string> = {
   ALIMENTACAO: "Alimentação",
@@ -20,6 +21,11 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
   });
 
   if (!evento) notFound();
+
+  const baseUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  const linkCliente = `${baseUrl}/e/${evento.id}`;
+  const linkQuiosque = `${baseUrl}/painel/${evento.id}/entrar`;
+  const linkTelaDePedidos = `${baseUrl}/e/${evento.id}/tela-de-pedidos`;
 
   return (
     <main className="tela">
@@ -55,6 +61,15 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         <Link href={`/gestor/eventos/${evento.id}/editar`} className="btn btn-secundario btn-bloco">
           Editar evento / recalibrar raio
         </Link>
+      </div>
+
+      <div className="cartao" style={{ marginBottom: 16 }}>
+        <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 12 }}>
+          Links do evento
+        </b>
+        <LinkCopiavel rotulo="Link do cliente (QR Code / WhatsApp)" url={linkCliente} />
+        <LinkCopiavel rotulo="Login do painel do quiosque (mesmo link pra todos os quiosques)" url={linkQuiosque} />
+        <LinkCopiavel rotulo="Tela de Pedidos (telão, sem senha)" url={linkTelaDePedidos} />
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
