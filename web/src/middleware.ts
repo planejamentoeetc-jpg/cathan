@@ -36,6 +36,14 @@ export function middleware(req: NextRequest) {
   }
 
   // --- área do painel do quiosque ---
+
+  // sem eventoId na URL (ex.: alguém acessou "/painel/entrar" direto, sem o
+  // ID do evento) — não existe login "geral" do quiosque, cada evento tem o
+  // seu; manda pro gestor achar o link certo em vez de um 404 confuso
+  if (pathname === "/painel" || pathname === "/painel/" || pathname === "/painel/entrar") {
+    return NextResponse.redirect(new URL("/gestor", req.url));
+  }
+
   const ehPaginaLogin = /^\/painel\/[^/]+\/entrar$/.test(pathname);
   const ehApiLogin = pathname === "/api/painel/entrar";
 
