@@ -83,8 +83,26 @@ model Evento {
   usuarios         Usuario[]
   pedidos          Pedido[]
   pedidosPendentes PedidoPendente[]
+  mensagensSuporte MensagemSuporte[]
 
   @@map("eventos")
+}
+
+enum RemetenteSuporte {
+  GESTOR
+  CATHAN
+}
+
+// Chat de suporte direto entre o gestor de um evento e a equipe Cathan (Console Cathan).
+model MensagemSuporte {
+  id       String           @id @default(cuid())
+  eventoId String           @map("evento_id")
+  evento   Evento           @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  de       RemetenteSuporte
+  texto    String
+  criadoEm DateTime         @default(now()) @map("criado_em")
+
+  @@map("mensagens_suporte")
 }
 
 // ---------------------------------------------------------------------------

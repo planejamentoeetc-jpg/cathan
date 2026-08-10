@@ -626,6 +626,48 @@ a {
   flex: 0 0 auto;
 }
 
+/* ===== Chat de suporte (gestor <-> Cathan) ===== */
+
+.chatbox {
+  background: var(--neve);
+  border: 1px solid var(--linha);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msg {
+  max-width: 82%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.msg.recebida {
+  background: #fff;
+  border: 1px solid var(--linha);
+  align-self: flex-start;
+}
+
+.msg.enviada {
+  background: var(--verde);
+  color: #fff;
+  align-self: flex-end;
+}
+
+.msg .h {
+  display: block;
+  font-size: 10.5px;
+  opacity: 0.7;
+  margin-top: 3px;
+}
+
 .dica-spot .ir {
   display: inline-block;
   margin-top: 4px;

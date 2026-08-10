@@ -6,6 +6,7 @@ import { AnalisesEvento } from "@/components/AnalisesEvento";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { LinkCopiavel } from "@/components/LinkCopiavel";
 import { PausarEventoToggle } from "@/components/PausarEventoToggle";
+import { ChatSuporte } from "@/components/ChatSuporte";
 
 const NOME_MODALIDADE: Record<string, string> = {
   ALIMENTACAO: "Alimentação",
@@ -196,6 +197,18 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         {evento.quiosques.length === 0 && (
           <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
         )}
+      </div>
+
+      <div className="g-sec" style={{ marginTop: 16 }}>
+        <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
+          🆘 Suporte Cathan — canal direto
+        </h5>
+        <ChatSuporte
+          apiUrl={`/api/eventos/${evento.id}/suporte`}
+          remetente="GESTOR"
+          placeholder="Descreva o problema — a equipe Cathan responde aqui"
+          rotuloEnviar="Chamar suporte"
+        />
       </div>
     </main>
   );

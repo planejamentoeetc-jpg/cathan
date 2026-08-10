@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { calcularAnalyticsEvento, TAXA_CATHAN } from "@/lib/analytics";
 import { AnalisesEvento } from "@/components/AnalisesEvento";
+import { ChatSuporte } from "@/components/ChatSuporte";
 
 function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -58,6 +59,18 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
       </div>
 
       <AnalisesEvento dados={dados} />
+
+      <div className="g-sec">
+        <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
+          🎧 Suporte — chamados do gestor
+        </h5>
+        <ChatSuporte
+          apiUrl={`/api/admin/eventos/${evento.id}/suporte`}
+          remetente="CATHAN"
+          placeholder="Responder ao gestor…"
+          rotuloEnviar="Enviar resposta"
+        />
+      </div>
     </main>
   );
 }
