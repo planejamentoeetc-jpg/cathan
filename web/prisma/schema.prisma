@@ -124,6 +124,10 @@ model Quiosque {
   dica               String?            @map("dica")
   mensagemPreparando String?            @map("mensagem_preparando")
   mensagemPronto     String?            @map("mensagem_pronto")
+  // sugestão de cross-sell: "combina com" outro quiosque do mesmo evento (ex.: pipoca -> bebidas)
+  combinaComId       String?            @map("combina_com_id")
+  combinaCom         Quiosque?          @relation("QuiosqueCombina", fields: [combinaComId], references: [id], onDelete: SetNull)
+  combinaComReverso  Quiosque[]         @relation("QuiosqueCombina")
   criadoEm           DateTime           @default(now()) @map("criado_em")
   atualizadoEm       DateTime           @updatedAt @map("atualizado_em")
 

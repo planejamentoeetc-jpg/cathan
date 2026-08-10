@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { ProdutoCard } from "@/components/ProdutoCard";
+import { DicaLoja } from "@/components/DicaLoja";
 
 export default async function LojaDoQuiosque({
   params,
@@ -14,16 +15,42 @@ export default async function LojaDoQuiosque({
     where: { id: params.quiosqueId, eventoId: params.eventoId },
     include: {
       produtos: { orderBy: { nome: "asc" } },
+      combinaCom: { select: { id: true, nome: true, cor: true } },
     },
   });
 
   if (!quiosque) notFound();
 
+  const irmaos = await prisma.quiosque.findMany({
+    where: { eventoId: params.eventoId },
+    select: { id: true, nome: true, cor: true, modalidade: true },
+    orderBy: { nome: "asc" },
+  });
+
   return (
     <main className="tela">
-      <Link href={`/e/${params.eventoId}`} className="texto-fraco">
+      <Link href={`/e/${params.eventoId}`} className="btn btn-secundario" style={{ marginBottom: 12 }}>
         ‹ Praça do evento
       </Link>
+
+      {irmaos.length > 1 && (
+        <div className="quiosques-abas" style={{ marginBottom: 4 }}>
+          {irmaos.map((irmao) => (
+            <Link
+              key={irmao.id}
+              href={`/e/${params.eventoId}/q/${irmao.id}`}
+              className="quiosque-aba"
+              style={irmao.id === quiosque.id ? { borderColor: irmao.cor, borderWidth: 2 } : undefined}
+            >
+              <div className="quiosque-logo" style={{ background: irmao.cor }}>
+                <IconeModalidade modalidade={irmao.modalidade} />
+              </div>
+              <b>{irmao.nome}</b>
+            </Link>
+          ))}
+        </div>
+      )}
+
       <div className="hero" style={{ background: quiosque.cor, marginTop: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <IconeModalidade modalidade={quiosque.modalidade} />
@@ -31,12 +58,14 @@ export default async function LojaDoQuiosque({
         </div>
       </div>
 
-      {quiosque.dica && (
-        <div className="dica-spot" style={{ borderColor: quiosque.cor, marginTop: 14 }}>
-          <span className="ic">💡</span>
-          <span>{quiosque.dica}</span>
-        </div>
-      )}
+      <div style={{ marginTop: 14 }}>
+        <DicaLoja
+          eventoId={params.eventoId}
+          quiosqueId={quiosque.id}
+          dica={quiosque.dica}
+          parceiro={quiosque.combinaCom}
+        />
+      </div>
 
       <div className="produtos-grid">
         {quiosque.produtos.map((produto) => (

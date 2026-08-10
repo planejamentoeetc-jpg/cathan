@@ -20,7 +20,7 @@ export default function Carrinho() {
         Carrinho
       </div>
 
-      <Link href={`/e/${eventoId}`} className="texto-fraco" style={{ display: "inline-block", marginBottom: 16 }}>
+      <Link href={`/e/${eventoId}`} className="btn btn-secundario btn-bloco" style={{ marginBottom: 16 }}>
         ‹ Continuar comprando
       </Link>
 

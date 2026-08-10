@@ -96,14 +96,7 @@ export function ProdutoCard({
               }}
             />
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 8,
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
               <div className="stepper">
                 <button
                   type="button"
@@ -121,10 +114,15 @@ export function ProdutoCard({
                   +
                 </button>
               </div>
-              <button type="button" className="btn btn-primario" onClick={adicionar}>
-                {adicionado ? "Adicionado ✓" : "Adicionar"}
-              </button>
             </div>
+            <button
+              type="button"
+              className="btn btn-primario btn-bloco"
+              style={{ marginTop: 8 }}
+              onClick={adicionar}
+            >
+              {adicionado ? "Adicionado ✓" : "Adicionar"}
+            </button>
           </>
         )}
       </div>

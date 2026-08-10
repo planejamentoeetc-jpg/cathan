@@ -85,6 +85,8 @@ export default async function PainelQuiosque({
         dicaInicial={quiosque.dica ?? ""}
         mensagemPreparandoInicial={quiosque.mensagemPreparando ?? ""}
         mensagemProntoInicial={quiosque.mensagemPronto ?? ""}
+        combinaComIdInicial={quiosque.combinaComId ?? ""}
+        outrosQuiosques={irmaos.filter((irmao) => irmao.id !== quiosque.id)}
       />
     </main>
   );
