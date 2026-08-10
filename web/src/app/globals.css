@@ -674,3 +674,45 @@ a {
   font-weight: 800;
   font-size: 12px;
 }
+
+/* ===== Praça do evento: quiosques em abas horizontais ===== */
+
+.quiosques-abas {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin: 0 -16px 4px;
+  padding: 2px 16px 12px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.quiosque-aba {
+  flex: 0 0 132px;
+  scroll-snap-align: start;
+  background: #fff;
+  border: 1px solid var(--linha);
+  border-radius: 18px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.quiosque-aba .quiosque-logo {
+  width: 44px;
+  height: 44px;
+}
+
+.quiosque-aba b {
+  font-family: var(--font-sora);
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+.quiosque-aba .espera {
+  font-size: 11.5px;
+  color: var(--cinza);
+}

@@ -65,35 +65,35 @@ export default async function PracaDoEvento({
         </div>
       )}
 
-      <div className="lista">
-        {evento.quiosques.map((quiosque) => {
-          const esperaMinutos = calcularEsperaEstimadaMinutos(
-            quiosque.produtos.map((p) => p.tempoProducaoMinutos),
-            quiosque.subPedidos.length
-          );
+      {evento.quiosques.length > 0 && (
+        <>
+          <p className="texto-fraco" style={{ marginBottom: 8 }}>
+            Toque num quiosque pra ver o cardápio:
+          </p>
+          <div className="quiosques-abas">
+            {evento.quiosques.map((quiosque) => {
+              const esperaMinutos = calcularEsperaEstimadaMinutos(
+                quiosque.produtos.map((p) => p.tempoProducaoMinutos),
+                quiosque.subPedidos.length
+              );
 
-          return (
-            <Link
-              key={quiosque.id}
-              href={`/e/${evento.id}/q/${quiosque.id}`}
-              className="cartao quiosque-card"
-            >
-              <div className="quiosque-logo" style={{ background: quiosque.cor }}>
-                <IconeModalidade modalidade={quiosque.modalidade} />
-              </div>
-              <div>
-                <b>{quiosque.nome}</b>
-                <div className="espera">{formatarEspera(esperaMinutos)}</div>
-              </div>
-              <div className="seta">›</div>
-            </Link>
-          );
-        })}
+              return (
+                <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="quiosque-aba">
+                  <div className="quiosque-logo" style={{ background: quiosque.cor }}>
+                    <IconeModalidade modalidade={quiosque.modalidade} />
+                  </div>
+                  <b>{quiosque.nome}</b>
+                  <div className="espera">{formatarEspera(esperaMinutos)}</div>
+                </Link>
+              );
+            })}
+          </div>
+        </>
+      )}
 
-        {evento.quiosques.length === 0 && (
-          <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
-        )}
-      </div>
+      {evento.quiosques.length === 0 && (
+        <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
+      )}
 
       <BarraCarrinho eventoId={evento.id} />
     </main>

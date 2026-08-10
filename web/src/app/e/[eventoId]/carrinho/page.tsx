@@ -16,9 +16,13 @@ export default function Carrinho() {
 
   return (
     <main className="tela">
-      <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
+      <div className="topo" style={{ borderRadius: 18, marginBottom: 10 }}>
         Carrinho
       </div>
+
+      <Link href={`/e/${eventoId}`} className="texto-fraco" style={{ display: "inline-block", marginBottom: 16 }}>
+        ‹ Continuar comprando
+      </Link>
 
       {itens.length === 0 && (
         <div className="cartao">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/CheckoutForm";
@@ -12,9 +13,12 @@ export default async function Checkout({ params }: { params: { eventoId: string 
 
   return (
     <main className="tela">
-      <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
+      <div className="topo" style={{ borderRadius: 18, marginBottom: 10 }}>
         Checkout — {evento.nome}
       </div>
+      <Link href={`/e/${evento.id}`} className="texto-fraco" style={{ display: "inline-block", marginBottom: 16 }}>
+        ‹ Continuar comprando
+      </Link>
       {evento.pedidosPausados && (
         <div className="aviso" style={{ marginBottom: 16 }}>
           Os pedidos deste evento estão temporariamente pausados pelo organizador. Tente
