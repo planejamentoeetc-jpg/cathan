@@ -17,8 +17,3 @@ export const mercadoPagoClient = globalForMp.mercadoPago ?? criarClient();
 if (process.env.NODE_ENV !== "production") {
   globalForMp.mercadoPago = mercadoPagoClient;
 }
-
-/** Credenciais TEST- usam a URL de sandbox; credenciais de produção usam a URL real. */
-export function ehAmbienteSandbox(): boolean {
-  return (process.env.MP_ACCESS_TOKEN ?? "").startsWith("TEST-");
-}

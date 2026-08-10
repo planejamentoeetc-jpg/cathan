@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
 import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
+
+const MAX_TENTATIVAS_POLLING = 30;
+const INTERVALO_POLLING_MS = 2000;
 
 function formatarDistancia(metros: number) {
   if (metros >= 1000) {
@@ -17,6 +21,8 @@ function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+type DadosPix = { pedidoPendenteId: string; copiaECola: string; qrCodeBase64: string };
+
 export function CheckoutForm({
   eventoId,
   exigeLocalizacao,
@@ -26,17 +32,61 @@ export function CheckoutForm({
   exigeLocalizacao: boolean;
   pedidosPausados?: boolean;
 }) {
+  const router = useRouter();
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
+  const total = calcularTotal(itens);
 
   const clienteSalvo = lerClienteLocal();
   const [nome, setNome] = useState(clienteSalvo?.nome ?? "");
   const [celular, setCelular] = useState(clienteSalvo?.celular ?? "");
+  const [email, setEmail] = useState(clienteSalvo?.email ?? "");
   // um nome por unidade, por produto (índice 0..quantidade-1)
   const [nomesCriancasPorProduto, setNomesCriancasPorProduto] = useState<Record<string, string[]>>({});
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [foraDoRaio, setForaDoRaio] = useState<{ distancia: number; raio: number } | null>(null);
+
+  const [pix, setPix] = useState<DadosPix | null>(null);
+  const [copiado, setCopiado] = useState(false);
+  const [tentativasEsgotadas, setTentativasEsgotadas] = useState(false);
+  const tentativasRef = useRef(0);
+
+  useEffect(() => {
+    if (!pix) return;
+
+    let cancelado = false;
+    async function verificar() {
+      try {
+        const resposta = await fetch(`/api/pedidos-pendentes/${pix!.pedidoPendenteId}`, {
+          cache: "no-store",
+        });
+        if (!resposta.ok || cancelado) return;
+        const dados = await resposta.json();
+        if (dados.status === "CONFIRMADO" && dados.pedidoId) {
+          router.push(`/e/${eventoId}/pedido/${dados.pedidoId}`);
+        }
+      } catch {
+        // silencioso — tenta de novo no próximo ciclo
+      }
+    }
+
+    verificar();
+    const intervalo = setInterval(() => {
+      tentativasRef.current += 1;
+      if (tentativasRef.current >= MAX_TENTATIVAS_POLLING) {
+        clearInterval(intervalo);
+        setTentativasEsgotadas(true);
+        return;
+      }
+      verificar();
+    }, INTERVALO_POLLING_MS);
+
+    return () => {
+      cancelado = true;
+      clearInterval(intervalo);
+    };
+  }, [pix, eventoId, router]);
 
   function nomeCrianca(produtoId: string, indice: number) {
     return nomesCriancasPorProduto[produtoId]?.[indice] ?? "";
@@ -74,8 +124,8 @@ export function CheckoutForm({
     setErro(null);
     setForaDoRaio(null);
 
-    if (!nome.trim() || !celular.trim()) {
-      setErro("Informe nome e celular para continuar.");
+    if (!nome.trim() || !celular.trim() || !email.trim()) {
+      setErro("Informe nome, celular e e-mail para continuar.");
       return;
     }
     if (itens.length === 0) {
@@ -97,6 +147,7 @@ export function CheckoutForm({
           eventoId,
           clienteNome: nome.trim(),
           clienteCelular: celular.trim(),
+          clienteEmail: email.trim(),
           latitude: localizacao?.latitude,
           longitude: localizacao?.longitude,
           itens: itens.map((i) => ({
@@ -123,13 +174,87 @@ export function CheckoutForm({
         return;
       }
 
-      salvarClienteLocal({ nome: nome.trim(), celular: celular.trim() });
+      salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), email: email.trim() });
       limparCarrinho(eventoId);
-      window.location.href = dados.checkoutUrl;
+      setPix({ pedidoPendenteId: dados.pedidoPendenteId, ...dados.pix });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro inesperado.");
+    } finally {
       setEnviando(false);
     }
+  }
+
+  async function copiarCodigo() {
+    if (!pix) return;
+    try {
+      await navigator.clipboard.writeText(pix.copiaECola);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      // navegador sem permissão de clipboard — cliente copia manualmente do texto exibido
+    }
+  }
+
+  if (pix) {
+    return (
+      <div className="cartao" style={{ textAlign: "center" }}>
+        <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 4 }}>
+          Pague com Pix · {formatarReais(total)}
+        </b>
+        <p className="texto-fraco" style={{ marginBottom: 16 }}>
+          Escaneie o QR code no app do seu banco, ou copie o código abaixo.
+        </p>
+
+        <img
+          src={`data:image/png;base64,${pix.qrCodeBase64}`}
+          alt="QR code do Pix"
+          style={{ width: 220, height: 220, margin: "0 auto 16px", borderRadius: 12 }}
+        />
+
+        <textarea
+          readOnly
+          value={pix.copiaECola}
+          onFocus={(e) => e.target.select()}
+          rows={3}
+          style={{
+            width: "100%",
+            border: "1.5px solid var(--linha)",
+            borderRadius: 10,
+            padding: "8px 10px",
+            fontSize: 11.5,
+            fontFamily: "var(--font-mono)",
+            background: "var(--neve)",
+            resize: "none",
+            marginBottom: 10,
+          }}
+        />
+
+        <button type="button" className="btn btn-secundario btn-bloco" onClick={copiarCodigo} style={{ marginBottom: 16 }}>
+          {copiado ? "Copiado ✓" : "Copiar código Pix"}
+        </button>
+
+        {!tentativasEsgotadas ? (
+          <p className="texto-fraco">Aguardando confirmação do pagamento…</p>
+        ) : (
+          <>
+            <p className="texto-fraco" style={{ marginBottom: 10 }}>
+              O pagamento ainda está sendo processado. Você pode fechar esta tela — assim que for
+              confirmado, seu pedido aparece pronto para acompanhamento.
+            </p>
+            <button
+              type="button"
+              className="btn btn-secundario btn-bloco"
+              onClick={() => {
+                tentativasRef.current = 0;
+                setTentativasEsgotadas(false);
+              }}
+            >
+              Verificar novamente
+            </button>
+          </>
+        )}
+      </div>
+    );
   }
 
   if (foraDoRaio) {
@@ -199,7 +324,7 @@ export function CheckoutForm({
 
         <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800 }}>
           <span>Total</span>
-          <span>{formatarReais(calcularTotal(itens))}</span>
+          <span>{formatarReais(total)}</span>
         </div>
       </div>
 
@@ -216,6 +341,18 @@ export function CheckoutForm({
             onChange={(e) => setCelular(e.target.value)}
             placeholder="(00) 00000-0000"
           />
+        </div>
+        <div className="campo">
+          <label>E-mail</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seuemail@exemplo.com"
+          />
+          <span className="texto-fraco" style={{ fontSize: 11.5 }}>
+            Exigido pelo Mercado Pago para gerar o Pix.
+          </span>
         </div>
 
         {exigeLocalizacao && (
@@ -240,8 +377,8 @@ export function CheckoutForm({
           {pedidosPausados
             ? "Pedidos pausados"
             : enviando
-            ? "Redirecionando para pagamento…"
-            : "Ir para pagamento"}
+            ? "Gerando Pix…"
+            : `Pagar com Pix · ${formatarReais(total)}`}
         </button>
       </div>
     </>

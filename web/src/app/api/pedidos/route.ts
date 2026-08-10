@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
-import { Preference } from "mercadopago";
+import { Payment } from "mercadopago";
 import { NextRequest, NextResponse } from "next/server";
 import { distanciaMetros } from "@/lib/geo";
-import { ehAmbienteSandbox, mercadoPagoClient } from "@/lib/mercadoPago";
+import { mercadoPagoClient } from "@/lib/mercadoPago";
 import { prisma } from "@/lib/prisma";
 
 type ItemRequisicao = {
@@ -17,6 +17,7 @@ type CorpoRequisicao = {
   eventoId: string;
   clienteNome: string;
   clienteCelular: string;
+  clienteEmail: string;
   latitude?: number;
   longitude?: number;
   itens: ItemRequisicao[];
@@ -38,7 +39,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "JSON inválido." }, { status: 400 });
   }
 
-  if (!corpo.eventoId || !corpo.clienteNome?.trim() || !corpo.clienteCelular?.trim()) {
+  if (
+    !corpo.eventoId ||
+    !corpo.clienteNome?.trim() ||
+    !corpo.clienteCelular?.trim() ||
+    !corpo.clienteEmail?.trim()
+  ) {
     return NextResponse.json({ erro: "Dados do cliente incompletos." }, { status: 400 });
   }
   if (!Array.isArray(corpo.itens) || corpo.itens.length === 0) {
@@ -138,6 +144,9 @@ export async function POST(req: NextRequest) {
     };
   });
 
+  const valorTotal = itensValidados.reduce((soma, i) => soma + i.precoUnitario * i.quantidade, 0);
+  const [primeiroNome, ...restoNome] = corpo.clienteNome.trim().split(/\s+/);
+
   try {
     const pedidoPendente = await prisma.pedidoPendente.create({
       data: {
@@ -148,44 +157,46 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const retornoUrl = `${appUrl}/e/${evento.id}/checkout/retorno?pedidoPendenteId=${pedidoPendente.id}`;
-
-    const preference = await new Preference(mercadoPagoClient).create({
+    // Pix direto (Payments API) — o pagamento acontece dentro do próprio app,
+    // sem redirecionar o cliente pro checkout hospedado do Mercado Pago.
+    const payment = await new Payment(mercadoPagoClient).create({
       body: {
-        items: itensValidados.map((item) => ({
-          id: item.produtoId,
-          title: produtosPorId.get(item.produtoId)!.nome,
-          quantity: item.quantidade,
-          unit_price: item.precoUnitario,
-          currency_id: "BRL",
-        })),
-        payer: { name: corpo.clienteNome.trim() },
-        back_urls: {
-          success: retornoUrl,
-          failure: retornoUrl,
-          pending: retornoUrl,
+        transaction_amount: valorTotal,
+        description: `${evento.nome} — pedido Cathan`,
+        payment_method_id: "pix",
+        payer: {
+          email: corpo.clienteEmail.trim(),
+          first_name: primeiroNome,
+          last_name: restoNome.join(" ") || undefined,
         },
-        // auto_return exige back_url https — sem efeito (e sem erro) em ambientes http locais
-        ...(appUrl.startsWith("https://") ? { auto_return: "approved" as const } : {}),
         notification_url: `${appUrl}/api/webhooks/mercado-pago`,
         external_reference: pedidoPendente.id,
       },
+      requestOptions: { idempotencyKey: pedidoPendente.id },
     });
+
+    const dadosPix = payment.point_of_interaction?.transaction_data;
+    if (!payment.id || !dadosPix?.qr_code || !dadosPix?.qr_code_base64) {
+      throw new Error("Mercado Pago não retornou os dados do Pix.");
+    }
 
     await prisma.pedidoPendente.update({
       where: { id: pedidoPendente.id },
-      data: { mpPreferenceId: preference.id },
+      data: { mpPaymentId: String(payment.id) },
     });
 
-    const checkoutUrl = ehAmbienteSandbox() ? preference.sandbox_init_point : preference.init_point;
-
-    if (!checkoutUrl) {
-      throw new Error("Mercado Pago não retornou uma URL de checkout.");
-    }
-
-    return NextResponse.json({ pedidoPendenteId: pedidoPendente.id, checkoutUrl }, { status: 201 });
+    return NextResponse.json(
+      {
+        pedidoPendenteId: pedidoPendente.id,
+        pix: {
+          copiaECola: dadosPix.qr_code,
+          qrCodeBase64: dadosPix.qr_code_base64,
+        },
+      },
+      { status: 201 }
+    );
   } catch (erro) {
-    console.error("Falha ao iniciar checkout", erro);
-    return NextResponse.json({ erro: "Não foi possível iniciar o pagamento." }, { status: 500 });
+    console.error("Falha ao iniciar pagamento Pix", erro);
+    return NextResponse.json({ erro: "Não foi possível gerar o Pix." }, { status: 500 });
   }
 }
