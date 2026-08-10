@@ -8,6 +8,9 @@ const PALETA_CORES = ["#1E8E5A", "#FFB94A", "#FF7A45", "#16333D", "#1F4E5F"];
 type CorpoRequisicao = {
   nome: string;
   modalidade: ModalidadeQuiosque;
+  tipo?: TipoQuiosque;
+  cnpj?: string;
+  chavePix?: string;
 };
 
 export async function POST(req: NextRequest, { params }: { params: { eventoId: string } }) {
@@ -30,6 +33,17 @@ export async function POST(req: NextRequest, { params }: { params: { eventoId: s
     return NextResponse.json({ erro: "Modalidade inválida." }, { status: 400 });
   }
 
+  const tipo = corpo.tipo ?? TipoQuiosque.DO_EVENTO;
+  if (!Object.values(TipoQuiosque).includes(tipo)) {
+    return NextResponse.json({ erro: "Tipo de quiosque inválido." }, { status: 400 });
+  }
+  if (tipo === TipoQuiosque.INDEPENDENTE && (!corpo.cnpj?.trim() || !corpo.chavePix?.trim())) {
+    return NextResponse.json(
+      { erro: "Quiosque independente precisa de CNPJ/CPF e chave PIX de recebimento." },
+      { status: 400 }
+    );
+  }
+
   const totalExistente = await prisma.quiosque.count({ where: { eventoId: evento.id } });
 
   const quiosque = await prisma.quiosque.create({
@@ -38,7 +52,9 @@ export async function POST(req: NextRequest, { params }: { params: { eventoId: s
       nome: corpo.nome.trim(),
       modalidade: corpo.modalidade,
       cor: PALETA_CORES[totalExistente % PALETA_CORES.length],
-      tipo: TipoQuiosque.DO_EVENTO,
+      tipo,
+      cnpj: tipo === TipoQuiosque.INDEPENDENTE ? corpo.cnpj!.trim() : null,
+      chavePix: tipo === TipoQuiosque.INDEPENDENTE ? corpo.chavePix!.trim() : null,
     },
   });
 
