@@ -35,6 +35,11 @@ enum PerfilUsuario {
   ADMIN
 }
 
+enum FormaPagamento {
+  MERCADO_PAGO
+  DINHEIRO
+}
+
 enum StatusPedidoPendente {
   PENDENTE
   CONFIRMADO
@@ -181,12 +186,13 @@ model PedidoPendente {
 // ---------------------------------------------------------------------------
 
 model Pedido {
-  id        String   @id @default(cuid())
-  eventoId  String   @map("evento_id")
-  evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Restrict)
-  clienteId String   @map("cliente_id")
-  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Restrict)
-  criadoEm  DateTime @default(now()) @map("criado_em")
+  id             String         @id @default(cuid())
+  eventoId       String         @map("evento_id")
+  evento         Evento         @relation(fields: [eventoId], references: [id], onDelete: Restrict)
+  clienteId      String         @map("cliente_id")
+  cliente        Cliente        @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  formaPagamento FormaPagamento @default(MERCADO_PAGO) @map("forma_pagamento")
+  criadoEm       DateTime       @default(now()) @map("criado_em")
 
   subPedidos     SubPedido[]
   pedidoPendente PedidoPendente?

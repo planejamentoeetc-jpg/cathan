@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { calcularAnalyticsEvento } from "@/lib/analytics";
+import { AnalisesEvento } from "@/components/AnalisesEvento";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { LinkCopiavel } from "@/components/LinkCopiavel";
 import { PausarEventoToggle } from "@/components/PausarEventoToggle";
@@ -37,28 +39,12 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         orderBy: { nome: "asc" },
         include: { _count: { select: { produtos: true } } },
       },
-      pedidos: {
-        include: { subPedidos: { include: { itens: true } } },
-      },
     },
   });
 
   if (!evento) notFound();
 
-  // vendas: Pedido só existe pós-pagamento confirmado, então todo pedido aqui já foi pago de
-  // verdade — sem "Caixa do Evento" ainda, 100% passa pela plataforma (Mercado Pago)
-  const vendasPorQuiosque = new Map<string, number>();
-  let vendasTotal = 0;
-  for (const pedido of evento.pedidos) {
-    for (const subPedido of pedido.subPedidos) {
-      const valorSub = subPedido.itens.reduce(
-        (soma, item) => soma + Number(item.precoUnitario) * item.quantidade,
-        0
-      );
-      vendasTotal += valorSub;
-      vendasPorQuiosque.set(subPedido.quiosqueId, (vendasPorQuiosque.get(subPedido.quiosqueId) ?? 0) + valorSub);
-    }
-  }
+  const dados = await calcularAnalyticsEvento(evento.id);
 
   const baseUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");
   const linkCliente = `${baseUrl}/e/${evento.id}`;
@@ -89,43 +75,24 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
       <div className="g-grid">
         <div className="kpi">
-          <div className="n">{formatarReais(vendasTotal)}</div>
+          <div className="n">{formatarReais(dados.vendasTotal)}</div>
           <div className="l">Vendas do evento</div>
         </div>
         <div className="kpi">
-          <div className="n">{evento.pedidos.length}</div>
+          <div className="n">{dados.totalPedidos}</div>
           <div className="l">Pedidos</div>
         </div>
         <div className="kpi">
-          <div className="n">{formatarReais(vendasTotal)}</div>
+          <div className="n">{formatarReais(dados.vendasPorForma.mercadoPago)}</div>
           <div className="l">Via plataforma (split)</div>
         </div>
         <div className="kpi">
-          <div className="n">{formatarReais(0)}</div>
+          <div className="n">{formatarReais(dados.vendasPorForma.dinheiro)}</div>
           <div className="l">Em caixa (dinheiro)</div>
         </div>
       </div>
 
-      {evento.quiosques.length > 0 && (
-        <div className="g-sec">
-          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>Vendas por quiosque</h5>
-          {evento.quiosques.map((quiosque) => (
-            <div key={quiosque.id} className="g-row">
-              <span
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 3,
-                  background: quiosque.cor,
-                  display: "inline-block",
-                }}
-              />
-              {quiosque.nome}
-              <span className="val">{formatarReais(vendasPorQuiosque.get(quiosque.id) ?? 0)}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <AnalisesEvento dados={dados} />
 
       <div className="cartao" style={{ marginBottom: 16 }}>
         <p style={{ marginBottom: 6 }}>

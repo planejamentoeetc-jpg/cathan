@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const COOKIE_QUIOSQUE = "cathan_painel_auth";
 const COOKIE_GESTOR = "cathan_gestor_auth";
+const COOKIE_ADMIN = "cathan_admin_auth";
 
 function autenticado(req: NextRequest, cookie: string, envVar: string): boolean {
   const senha = process.env[envVar];
@@ -31,6 +32,28 @@ export function middleware(req: NextRequest) {
     }
 
     const destino = new URL("/gestor/entrar", req.url);
+    destino.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(destino);
+  }
+
+  // --- Console Cathan (uso interno da equipe Cathan, não do gestor do evento) ---
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    const ehPaginaLoginAdmin = pathname === "/admin/entrar";
+    const ehApiAuthAdmin = pathname === "/api/admin/entrar" || pathname === "/api/admin/sair";
+
+    if (ehPaginaLoginAdmin || ehApiAuthAdmin) {
+      return NextResponse.next();
+    }
+
+    if (autenticado(req, COOKIE_ADMIN, "PAINEL_ADMIN_SENHA")) {
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+    }
+
+    const destino = new URL("/admin/entrar", req.url);
     destino.searchParams.set("redirect", pathname);
     return NextResponse.redirect(destino);
   }
@@ -69,9 +92,11 @@ export const config = {
   matcher: [
     "/painel/:path*",
     "/gestor/:path*",
+    "/admin/:path*",
     "/api/quiosques/:path*",
     "/api/sub-pedidos/:path*",
     "/api/produtos/:path*",
     "/api/eventos/:path*",
+    "/api/admin/:path*",
   ],
 };
