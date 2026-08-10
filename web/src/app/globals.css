@@ -544,6 +544,14 @@ a {
   font-weight: 700;
 }
 
+.g-sec {
+  background: #fff;
+  border: 1px solid var(--linha);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
 .g-row {
   display: flex;
   align-items: center;

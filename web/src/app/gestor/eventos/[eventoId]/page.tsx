@@ -19,6 +19,16 @@ function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// leitura só de presença/prefixo — não instancia o client real do Mercado Pago
+// (lib/mercadoPago.ts lança erro se MP_ACCESS_TOKEN faltar, o que derrubaria essa página à toa)
+function statusGateway() {
+  const token = process.env.MP_ACCESS_TOKEN;
+  return {
+    conectado: Boolean(token),
+    ambiente: token?.startsWith("TEST-") ? "Sandbox" : "Produção",
+  };
+}
+
 export default async function EventoGestor({ params }: { params: { eventoId: string } }) {
   const evento = await prisma.evento.findUnique({
     where: { id: params.eventoId },
@@ -54,6 +64,8 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
   const linkCliente = `${baseUrl}/e/${evento.id}`;
   const linkQuiosque = `${baseUrl}/painel/${evento.id}/entrar`;
   const linkTelaDePedidos = `${baseUrl}/e/${evento.id}/tela-de-pedidos`;
+  const linkWebhook = `${baseUrl}/api/webhooks/mercado-pago`;
+  const gateway = statusGateway();
 
   return (
     <main className="tela">
@@ -131,6 +143,40 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         <Link href={`/gestor/eventos/${evento.id}/editar`} className="btn btn-secundario btn-bloco">
           Editar evento / recalibrar raio
         </Link>
+      </div>
+
+      <div className="g-sec">
+        <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 4 }}>💳 Configurações de pagamento</h5>
+        <div className="g-row">
+          Gateway
+          <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
+            Mercado Pago
+          </span>
+        </div>
+        <div className="g-row">
+          Ambiente
+          <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
+            {gateway.ambiente}
+          </span>
+        </div>
+        <div className="g-row">
+          Status
+          <span className="val" style={{ color: gateway.conectado ? "var(--verde)" : "var(--festa)" }}>
+            {gateway.conectado ? "✓ conectado" : "não conectado"}
+          </span>
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <LinkCopiavel rotulo="URL de webhook (configurada no painel do Mercado Pago)" url={linkWebhook} />
+        </div>
+        <p className="texto-fraco" style={{ marginTop: 10 }}>
+          Hoje é uma conta única (a do evento/Cathan) — sem split automático por quiosque ainda,
+          essa é a próxima etapa no roadmap de pagamentos.
+        </p>
+        <div className="aviso" style={{ marginTop: 10 }}>
+          <b>Regra de ouro:</b> a chave secreta (Access Token) nunca fica no navegador — ela vive
+          só nas variáveis de ambiente do servidor. O que aparece aqui é só informação pública de
+          status.
+        </div>
       </div>
 
       <div className="cartao" style={{ marginBottom: 16 }}>
