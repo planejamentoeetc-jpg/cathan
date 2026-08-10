@@ -11,7 +11,9 @@
 
 ## O que já está construído e funcionando
 
-- **Fluxo do cliente de ponta a ponta**: praça do evento → loja do quiosque → carrinho único (multi-quiosque) → checkout → pagamento real via Mercado Pago (Checkout Pro) → tela de retorno (faz polling até o webhook confirmar) → acompanhamento com código de retirada.
+- **Fluxo do cliente de ponta a ponta**: praça do evento → loja do quiosque → carrinho único (multi-quiosque) → checkout → pagamento real via Mercado Pago (Checkout Pro) → tela de retorno (faz polling até o webhook confirmar) → acompanhamento com código de retirada. A tela de acompanhamento (`/e/[eventoId]/pedido/[pedidoId]`) faz polling a cada 3s e dispara um **pager em tela cheia** (com vibração, se o aparelho suportar) assim que qualquer sub-pedido vira `PRONTO`/`CHAMADO` — dispensado com "Estou indo!", lembrado por sub-pedido via `localStorage` pra não reaparecer. Isso é notificação **dentro da aba aberta**, não push real fora do app (ver roadmap).
+- **Geofencing negativo com mapa ilustrativo**: se o pedido for rejeitado por estar fora do raio, o checkout mostra uma tela dedicada com um mapa estilizado (`MapaForaDoRaio`, SVG, não é geolocalização real) e a distância real até o evento, em vez de só um texto de erro.
+- **Pausar pedidos do evento inteiro**: toggle de emergência na tela do gestor (`Evento.pedidosPausados`) que bloqueia `POST /api/pedidos` pra todos os quiosques do evento de uma vez, com aviso pro cliente na praça e no checkout.
 - **Painel do quiosque em tempo real** (`/painel/[eventoId]/...`, senha única em `PAINEL_QUIOSQUE_SENHA`, fila atualizada por polling a cada 3s — ver "Por que polling" abaixo). Dois fluxos de status distintos para o mesmo `SubPedido`, conforme a modalidade do quiosque:
   - **Alimentação/bebidas**: Recebido → Aceito → Pronto → Retirado (`EM_PRODUCAO` existe no enum mas não está ligado a nenhum botão ainda).
   - **Brincadeiras**: Recebido → Chamado → Aproveitando (cronômetro de duração ao vivo) → Concluído. Cada rota de transição valida a modalidade do quiosque — não dá pra chamar `/aceitar` num sub-pedido de brincadeiras nem `/chamar` num de comida.
@@ -36,10 +38,13 @@ Painel do quiosque e Tela de Pedidos atualizam via polling curto (3s), não push
 ## O que falta (roadmap)
 
 - Split de pagamento por quiosque no Mercado Pago (marketplace/contas conectadas) — hoje a cobrança é única
-- Pager digital de verdade (push notification no navegador) — hoje as telas dependem de polling/refresh, sem notificação fora da aba
+- Push notification de verdade (Web Push), funcionando com a aba/app fechado — hoje o pager só dispara com a aba de acompanhamento aberta (polling)
+- Indicador "você é o próximo" na fila de cada quiosque
 - Caixa do Evento (pagamento em dinheiro / compra assistida)
 - Venda Manual (compra multi-quiosque simultânea, recibo único consolidado, edição de pedido)
 - Console Cathan (dashboard gerencial completo: faturamento, comissão, gráficos operacionais)
-- Tela "fora do raio" com mapa e sombreamento da área liberada
+- Dashboard de analytics pro gestor (KPIs, funil por status, SLA)
+- UI de configuração de gateway de pagamento na tela do gestor
+- UI pra criar quiosque `INDEPENDENTE` (CNPJ/PIX) — schema já suporta, falta a tela
 - PWA (empacotamento final)
 - Identidade visual: aplicar personagens estilo Corporate Memphis (Pai, Mãe, Filho, Filha, Amigos, Vendedor, Caixa, Organizador + mascote "C") em todo o PWA
