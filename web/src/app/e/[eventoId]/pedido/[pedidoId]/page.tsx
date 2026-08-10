@@ -11,6 +11,7 @@ type SubPedido = {
   status: keyof typeof STATUS_LABEL;
   codigoRetirada: string;
   quiosque: { id: string; nome: string; cor: string; modalidade: string };
+  vocEProximo: boolean;
   itens: {
     nome: string;
     quantidade: number;
@@ -124,7 +125,13 @@ export default function Acompanhamento() {
               <b style={{ color: sp.quiosque.cor, fontFamily: "var(--font-sora)" }}>
                 {sp.quiosque.nome}
               </b>
-              <span className={classeBadge(sp.status)}>{STATUS_LABEL[sp.status]}</span>
+              <span className={sp.vocEProximo ? "badge-status proximo" : classeBadge(sp.status)}>
+                {sp.vocEProximo
+                  ? sp.quiosque.modalidade === "BRINCADEIRAS"
+                    ? "Você é o próximo!"
+                    : "Já vamos preparar o seu!"
+                  : STATUS_LABEL[sp.status]}
+              </span>
             </div>
 
             <div style={{ marginTop: 10 }}>

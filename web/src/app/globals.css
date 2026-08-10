@@ -253,6 +253,11 @@ a {
   color: var(--cinza);
 }
 
+.badge-status.proximo {
+  background: var(--festa-suave);
+  color: var(--festa);
+}
+
 .codigo-retirada {
   font-family: var(--font-mono);
   font-weight: 700;
