@@ -1,8 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
+import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
+
+function formatarDistancia(metros: number) {
+  if (metros >= 1000) {
+    return `${(metros / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`;
+  }
+  return `${metros} m`;
+}
 
 function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -27,6 +36,7 @@ export function CheckoutForm({
   const [nomesCriancasPorProduto, setNomesCriancasPorProduto] = useState<Record<string, string[]>>({});
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [foraDoRaio, setForaDoRaio] = useState<{ distancia: number; raio: number } | null>(null);
 
   function nomeCrianca(produtoId: string, indice: number) {
     return nomesCriancasPorProduto[produtoId]?.[indice] ?? "";
@@ -62,6 +72,7 @@ export function CheckoutForm({
 
   async function confirmar() {
     setErro(null);
+    setForaDoRaio(null);
 
     if (!nome.trim() || !celular.trim()) {
       setErro("Informe nome e celular para continuar.");
@@ -103,11 +114,11 @@ export function CheckoutForm({
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        setErro(
-          dados.distanciaMetros
-            ? `${dados.erro} (você está a ${dados.distanciaMetros}m; raio permitido: ${dados.raioPedidosMetros}m)`
-            : dados.erro ?? "Não foi possível concluir o pedido."
-        );
+        if (typeof dados.distanciaMetros === "number") {
+          setForaDoRaio({ distancia: dados.distanciaMetros, raio: dados.raioPedidosMetros });
+        } else {
+          setErro(dados.erro ?? "Não foi possível concluir o pedido.");
+        }
         setEnviando(false);
         return;
       }
@@ -119,6 +130,26 @@ export function CheckoutForm({
       setErro(e instanceof Error ? e.message : "Erro inesperado.");
       setEnviando(false);
     }
+  }
+
+  if (foraDoRaio) {
+    return (
+      <>
+        <MapaForaDoRaio distanciaMetros={foraDoRaio.distancia} raioMetros={foraDoRaio.raio} />
+        <div className="cartao">
+          <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 6 }}>
+            Você está a {formatarDistancia(foraDoRaio.distancia)} do evento
+          </b>
+          <p className="texto-fraco" style={{ marginBottom: 14 }}>
+            Indo para lá? Pode deixar o carrinho pronto — assim que você entrar na área
+            sombreada, é só tentar pagar de novo.
+          </p>
+          <Link href={`/e/${eventoId}`} className="btn btn-secundario btn-bloco">
+            Voltar ao cardápio
+          </Link>
+        </div>
+      </>
+    );
   }
 
   return (
