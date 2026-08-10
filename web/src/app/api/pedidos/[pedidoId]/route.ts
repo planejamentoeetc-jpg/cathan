@@ -15,7 +15,16 @@ export async function GET(_req: NextRequest, { params }: { params: { pedidoId: s
     include: {
       subPedidos: {
         include: {
-          quiosque: { select: { id: true, nome: true, cor: true, modalidade: true } },
+          quiosque: {
+            select: {
+              id: true,
+              nome: true,
+              cor: true,
+              modalidade: true,
+              mensagemPreparando: true,
+              mensagemPronto: true,
+            },
+          },
           itens: {
             include: { produto: { select: { nome: true } } },
           },

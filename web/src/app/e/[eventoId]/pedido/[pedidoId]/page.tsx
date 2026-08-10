@@ -10,7 +10,14 @@ type SubPedido = {
   id: string;
   status: keyof typeof STATUS_LABEL;
   codigoRetirada: string;
-  quiosque: { id: string; nome: string; cor: string; modalidade: string };
+  quiosque: {
+    id: string;
+    nome: string;
+    cor: string;
+    modalidade: string;
+    mensagemPreparando: string | null;
+    mensagemPronto: string | null;
+  };
   vocEProximo: boolean;
   itens: {
     nome: string;
@@ -106,6 +113,7 @@ export default function Acompanhamento() {
     codigoRetirada: sp.codigoRetirada,
     quiosqueNome: sp.quiosque.nome,
     brincadeira: sp.quiosque.modalidade === "BRINCADEIRAS",
+    mensagemPronto: sp.quiosque.mensagemPronto,
   }));
 
   return (
@@ -127,9 +135,10 @@ export default function Acompanhamento() {
               </b>
               <span className={sp.vocEProximo ? "badge-status proximo" : classeBadge(sp.status)}>
                 {sp.vocEProximo
-                  ? sp.quiosque.modalidade === "BRINCADEIRAS"
-                    ? "Você é o próximo!"
-                    : "Já vamos preparar o seu!"
+                  ? sp.quiosque.mensagemPreparando ??
+                    (sp.quiosque.modalidade === "BRINCADEIRAS"
+                      ? "Você é o próximo!"
+                      : "Já vamos preparar o seu!")
                   : STATUS_LABEL[sp.status]}
               </span>
             </div>

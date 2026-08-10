@@ -33,6 +33,12 @@ export default async function PracaDoEvento({
 
   if (!evento) notFound();
 
+  const quiosquesComDica = evento.quiosques.filter((q) => q.dica);
+  const dicaEmDestaque =
+    quiosquesComDica.length > 0
+      ? quiosquesComDica[Math.floor(Math.random() * quiosquesComDica.length)]
+      : null;
+
   return (
     <main className="tela">
       <div className="hero">
@@ -44,6 +50,18 @@ export default async function PracaDoEvento({
         <div className="aviso" style={{ marginBottom: 16 }}>
           Os pedidos deste evento estão temporariamente pausados pelo organizador. Você ainda
           pode navegar pelos quiosques, mas não será possível finalizar a compra agora.
+        </div>
+      )}
+
+      {dicaEmDestaque && (
+        <div className="dica-spot" style={{ borderColor: dicaEmDestaque.cor }}>
+          <span className="ic">💡</span>
+          <span>
+            <b>Fica a dica:</b> {dicaEmDestaque.dica}{" "}
+            <Link href={`/e/${evento.id}/q/${dicaEmDestaque.id}`} className="ir" style={{ color: dicaEmDestaque.cor }}>
+              Visitar {dicaEmDestaque.nome} ›
+            </Link>
+          </span>
         </div>
       )}
 

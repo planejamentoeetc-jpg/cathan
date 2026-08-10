@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { FilaQuiosque } from "@/components/FilaQuiosque";
 import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { BotaoSair } from "@/components/BotaoSair";
+import { MensagensQuiosqueForm } from "@/components/MensagensQuiosqueForm";
 
 export default async function PainelQuiosque({
   params,
@@ -75,6 +76,16 @@ export default async function PainelQuiosque({
           />
         </div>
       </div>
+
+      <h5 style={{ fontFamily: "var(--font-sora)", margin: "20px 0 12px" }}>
+        Personalizar mensagens
+      </h5>
+      <MensagensQuiosqueForm
+        quiosqueId={params.quiosqueId}
+        dicaInicial={quiosque.dica ?? ""}
+        mensagemPreparandoInicial={quiosque.mensagemPreparando ?? ""}
+        mensagemProntoInicial={quiosque.mensagemPronto ?? ""}
+      />
     </main>
   );
 }

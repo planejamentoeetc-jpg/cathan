@@ -31,6 +31,13 @@ export default async function LojaDoQuiosque({
         </div>
       </div>
 
+      {quiosque.dica && (
+        <div className="dica-spot" style={{ borderColor: quiosque.cor, marginTop: 14 }}>
+          <span className="ic">💡</span>
+          <span>{quiosque.dica}</span>
+        </div>
+      )}
+
       <div className="produtos-grid">
         {quiosque.produtos.map((produto) => (
           <ProdutoCard

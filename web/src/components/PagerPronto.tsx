@@ -3,6 +3,7 @@ export type ItemPager = {
   codigoRetirada: string;
   quiosqueNome: string;
   brincadeira: boolean;
+  mensagemPronto: string | null;
 };
 
 export function PagerPronto({ itens, onFechar }: { itens: ItemPager[]; onFechar: () => void }) {
@@ -12,7 +13,7 @@ export function PagerPronto({ itens, onFechar }: { itens: ItemPager[]; onFechar:
     const item = itens[0];
     return (
       <div className="pager-overlay">
-        <h2>{item.brincadeira ? "É a sua vez!" : "Seu pedido está pronto!"}</h2>
+        <h2>{item.mensagemPronto ?? (item.brincadeira ? "É a sua vez!" : "Seu pedido está pronto!")}</h2>
         <div className="pager-anel">
           <b>{item.codigoRetirada}</b>
         </div>
