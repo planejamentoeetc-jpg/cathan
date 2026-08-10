@@ -15,13 +15,40 @@ function formatarData(data: Date) {
   return data.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+function formatarReais(valor: number) {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default async function EventoGestor({ params }: { params: { eventoId: string } }) {
   const evento = await prisma.evento.findUnique({
     where: { id: params.eventoId },
-    include: { quiosques: { orderBy: { nome: "asc" } } },
+    include: {
+      quiosques: {
+        orderBy: { nome: "asc" },
+        include: { _count: { select: { produtos: true } } },
+      },
+      pedidos: {
+        include: { subPedidos: { include: { itens: true } } },
+      },
+    },
   });
 
   if (!evento) notFound();
+
+  // vendas: Pedido só existe pós-pagamento confirmado, então todo pedido aqui já foi pago de
+  // verdade — sem "Caixa do Evento" ainda, 100% passa pela plataforma (Mercado Pago)
+  const vendasPorQuiosque = new Map<string, number>();
+  let vendasTotal = 0;
+  for (const pedido of evento.pedidos) {
+    for (const subPedido of pedido.subPedidos) {
+      const valorSub = subPedido.itens.reduce(
+        (soma, item) => soma + Number(item.precoUnitario) * item.quantidade,
+        0
+      );
+      vendasTotal += valorSub;
+      vendasPorQuiosque.set(subPedido.quiosqueId, (vendasPorQuiosque.get(subPedido.quiosqueId) ?? 0) + valorSub);
+    }
+  }
 
   const baseUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");
   const linkCliente = `${baseUrl}/e/${evento.id}`;
@@ -47,6 +74,46 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
       </div>
 
       <PausarEventoToggle eventoId={evento.id} pausadoInicial={evento.pedidosPausados} />
+
+      <div className="g-grid">
+        <div className="kpi">
+          <div className="n">{formatarReais(vendasTotal)}</div>
+          <div className="l">Vendas do evento</div>
+        </div>
+        <div className="kpi">
+          <div className="n">{evento.pedidos.length}</div>
+          <div className="l">Pedidos</div>
+        </div>
+        <div className="kpi">
+          <div className="n">{formatarReais(vendasTotal)}</div>
+          <div className="l">Via plataforma (split)</div>
+        </div>
+        <div className="kpi">
+          <div className="n">{formatarReais(0)}</div>
+          <div className="l">Em caixa (dinheiro)</div>
+        </div>
+      </div>
+
+      {evento.quiosques.length > 0 && (
+        <div className="g-sec">
+          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>Vendas por quiosque</h5>
+          {evento.quiosques.map((quiosque) => (
+            <div key={quiosque.id} className="g-row">
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 3,
+                  background: quiosque.cor,
+                  display: "inline-block",
+                }}
+              />
+              {quiosque.nome}
+              <span className="val">{formatarReais(vendasPorQuiosque.get(quiosque.id) ?? 0)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="cartao" style={{ marginBottom: 16 }}>
         <p style={{ marginBottom: 6 }}>
@@ -88,10 +155,17 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
             <div className="quiosque-logo" style={{ background: quiosque.cor }}>
               <IconeModalidade modalidade={quiosque.modalidade} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <b>{quiosque.nome}</b>
               <div className="texto-fraco">{NOME_MODALIDADE[quiosque.modalidade]}</div>
             </div>
+            {quiosque._count.produtos === 0 ? (
+              <span style={{ fontSize: 12, fontWeight: 800, color: "#B4441C" }}>⚠ sem produtos ainda</span>
+            ) : (
+              <span className="texto-fraco" style={{ fontSize: 12 }}>
+                {quiosque._count.produtos} produto{quiosque._count.produtos === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
         ))}
 

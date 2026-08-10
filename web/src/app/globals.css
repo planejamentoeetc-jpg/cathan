@@ -515,3 +515,50 @@ a {
   border-radius: 999px;
   padding: 12px 26px;
 }
+
+/* ===== Dashboard do gestor (KPIs + vendas por quiosque) ===== */
+
+.g-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  background: #fff;
+  border: 1px solid var(--linha);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.kpi .n {
+  font-family: var(--font-sora);
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.kpi .l {
+  font-size: 12px;
+  color: var(--cinza);
+  font-weight: 700;
+}
+
+.g-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--linha);
+  font-size: 14px;
+}
+
+.g-row:last-child {
+  border-bottom: none;
+}
+
+.g-row .val {
+  margin-left: auto;
+  font-family: var(--font-sora);
+  font-weight: 800;
+}
