@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { STATUS_LABEL } from "@/lib/statusSubPedido";
+import { ItemPager, PagerPronto } from "@/components/PagerPronto";
 
 type SubPedido = {
   id: string;
@@ -25,6 +26,8 @@ type Pedido = {
   subPedidos: SubPedido[];
 };
 
+const INTERVALO_POLLING_MS = 3000;
+
 function classeBadge(status: string) {
   if (status === "RECEBIDO") return "badge-status recebido";
   if (status === "PRONTO" || status === "CHAMADO") return "badge-status pronto";
@@ -34,11 +37,26 @@ function classeBadge(status: string) {
   return "badge-status";
 }
 
+function chaveDispensados(pedidoId: string) {
+  return `cathan:pager-dispensados:${pedidoId}`;
+}
+
+function lerDispensados(pedidoId: string): string[] {
+  try {
+    const bruto = window.localStorage.getItem(chaveDispensados(pedidoId));
+    return bruto ? (JSON.parse(bruto) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function Acompanhamento() {
   const { eventoId, pedidoId } = useParams<{ eventoId: string; pedidoId: string }>();
   const [pedido, setPedido] = useState<Pedido | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [dispensados, setDispensados] = useState<string[]>([]);
+  const idsJaAvisados = useRef<Set<string>>(new Set());
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -55,11 +73,44 @@ export default function Acompanhamento() {
   }, [pedidoId]);
 
   useEffect(() => {
+    setDispensados(lerDispensados(pedidoId));
     carregar();
-  }, [carregar]);
+    const intervalo = setInterval(carregar, INTERVALO_POLLING_MS);
+    return () => clearInterval(intervalo);
+  }, [carregar, pedidoId]);
+
+  const prontos = (pedido?.subPedidos ?? []).filter(
+    (sp) => (sp.status === "PRONTO" || sp.status === "CHAMADO") && !dispensados.includes(sp.id)
+  );
+
+  useEffect(() => {
+    const novos = prontos.filter((sp) => !idsJaAvisados.current.has(sp.id));
+    if (novos.length > 0) {
+      novos.forEach((sp) => idsJaAvisados.current.add(sp.id));
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([180, 90, 180]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prontos.map((sp) => sp.id).join(",")]);
+
+  function fecharPager() {
+    const novosDispensados = [...dispensados, ...prontos.map((sp) => sp.id)];
+    setDispensados(novosDispensados);
+    window.localStorage.setItem(chaveDispensados(pedidoId), JSON.stringify(novosDispensados));
+  }
+
+  const itensPager: ItemPager[] = prontos.map((sp) => ({
+    id: sp.id,
+    codigoRetirada: sp.codigoRetirada,
+    quiosqueNome: sp.quiosque.nome,
+    brincadeira: sp.quiosque.modalidade === "BRINCADEIRAS",
+  }));
 
   return (
     <main className="tela">
+      <PagerPronto itens={itensPager} onFechar={fecharPager} />
+
       <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
         Acompanhar pedido
       </div>
@@ -98,18 +149,8 @@ export default function Acompanhamento() {
         ))}
       </div>
 
-      <button
-        type="button"
-        className="btn btn-secundario btn-bloco"
-        style={{ marginTop: 16 }}
-        onClick={carregar}
-        disabled={carregando}
-      >
-        {carregando ? "Atualizando…" : "Atualizar status"}
-      </button>
-
       <p className="texto-fraco" style={{ marginTop: 10, textAlign: "center" }}>
-        Atualização automática chega na próxima fase — por enquanto, use o botão acima.
+        {carregando ? "Atualizando…" : "Atualizado automaticamente a cada poucos segundos."}
       </p>
 
       <div style={{ textAlign: "center", marginTop: 14 }}>
