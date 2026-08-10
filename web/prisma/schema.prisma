@@ -69,6 +69,8 @@ model Evento {
   // ponto central do raio de pedidos; obrigatório junto com raioPedidosMetros (ver CHECK na migration)
   latitude          Float?
   longitude         Float?
+  // trava de emergência do gestor: bloqueia novos pedidos no evento inteiro sem mexer em cada quiosque
+  pedidosPausados   Boolean  @default(false) @map("pedidos_pausados")
   criadoEm          DateTime @default(now()) @map("criado_em")
   atualizadoEm      DateTime @updatedAt @map("atualizado_em")
 

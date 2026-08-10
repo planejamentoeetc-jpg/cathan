@@ -40,6 +40,13 @@ export default async function PracaDoEvento({
         <div className="sub">{evento.local}</div>
       </div>
 
+      {evento.pedidosPausados && (
+        <div className="aviso" style={{ marginBottom: 16 }}>
+          Os pedidos deste evento estão temporariamente pausados pelo organizador. Você ainda
+          pode navegar pelos quiosques, mas não será possível finalizar a compra agora.
+        </div>
+      )}
+
       <div className="lista">
         {evento.quiosques.map((quiosque) => {
           const esperaMinutos = calcularEsperaEstimadaMinutos(

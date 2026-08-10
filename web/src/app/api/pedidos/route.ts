@@ -53,6 +53,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }
 
+  if (evento.pedidosPausados) {
+    return NextResponse.json(
+      { erro: "Os pedidos deste evento estão temporariamente pausados. Tente novamente em instantes." },
+      { status: 423 }
+    );
+  }
+
   // --- Geofencing: validado no servidor, coordenadas nunca são persistidas ---
   if (evento.raioPedidosMetros !== null) {
     if (

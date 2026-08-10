@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { LinkCopiavel } from "@/components/LinkCopiavel";
+import { PausarEventoToggle } from "@/components/PausarEventoToggle";
 
 const NOME_MODALIDADE: Record<string, string> = {
   ALIMENTACAO: "Alimentação",
@@ -44,6 +45,8 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
           Meus eventos
         </Link>
       </div>
+
+      <PausarEventoToggle eventoId={evento.id} pausadoInicial={evento.pedidosPausados} />
 
       <div className="cartao" style={{ marginBottom: 16 }}>
         <p style={{ marginBottom: 6 }}>

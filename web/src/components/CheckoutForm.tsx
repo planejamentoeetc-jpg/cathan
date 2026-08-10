@@ -11,9 +11,11 @@ function formatarReais(valor: number) {
 export function CheckoutForm({
   eventoId,
   exigeLocalizacao,
+  pedidosPausados = false,
 }: {
   eventoId: string;
   exigeLocalizacao: boolean;
+  pedidosPausados?: boolean;
 }) {
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
@@ -201,10 +203,14 @@ export function CheckoutForm({
         <button
           type="button"
           className="btn btn-primario btn-bloco"
-          disabled={enviando || itens.length === 0}
+          disabled={enviando || itens.length === 0 || pedidosPausados}
           onClick={confirmar}
         >
-          {enviando ? "Redirecionando para pagamento…" : "Ir para pagamento"}
+          {pedidosPausados
+            ? "Pedidos pausados"
+            : enviando
+            ? "Redirecionando para pagamento…"
+            : "Ir para pagamento"}
         </button>
       </div>
     </>
