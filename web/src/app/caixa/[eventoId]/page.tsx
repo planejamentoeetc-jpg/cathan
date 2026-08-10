@@ -45,6 +45,8 @@ export default async function PainelCaixa({ params }: { params: { eventoId: stri
 
       <CaixaVenda
         eventoId={evento.id}
+        eventoNome={evento.nome}
+        eventoLocal={evento.local}
         pausado={evento.pedidosPausados}
         quiosques={evento.quiosques.map((q) => ({
           id: q.id,

@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { STATUS_LABEL } from "@/lib/statusSubPedido";
+import {
+  conectarImpressora,
+  imprimirRecibo,
+  ErroImpressora,
+  type ConexaoImpressora,
+} from "@/lib/impressoraTermica";
 
 type Produto = { id: string; nome: string; preco: number };
 type Quiosque = {
@@ -46,10 +52,14 @@ function formatarReais(valor: number) {
 
 export function CaixaVenda({
   eventoId,
+  eventoNome,
+  eventoLocal,
   pausado,
   quiosques,
 }: {
   eventoId: string;
+  eventoNome: string;
+  eventoLocal: string;
   pausado: boolean;
   quiosques: Quiosque[];
 }) {
@@ -58,6 +68,9 @@ export function CaixaVenda({
   const [celular, setCelular] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [conexaoImpressora, setConexaoImpressora] = useState<ConexaoImpressora | null>(null);
+  const [statusImpressora, setStatusImpressora] = useState("não conectada");
+  const [imprimindo, setImprimindo] = useState<string | null>(null);
   const [ultimaVenda, setUltimaVenda] = useState<string[] | null>(null);
   const [vendas, setVendas] = useState<VendaHistorico[]>([]);
 
@@ -187,8 +200,68 @@ export function CaixaVenda({
     }
   }
 
+  async function conectarBt() {
+    try {
+      const conexao = await conectarImpressora(() => {
+        setConexaoImpressora(null);
+        setStatusImpressora("não conectada");
+      });
+      setConexaoImpressora(conexao);
+      setStatusImpressora(conexao.device.name || "conectada");
+    } catch (e) {
+      if (e instanceof ErroImpressora) {
+        alert(`🖨 ${e.message}`);
+      } else {
+        alert("🖨 Erro inesperado ao conectar a impressora.");
+      }
+    }
+  }
+
+  async function imprimir(venda: VendaHistorico) {
+    if (!conexaoImpressora) {
+      alert("🖨 Conecte a impressora Bluetooth primeiro (botão no topo).");
+      return;
+    }
+    setImprimindo(venda.id);
+    try {
+      await imprimirRecibo(conexaoImpressora, {
+        eventoNome,
+        eventoLocal,
+        clienteNome: venda.clienteNome,
+        criadoEm: venda.criadoEm,
+        subPedidos: venda.subPedidos.map((sp) => ({
+          codigoRetirada: sp.codigoRetirada,
+          quiosqueNome: sp.quiosqueNome,
+          itens: sp.itens,
+        })),
+      });
+    } catch (e) {
+      alert(`🖨 Falha ao imprimir: ${e instanceof Error ? e.message : e}`);
+    } finally {
+      setImprimindo(null);
+    }
+  }
+
   return (
     <>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 16,
+          fontSize: 12.5,
+        }}
+      >
+        <span>
+          🖨 Impressora:{" "}
+          <b style={{ color: conexaoImpressora ? "var(--verde)" : "var(--festa)" }}>{statusImpressora}</b>
+        </span>
+        <button type="button" className="btn btn-secundario" style={{ padding: "6px 14px" }} onClick={conectarBt}>
+          Conectar Bluetooth
+        </button>
+      </div>
+
       {ultimaVenda && (
         <div className="aviso" style={{ marginBottom: 16, borderColor: "var(--verde)", background: "var(--verde-suave)", color: "var(--verde)" }}>
           ✓ Venda registrada! Código{ultimaVenda.length > 1 ? "s" : ""}:{" "}
@@ -325,9 +398,23 @@ export function CaixaVenda({
         ) : (
           vendas.map((venda) => (
             <div key={venda.id} style={{ marginBottom: 10 }}>
-              <div className="texto-fraco" style={{ fontSize: 12, marginBottom: 4 }}>
-                {venda.clienteNome} ·{" "}
-                {new Date(venda.criadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              <div
+                className="texto-fraco"
+                style={{ fontSize: 12, marginBottom: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+              >
+                <span>
+                  {venda.clienteNome} ·{" "}
+                  {new Date(venda.criadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secundario"
+                  style={{ padding: "4px 10px", fontSize: 11.5 }}
+                  disabled={imprimindo === venda.id}
+                  onClick={() => imprimir(venda)}
+                >
+                  {imprimindo === venda.id ? "Imprimindo…" : "🖨 Imprimir recibo"}
+                </button>
               </div>
               {venda.subPedidos.map((sp) => (
                 <div key={sp.id} className="g-row">
