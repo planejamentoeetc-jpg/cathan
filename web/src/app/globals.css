@@ -570,3 +570,37 @@ a {
   font-family: var(--font-sora);
   font-weight: 800;
 }
+
+/* ===== Painel do quiosque: troca rápida + split fila/produtos ===== */
+
+.quiosque-switcher {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quiosque-switcher a {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 7px 13px;
+  border-radius: 999px;
+}
+
+.quiosque-switcher a.sel {
+  background: #fff;
+  color: var(--grafite);
+}
+
+.painel-split {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 860px) {
+  .painel-split {
+    grid-template-columns: 1fr;
+  }
+}

@@ -37,7 +37,7 @@ export function FormularioProduto({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const voltar = `/painel/${eventoId}/q/${quiosqueId}/produtos`;
+  const voltar = `/painel/${eventoId}/q/${quiosqueId}`;
 
   async function salvar() {
     setErro(null);

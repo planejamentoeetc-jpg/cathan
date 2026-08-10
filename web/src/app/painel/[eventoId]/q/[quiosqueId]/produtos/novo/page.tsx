@@ -33,7 +33,7 @@ export default async function NovoProduto({
       >
         <span>Novo produto</span>
         <Link
-          href={`/painel/${params.eventoId}/q/${params.quiosqueId}/produtos`}
+          href={`/painel/${params.eventoId}/q/${params.quiosqueId}`}
           style={{ fontSize: 12.5, color: "#BFD4DA" }}
         >
           Cancelar
