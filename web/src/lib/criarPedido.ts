@@ -1,4 +1,4 @@
-import { ModalidadeQuiosque } from "@prisma/client";
+import { FormaPagamento, ModalidadeQuiosque } from "@prisma/client";
 import { criarSubPedidoComCodigoUnico } from "@/lib/codigoRetirada";
 import { prisma } from "@/lib/prisma";
 
@@ -26,8 +26,9 @@ export async function criarPedidoAPartirDeItensValidados(params: {
   clienteNome: string;
   clienteCelular: string;
   itens: ItemPedidoValidado[];
+  formaPagamento?: FormaPagamento;
 }) {
-  const { eventoId, clienteNome, clienteCelular, itens } = params;
+  const { eventoId, clienteNome, clienteCelular, itens, formaPagamento = FormaPagamento.MERCADO_PAGO } = params;
 
   const produtoIds = [...new Set(itens.map((i) => i.produtoId))];
   const produtos = await prisma.produto.findMany({
@@ -77,7 +78,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     });
 
     const pedido = await tx.pedido.create({
-      data: { eventoId, clienteId: cliente.id },
+      data: { eventoId, clienteId: cliente.id, formaPagamento },
     });
 
     const subPedidosCriados = [];

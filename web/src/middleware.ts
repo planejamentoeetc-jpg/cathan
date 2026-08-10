@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const COOKIE_QUIOSQUE = "cathan_painel_auth";
 const COOKIE_GESTOR = "cathan_gestor_auth";
 const COOKIE_ADMIN = "cathan_admin_auth";
+const COOKIE_CAIXA = "cathan_caixa_auth";
 
 function autenticado(req: NextRequest, cookie: string, envVar: string): boolean {
   const senha = process.env[envVar];
@@ -58,6 +59,29 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(destino);
   }
 
+  // --- Venda Manual / Caixa do Evento (operador autorizado do evento) ---
+  if (pathname.startsWith("/caixa") || pathname.startsWith("/api/caixa")) {
+    const ehPaginaLoginCaixa = /^\/caixa\/[^/]+\/entrar$/.test(pathname);
+    const ehApiLoginCaixa = pathname === "/api/caixa/entrar";
+
+    if (ehPaginaLoginCaixa || ehApiLoginCaixa) {
+      return NextResponse.next();
+    }
+
+    if (autenticado(req, COOKIE_CAIXA, "PAINEL_CAIXA_SENHA")) {
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+    }
+
+    const eventoId = pathname.split("/")[2] ?? "";
+    const destino = new URL(`/caixa/${eventoId}/entrar`, req.url);
+    destino.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(destino);
+  }
+
   // --- área do painel do quiosque ---
 
   // sem eventoId na URL (ex.: alguém acessou "/painel/entrar" direto, sem o
@@ -93,10 +117,12 @@ export const config = {
     "/painel/:path*",
     "/gestor/:path*",
     "/admin/:path*",
+    "/caixa/:path*",
     "/api/quiosques/:path*",
     "/api/sub-pedidos/:path*",
     "/api/produtos/:path*",
     "/api/eventos/:path*",
     "/api/admin/:path*",
+    "/api/caixa/:path*",
   ],
 };

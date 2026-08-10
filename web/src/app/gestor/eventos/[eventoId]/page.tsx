@@ -50,6 +50,7 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
   const linkCliente = `${baseUrl}/e/${evento.id}`;
   const linkQuiosque = `${baseUrl}/painel/${evento.id}/entrar`;
   const linkTelaDePedidos = `${baseUrl}/e/${evento.id}/tela-de-pedidos`;
+  const linkCaixa = `${baseUrl}/caixa/${evento.id}/entrar`;
   const linkWebhook = `${baseUrl}/api/webhooks/mercado-pago`;
   const gateway = statusGateway();
 
@@ -153,6 +154,7 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         <LinkCopiavel rotulo="Link do cliente (QR Code / WhatsApp)" url={linkCliente} />
         <LinkCopiavel rotulo="Login do painel do quiosque (mesmo link pra todos os quiosques)" url={linkQuiosque} />
         <LinkCopiavel rotulo="Tela de Pedidos (telão, sem senha)" url={linkTelaDePedidos} />
+        <LinkCopiavel rotulo="Venda Manual / Caixa do Evento (login do operador)" url={linkCaixa} />
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
