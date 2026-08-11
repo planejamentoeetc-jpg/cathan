@@ -21,7 +21,7 @@ function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-type DadosPix = { pedidoPendenteId: string; copiaECola: string; qrCodeBase64: string };
+type DadosPix = { pedidoPendenteId: string; copiaECola: string; qrCodeBase64: string; valor: number };
 
 export function CheckoutForm({
   eventoId,
@@ -175,8 +175,8 @@ export function CheckoutForm({
       }
 
       salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), email: email.trim() });
+      setPix({ pedidoPendenteId: dados.pedidoPendenteId, valor: total, ...dados.pix });
       limparCarrinho(eventoId);
-      setPix({ pedidoPendenteId: dados.pedidoPendenteId, ...dados.pix });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro inesperado.");
     } finally {
@@ -199,7 +199,7 @@ export function CheckoutForm({
     return (
       <div className="cartao" style={{ textAlign: "center" }}>
         <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 4 }}>
-          Pague com Pix · {formatarReais(total)}
+          Pague com Pix · {formatarReais(pix.valor)}
         </b>
         <p className="texto-fraco" style={{ marginBottom: 16 }}>
           Escaneie o QR code no app do seu banco, ou copie o código abaixo.
