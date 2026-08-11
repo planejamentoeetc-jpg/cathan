@@ -40,7 +40,7 @@ export default async function PracaDoEvento({
       : null;
 
   return (
-    <main className="tela tela-centralizada">
+    <main className="tela">
       <div className="hero">
         <div className="nome">{evento.nome}</div>
         <div className="sub">{evento.local}</div>
@@ -70,7 +70,7 @@ export default async function PracaDoEvento({
           <p className="texto-fraco" style={{ marginBottom: 8 }}>
             Toque num quiosque pra ver o cardápio:
           </p>
-          <div className="quiosques-abas">
+          <div className="quiosques-grid">
             {evento.quiosques.map((quiosque) => {
               const esperaMinutos = calcularEsperaEstimadaMinutos(
                 quiosque.produtos.map((p) => p.tempoProducaoMinutos),

@@ -65,15 +65,6 @@ a {
   min-height: 100vh;
 }
 
-/* pra telas com pouco conteúdo (ex.: praça do evento sem dica em destaque) —
-   distribui o bloco no meio do viewport em vez de deixá-lo colado no topo com
-   um vazio grande embaixo. Sem efeito quando o conteúdo já preenche a tela. */
-.tela-centralizada {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
 
 .hero {
   background: var(--petroleo);
@@ -685,7 +676,15 @@ a {
   font-size: 12px;
 }
 
-/* ===== Praça do evento: quiosques em abas horizontais ===== */
+/* ===== Praça do evento: grade de quiosques ===== */
+
+.quiosques-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ===== Loja do quiosque: troca rápida entre os quiosques-irmãos, em abas horizontais ===== */
 
 .quiosques-abas {
   display: flex;
