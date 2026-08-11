@@ -40,7 +40,7 @@ export default async function PracaDoEvento({
       : null;
 
   return (
-    <main className="tela">
+    <main className="tela tela-centralizada">
       <div className="hero">
         <div className="nome">{evento.nome}</div>
         <div className="sub">{evento.local}</div>
