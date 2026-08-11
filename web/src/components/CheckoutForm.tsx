@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
@@ -32,7 +31,6 @@ export function CheckoutForm({
   exigeLocalizacao: boolean;
   pedidosPausados?: boolean;
 }) {
-  const router = useRouter();
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
   const total = calcularTotal(itens);
@@ -50,10 +48,11 @@ export function CheckoutForm({
   const [pix, setPix] = useState<DadosPix | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [tentativasEsgotadas, setTentativasEsgotadas] = useState(false);
+  const [pedidoConfirmadoId, setPedidoConfirmadoId] = useState<string | null>(null);
   const tentativasRef = useRef(0);
 
   useEffect(() => {
-    if (!pix) return;
+    if (!pix || pedidoConfirmadoId) return;
 
     let cancelado = false;
     async function verificar() {
@@ -64,7 +63,8 @@ export function CheckoutForm({
         if (!resposta.ok || cancelado) return;
         const dados = await resposta.json();
         if (dados.status === "CONFIRMADO" && dados.pedidoId) {
-          router.push(`/e/${eventoId}/pedido/${dados.pedidoId}`);
+          clearInterval(intervalo);
+          setPedidoConfirmadoId(dados.pedidoId);
         }
       } catch {
         // silencioso — tenta de novo no próximo ciclo
@@ -86,7 +86,7 @@ export function CheckoutForm({
       cancelado = true;
       clearInterval(intervalo);
     };
-  }, [pix, eventoId, router]);
+  }, [pix, pedidoConfirmadoId]);
 
   function nomeCrianca(produtoId: string, indice: number) {
     return nomesCriancasPorProduto[produtoId]?.[indice] ?? "";
@@ -193,6 +193,42 @@ export function CheckoutForm({
     } catch {
       // navegador sem permissão de clipboard — cliente copia manualmente do texto exibido
     }
+  }
+
+  if (pedidoConfirmadoId) {
+    return (
+      <div className="cartao" style={{ textAlign: "center", padding: "32px 20px" }}>
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            background: "var(--verde-suave)",
+            color: "var(--verde)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 32,
+            margin: "0 auto 16px",
+          }}
+        >
+          ✓
+        </div>
+        <b style={{ fontFamily: "var(--font-sora)", fontSize: 18, display: "block", marginBottom: 6 }}>
+          Pagamento confirmado!
+        </b>
+        <p className="texto-fraco" style={{ marginBottom: 22 }}>
+          Seu pedido já foi enviado para o(s) quiosque(s). Acompanhe o preparo e o código de
+          retirada na tela de pedidos.
+        </p>
+        <Link
+          href={`/e/${eventoId}/pedido/${pedidoConfirmadoId}`}
+          className="btn btn-primario btn-bloco"
+        >
+          Ver meu pedido
+        </Link>
+      </div>
+    );
   }
 
   if (pix) {
