@@ -18,10 +18,18 @@ export function ListaProdutosPainel({
   eventoId,
   quiosqueId,
   produtos: produtosIniciais,
+  criarUrl,
+  editarUrlBase,
+  alternarAtivoUrlBase,
 }: {
   eventoId: string;
   quiosqueId: string;
   produtos: Produto[];
+  // por padrão aponta pras telas/API do painel do quiosque (senha do quiosque); o
+  // painel do gestor passa suas próprias URLs (senha do gestor) pra reusar esta lista
+  criarUrl?: string;
+  editarUrlBase?: string;
+  alternarAtivoUrlBase?: string;
 }) {
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [emAndamento, setEmAndamento] = useState<string | null>(null);
@@ -29,7 +37,9 @@ export function ListaProdutosPainel({
   async function alternar(id: string) {
     setEmAndamento(id);
     try {
-      const resposta = await fetch(`/api/produtos/${id}/alternar-ativo`, { method: "POST" });
+      const resposta = await fetch(`${alternarAtivoUrlBase ?? "/api/produtos"}/${id}/alternar-ativo`, {
+        method: "POST",
+      });
       if (!resposta.ok) return;
       const dados = await resposta.json();
       setProdutos((atual) => atual.map((p) => (p.id === id ? { ...p, ativo: dados.ativo } : p)));
@@ -40,7 +50,10 @@ export function ListaProdutosPainel({
 
   return (
     <div className="lista">
-      <Link href={`/painel/${eventoId}/q/${quiosqueId}/produtos/novo`} className="btn btn-primario btn-bloco">
+      <Link
+        href={criarUrl ?? `/painel/${eventoId}/q/${quiosqueId}/produtos/novo`}
+        className="btn btn-primario btn-bloco"
+      >
         + Novo produto
       </Link>
 
@@ -48,7 +61,7 @@ export function ListaProdutosPainel({
         <div key={produto.id} className="cartao" style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ flex: 1 }}>
             <Link
-              href={`/painel/${eventoId}/q/${quiosqueId}/produtos/${produto.id}/editar`}
+              href={editarUrlBase ? `${editarUrlBase}/${produto.id}/editar` : `/painel/${eventoId}/q/${quiosqueId}/produtos/${produto.id}/editar`}
               style={{ fontWeight: 700 }}
             >
               {produto.nome}

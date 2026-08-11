@@ -16,11 +16,19 @@ export function FormularioProduto({
   quiosqueId,
   rotuloTempo,
   produtoInicial,
+  criarUrl,
+  editarUrlBase,
+  voltarUrl,
 }: {
   eventoId: string;
   quiosqueId: string;
   rotuloTempo: string;
   produtoInicial?: ProdutoInicial;
+  // por padrão aponta pra API do painel do quiosque (senha do quiosque); o painel
+  // do gestor passa suas próprias URLs (senha do gestor) pra reusar este formulário
+  criarUrl?: string;
+  editarUrlBase?: string;
+  voltarUrl?: string;
 }) {
   const router = useRouter();
   const [nome, setNome] = useState(produtoInicial?.nome ?? "");
@@ -37,7 +45,7 @@ export function FormularioProduto({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const voltar = `/painel/${eventoId}/q/${quiosqueId}`;
+  const voltar = voltarUrl ?? `/painel/${eventoId}/q/${quiosqueId}`;
 
   async function salvar() {
     setErro(null);
@@ -73,12 +81,12 @@ export function FormularioProduto({
       };
 
       const resposta = produtoInicial
-        ? await fetch(`/api/produtos/${produtoInicial.id}`, {
+        ? await fetch(`${editarUrlBase ?? "/api/produtos"}/${produtoInicial.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(corpo),
           })
-        : await fetch(`/api/quiosques/${quiosqueId}/produtos`, {
+        : await fetch(criarUrl ?? `/api/quiosques/${quiosqueId}/produtos`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(corpo),

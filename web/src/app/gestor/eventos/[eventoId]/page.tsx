@@ -168,7 +168,11 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
       <div className="lista">
         {evento.quiosques.map((quiosque) => (
-          <div key={quiosque.id} className="cartao quiosque-card">
+          <Link
+            key={quiosque.id}
+            href={`/gestor/eventos/${evento.id}/quiosques/${quiosque.id}`}
+            className="cartao quiosque-card"
+          >
             <div className="quiosque-logo" style={{ background: quiosque.cor }}>
               <IconeModalidade modalidade={quiosque.modalidade} />
             </div>
@@ -192,7 +196,8 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
                 {quiosque._count.produtos} produto{quiosque._count.produtos === 1 ? "" : "s"}
               </span>
             )}
-          </div>
+            <div className="seta">›</div>
+          </Link>
         ))}
 
         {evento.quiosques.length === 0 && (
