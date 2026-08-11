@@ -682,9 +682,21 @@ a {
   gap: 12px;
   overflow-x: auto;
   margin: 0 -16px 4px;
-  padding: 2px 16px 12px;
+  padding: 2px 16px 6px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
+  /* esconde a barra de rolagem nativa (feia em Windows/Chrome) — o gesto de
+     arrastar continua funcionando normalmente, só a barra visual some */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* esmaece as bordas esquerda/direita pra sinalizar "tem mais coisa pra
+     arrastar" sem precisar da barra de rolagem visível */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
+
+.quiosques-abas::-webkit-scrollbar {
+  display: none;
 }
 
 .quiosque-aba {
