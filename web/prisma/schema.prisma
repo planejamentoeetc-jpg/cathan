@@ -269,6 +269,11 @@ model ItemSubPedido {
   observacao    String?
   // um nome por unidade (tamanho = quantidade); só usado quando quiosque.modalidade = BRINCADEIRAS
   nomesCriancas String[]  @map("nomes_criancas")
+  // controle de "compra em massa": o cliente pode ter pago o item sem querer que ele
+  // vá pra produção ainda. Enquanto false, o quiosque nem vê este item na fila dele.
+  // Venda Manual (Caixa) libera na hora, já que é uma compra presencial em tempo real.
+  liberadoParaProducao Boolean   @default(false) @map("liberado_para_producao")
+  liberadoEm           DateTime? @map("liberado_em")
 
   @@map("itens_sub_pedido")
 }

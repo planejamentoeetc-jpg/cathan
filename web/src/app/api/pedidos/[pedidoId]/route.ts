@@ -61,11 +61,13 @@ export async function GET(_req: NextRequest, { params }: { params: { pedidoId: s
       vocEProximo:
         STATUS_EM_ESPERA.includes(sp.status) && frenteDaFilaPorQuiosque.get(sp.quiosqueId) === sp.id,
       itens: sp.itens.map((item) => ({
+        id: item.id,
         nome: item.produto.nome,
         quantidade: item.quantidade,
         precoUnitario: Number(item.precoUnitario),
         observacao: item.observacao,
         nomesCriancas: item.nomesCriancas,
+        liberadoParaProducao: item.liberadoParaProducao,
       })),
     })),
   });

@@ -23,27 +23,33 @@ export async function GET(_req: NextRequest, { params }: { params: { quiosqueId:
 
   return NextResponse.json({
     quiosque,
-    pedidos: subPedidos.map((sp) => {
-      const nomesCriancas = sp.itens.flatMap((item) => item.nomesCriancas);
-      // sessão dura o tempo da atividade mais longa entre os itens do sub-pedido
-      const duracaoMinutos = Math.max(0, ...sp.itens.map((item) => item.produto.tempoProducaoMinutos));
+    // itens ainda não liberados pelo cliente ("compra em massa" segurada) nem entram
+    // aqui — o quiosque não vê nada até o cliente mandar pra produção. Um sub-pedido
+    // sem nenhum item liberado some da fila inteiro.
+    pedidos: subPedidos
+      .map((sp) => ({ ...sp, itensLiberados: sp.itens.filter((item) => item.liberadoParaProducao) }))
+      .filter((sp) => sp.itensLiberados.length > 0)
+      .map((sp) => {
+        const nomesCriancas = sp.itensLiberados.flatMap((item) => item.nomesCriancas);
+        // sessão dura o tempo da atividade mais longa entre os itens liberados do sub-pedido
+        const duracaoMinutos = Math.max(0, ...sp.itensLiberados.map((item) => item.produto.tempoProducaoMinutos));
 
-      return {
-        id: sp.id,
-        status: sp.status,
-        codigoRetirada: sp.codigoRetirada,
-        criadoEm: sp.criadoEm,
-        clienteNome: sp.pedido.cliente.nome,
-        nomesCriancas,
-        duracaoMinutos,
-        inicioAproveitamentoEm: sp.inicioAproveitamentoEm,
-        itens: sp.itens.map((item) => ({
-          nome: item.produto.nome,
-          quantidade: item.quantidade,
-          observacao: item.observacao,
-          nomesCriancas: item.nomesCriancas,
-        })),
-      };
-    }),
+        return {
+          id: sp.id,
+          status: sp.status,
+          codigoRetirada: sp.codigoRetirada,
+          criadoEm: sp.criadoEm,
+          clienteNome: sp.pedido.cliente.nome,
+          nomesCriancas,
+          duracaoMinutos,
+          inicioAproveitamentoEm: sp.inicioAproveitamentoEm,
+          itens: sp.itensLiberados.map((item) => ({
+            nome: item.produto.nome,
+            quantidade: item.quantidade,
+            observacao: item.observacao,
+            nomesCriancas: item.nomesCriancas,
+          })),
+        };
+      }),
   });
 }

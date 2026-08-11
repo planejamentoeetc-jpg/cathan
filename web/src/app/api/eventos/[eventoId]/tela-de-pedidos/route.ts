@@ -21,7 +21,9 @@ export async function GET(_req: NextRequest, { params }: { params: { eventoId: s
           codigoRetirada: true,
           inicioAproveitamentoEm: true,
           pedido: { select: { cliente: { select: { nome: true } } } },
-          itens: { select: { nomesCriancas: true, produto: { select: { tempoProducaoMinutos: true } } } },
+          itens: {
+            select: { nomesCriancas: true, liberadoParaProducao: true, produto: { select: { tempoProducaoMinutos: true } } },
+          },
         },
       },
     },
@@ -33,15 +35,20 @@ export async function GET(_req: NextRequest, { params }: { params: { eventoId: s
       nome: q.nome,
       cor: q.cor,
       modalidade: q.modalidade,
-      pedidos: q.subPedidos.map((sp) => ({
-        id: sp.id,
-        status: sp.status,
-        codigoRetirada: sp.codigoRetirada,
-        clienteNome: sp.pedido.cliente.nome,
-        nomesCriancas: sp.itens.flatMap((item) => item.nomesCriancas),
-        duracaoMinutos: Math.max(0, ...sp.itens.map((item) => item.produto.tempoProducaoMinutos)),
-        inicioAproveitamentoEm: sp.inicioAproveitamentoEm,
-      })),
+      // mesma regra da fila do quiosque: itens ainda segurados pelo cliente não
+      // aparecem no telão público até serem liberados pra produção.
+      pedidos: q.subPedidos
+        .map((sp) => ({ ...sp, itensLiberados: sp.itens.filter((item) => item.liberadoParaProducao) }))
+        .filter((sp) => sp.itensLiberados.length > 0)
+        .map((sp) => ({
+          id: sp.id,
+          status: sp.status,
+          codigoRetirada: sp.codigoRetirada,
+          clienteNome: sp.pedido.cliente.nome,
+          nomesCriancas: sp.itensLiberados.flatMap((item) => item.nomesCriancas),
+          duracaoMinutos: Math.max(0, ...sp.itensLiberados.map((item) => item.produto.tempoProducaoMinutos)),
+          inicioAproveitamentoEm: sp.inicioAproveitamentoEm,
+        })),
     })),
   });
 }

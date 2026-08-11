@@ -20,11 +20,13 @@ type SubPedido = {
   };
   vocEProximo: boolean;
   itens: {
+    id: string;
     nome: string;
     quantidade: number;
     precoUnitario: number;
     observacao: string | null;
     nomesCriancas: string[];
+    liberadoParaProducao: boolean;
   }[];
 };
 
@@ -64,6 +66,7 @@ export default function Acompanhamento() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [dispensados, setDispensados] = useState<string[]>([]);
+  const [liberando, setLiberando] = useState<Set<string>>(new Set());
   const idsJaAvisados = useRef<Set<string>>(new Set());
 
   const carregar = useCallback(async () => {
@@ -101,6 +104,20 @@ export default function Acompanhamento() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prontos.map((sp) => sp.id).join(",")]);
+
+  async function liberarItem(itemId: string) {
+    setLiberando((atual) => new Set(atual).add(itemId));
+    try {
+      await fetch(`/api/itens-sub-pedido/${itemId}/liberar`, { method: "POST" });
+      await carregar();
+    } finally {
+      setLiberando((atual) => {
+        const novo = new Set(atual);
+        novo.delete(itemId);
+        return novo;
+      });
+    }
+  }
 
   function fecharPager() {
     const novosDispensados = [...dispensados, ...prontos.map((sp) => sp.id)];
@@ -143,19 +160,41 @@ export default function Acompanhamento() {
               </span>
             </div>
 
-            <div style={{ marginTop: 10 }}>
-              {sp.itens.map((item, idx) => (
-                <div key={idx} style={{ fontSize: 13.5 }}>
-                  {item.quantidade}× {item.nome}
-                  {item.observacao && (
-                    <span className="texto-fraco"> — {item.observacao}</span>
-                  )}
-                  {item.nomesCriancas.length > 0 && (
-                    <span className="texto-fraco"> ({item.nomesCriancas.join(", ")})</span>
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+              {sp.itens.map((item) => (
+                <div
+                  key={item.id}
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}
+                >
+                  <div style={{ fontSize: 13.5 }}>
+                    {item.quantidade}× {item.nome}
+                    {item.observacao && (
+                      <span className="texto-fraco"> — {item.observacao}</span>
+                    )}
+                    {item.nomesCriancas.length > 0 && (
+                      <span className="texto-fraco"> ({item.nomesCriancas.join(", ")})</span>
+                    )}
+                  </div>
+                  {!item.liberadoParaProducao && (
+                    <button
+                      type="button"
+                      className="btn btn-secundario"
+                      style={{ padding: "6px 10px", fontSize: 12.5, whiteSpace: "nowrap" }}
+                      disabled={liberando.has(item.id)}
+                      onClick={() => liberarItem(item.id)}
+                    >
+                      {liberando.has(item.id) ? "Enviando…" : "Mandar pra produção"}
+                    </button>
                   )}
                 </div>
               ))}
             </div>
+            {sp.itens.some((item) => !item.liberadoParaProducao) && (
+              <p className="texto-fraco" style={{ marginTop: 6, fontSize: 12 }}>
+                Comprou em quantidade e ainda não quer tudo agora? Os itens sem esse botão marcado
+                já estão sendo preparados — mande o resto quando quiser.
+              </p>
+            )}
 
             <div style={{ marginTop: 12, textAlign: "center" }}>
               <div className="texto-fraco">Código de retirada</div>

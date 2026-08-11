@@ -27,8 +27,19 @@ export async function criarPedidoAPartirDeItensValidados(params: {
   clienteCelular: string;
   itens: ItemPedidoValidado[];
   formaPagamento?: FormaPagamento;
+  // Venda Manual (Caixa) libera pra produção na hora — é uma compra presencial em
+  // tempo real, não faz sentido segurar. Pedidos do cliente (Pix) nascem segurados
+  // (false): o próprio cliente decide, item a item, quando mandar pra produção.
+  liberarProducaoAutomaticamente?: boolean;
 }) {
-  const { eventoId, clienteNome, clienteCelular, itens, formaPagamento = FormaPagamento.MERCADO_PAGO } = params;
+  const {
+    eventoId,
+    clienteNome,
+    clienteCelular,
+    itens,
+    formaPagamento = FormaPagamento.MERCADO_PAGO,
+    liberarProducaoAutomaticamente = false,
+  } = params;
 
   const produtoIds = [...new Set(itens.map((i) => i.produtoId))];
   const produtos = await prisma.produto.findMany({
@@ -102,6 +113,8 @@ export async function criarPedidoAPartirDeItensValidados(params: {
                   quiosque.modalidade === ModalidadeQuiosque.BRINCADEIRAS
                     ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
                     : [],
+                liberadoParaProducao: liberarProducaoAutomaticamente,
+                liberadoEm: liberarProducaoAutomaticamente ? new Date() : null,
               })),
             },
           },
