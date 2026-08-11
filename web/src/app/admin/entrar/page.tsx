@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { CampoSenha } from "@/components/CampoSenha";
 
 export default function EntrarAdmin() {
   return (
@@ -52,16 +53,13 @@ function EntrarAdminConteudo() {
         <p className="texto-fraco" style={{ marginBottom: 12 }}>
           Acesso exclusivo da equipe Cathan.
         </p>
-        <div className="campo">
-          <label>Senha</label>
-          <input
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && entrar()}
-            autoFocus
-          />
-        </div>
+        <CampoSenha
+          label="Senha"
+          value={senha}
+          onChange={setSenha}
+          onKeyDown={(e) => e.key === "Enter" && entrar()}
+          autoFocus
+        />
 
         {erro && (
           <div className="aviso" style={{ marginBottom: 10 }}>

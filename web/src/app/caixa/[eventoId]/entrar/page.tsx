@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { CampoSenha } from "@/components/CampoSenha";
 
 export default function EntrarCaixa() {
   return (
@@ -53,16 +54,13 @@ function EntrarCaixaConteudo() {
         <p className="texto-fraco" style={{ marginBottom: 12 }}>
           Acesso do operador autorizado para vendas em dinheiro e compras assistidas.
         </p>
-        <div className="campo">
-          <label>Senha do evento</label>
-          <input
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && entrar()}
-            autoFocus
-          />
-        </div>
+        <CampoSenha
+          label="Senha do evento"
+          value={senha}
+          onChange={setSenha}
+          onKeyDown={(e) => e.key === "Enter" && entrar()}
+          autoFocus
+        />
 
         {erro && (
           <div className="aviso" style={{ marginBottom: 10 }}>

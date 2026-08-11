@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Manrope, Sora } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,19 @@ const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["500", "600"], variabl
 export const metadata: Metadata = {
   title: "Cathan",
   description: "O balcão digital do seu evento",
+};
+
+// sem isso, o Next só injeta o viewport padrão (sem travar o zoom) — no celular,
+// um pinch-zoom acidental numa tela "vaza" pro client-side routing do Next.js
+// (não é um reload de página de verdade), então a próxima tela abre com o zoom
+// torto até o usuário ajustar na mão. Travando a escala em 1, cada tela sempre
+// abre encaixada certinha.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
