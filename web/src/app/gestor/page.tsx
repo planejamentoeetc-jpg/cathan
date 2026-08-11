@@ -2,6 +2,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { BotaoSairGestor } from "@/components/BotaoSairGestor";
 
+// sem chamada a cookies()/headers(), o Next marcaria esta página como estática
+// (prerendered no build) — o que congelaria a lista de eventos na foto do último
+// deploy, ignorando eventos criados/excluídos depois em produção.
+export const dynamic = "force-dynamic";
+
 function formatarData(data: Date) {
   return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }

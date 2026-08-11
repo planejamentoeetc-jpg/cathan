@@ -2,6 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { BotaoSairAdmin } from "@/components/BotaoSairAdmin";
 
+// mesmo motivo do /gestor: sem isso, o Next prerenderia esta lista estática no
+// build e congelaria a foto do último deploy, ignorando eventos criados/excluídos depois.
+export const dynamic = "force-dynamic";
+
 function formatarData(data: Date) {
   return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
