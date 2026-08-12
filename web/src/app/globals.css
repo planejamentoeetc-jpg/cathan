@@ -695,13 +695,11 @@ a {
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
   /* esconde a barra de rolagem nativa (feia em Windows/Chrome) — o gesto de
-     arrastar continua funcionando normalmente, só a barra visual some */
+     arrastar continua funcionando normalmente, só a barra visual some. Sem
+     esmaecer as bordas: isso deixava o nome do último quiosque visível
+     ilegível — o próprio card cortado na borda já sinaliza "tem mais". */
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* esmaece as bordas esquerda/direita pra sinalizar "tem mais coisa pra
-     arrastar" sem precisar da barra de rolagem visível */
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-  mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
 }
 
 .quiosques-abas::-webkit-scrollbar {
