@@ -60,16 +60,23 @@ export default function Acompanhamento() {
   const [dispensados, setDispensados] = useState<string[]>([]);
   const [liberando, setLiberando] = useState<Set<string>>(new Set());
   const idsJaAvisados = useRef<Set<string>>(new Set());
+  // um blip isolado (rede, banco "acordando") não deveria assustar o cliente com um
+  // aviso vermelho — só mostra erro depois de falhar algumas vezes seguidas.
+  const falhasConsecutivasRef = useRef(0);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
-    setErro(null);
     try {
       const resposta = await fetch(`/api/pedidos/${pedidoId}`, { cache: "no-store" });
       if (!resposta.ok) throw new Error("Pedido não encontrado.");
       setPedido(await resposta.json());
+      falhasConsecutivasRef.current = 0;
+      setErro(null);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar pedido.");
+      falhasConsecutivasRef.current += 1;
+      if (falhasConsecutivasRef.current >= 3) {
+        setErro(e instanceof Error ? e.message : "Erro ao carregar pedido.");
+      }
     } finally {
       setCarregando(false);
     }

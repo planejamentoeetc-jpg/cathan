@@ -8,6 +8,7 @@ import { LinkCopiavel } from "@/components/LinkCopiavel";
 import { PausarEventoToggle } from "@/components/PausarEventoToggle";
 import { ChatSuporte } from "@/components/ChatSuporte";
 import { ExcluirEventoButton } from "@/components/ExcluirEventoButton";
+import { AutoRefresh } from "@/components/AutoRefresh";
 
 const NOME_MODALIDADE: Record<string, string> = {
   ALIMENTACAO: "Alimentação",
@@ -58,6 +59,7 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
   return (
     <main className="tela">
+      <AutoRefresh />
       <div
         className="topo"
         style={{

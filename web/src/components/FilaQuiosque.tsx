@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Cronometro } from "@/components/Cronometro";
 
 const INTERVALO_POLLING_MS = 3000;
+// um blip isolado (rede, banco "acordando") não deveria assustar o operador com um
+// aviso vermelho — só mostra erro depois de falhar algumas vezes seguidas, sinal de
+// que é um problema de verdade, não um soluço passageiro.
+const FALHAS_CONSECUTIVAS_PARA_MOSTRAR_ERRO = 3;
 
 type StatusFila = "RECEBIDO" | "ACEITO" | "PRONTO" | "CHAMADO" | "APROVEITANDO";
 type Modalidade = "ALIMENTACAO" | "BEBIDAS" | "BRINCADEIRAS";
@@ -57,15 +61,20 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
   const [erro, setErro] = useState<string | null>(null);
   const [acaoEmAndamento, setAcaoEmAndamento] = useState<string | null>(null);
   const intervaloRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const falhasConsecutivasRef = useRef(0);
 
   const carregarFila = useCallback(async () => {
     try {
       const resposta = await fetch(`/api/quiosques/${quiosqueId}/fila`, { cache: "no-store" });
       if (!resposta.ok) throw new Error("Não foi possível carregar a fila.");
       setDados(await resposta.json());
+      falhasConsecutivasRef.current = 0;
       setErro(null);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar a fila.");
+      falhasConsecutivasRef.current += 1;
+      if (falhasConsecutivasRef.current >= FALHAS_CONSECUTIVAS_PARA_MOSTRAR_ERRO) {
+        setErro(e instanceof Error ? e.message : "Erro ao carregar a fila.");
+      }
     } finally {
       setCarregando(false);
     }

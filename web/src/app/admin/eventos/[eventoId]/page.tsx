@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calcularAnalyticsEvento, TAXA_CATHAN } from "@/lib/analytics";
 import { AnalisesEvento } from "@/components/AnalisesEvento";
 import { ChatSuporte } from "@/components/ChatSuporte";
+import { AutoRefresh } from "@/components/AutoRefresh";
 
 function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -19,6 +20,7 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
 
   return (
     <main className="tela">
+      <AutoRefresh />
       <div
         className="topo"
         style={{
