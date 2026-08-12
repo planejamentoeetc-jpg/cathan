@@ -1,12 +1,19 @@
 "use client";
 
 const PREFIXO = "cathan:pix-pendente:";
+// depois disso, um Pix pendente não é mais restaurado automaticamente — evita que um
+// teste abandonado de horas atrás "sequestre" um checkout novo (aconteceu de verdade:
+// cliente foi comprar um item de R$3 e caiu de volta num Pix de R$0,50 de um teste
+// velho, sem nem ver o carrinho novo). Continua com o botão "cancelar e fazer um novo
+// pedido" pra sair de um pendente ainda dentro da janela, se não for o que ele quer.
+const LIMITE_RESTAURACAO_MS = 20 * 60 * 1000;
 
 export type PixPendenteLocal = {
   pedidoPendenteId: string;
   copiaECola: string;
   qrCodeBase64: string;
   valor: number;
+  criadoEm: number;
   // presente só depois que o pagamento é confirmado — permite reabrir direto na
   // tela de "pagamento confirmado" se a aba recarregar antes do cliente tocar
   // no botão de ir pro acompanhamento
@@ -22,7 +29,13 @@ export function lerPixPendente(eventoId: string): PixPendenteLocal | null {
   if (typeof window === "undefined") return null;
   try {
     const bruto = window.localStorage.getItem(PREFIXO + eventoId);
-    return bruto ? (JSON.parse(bruto) as PixPendenteLocal) : null;
+    if (!bruto) return null;
+    const dados = JSON.parse(bruto) as PixPendenteLocal;
+    if (!dados.criadoEm || Date.now() - dados.criadoEm > LIMITE_RESTAURACAO_MS) {
+      window.localStorage.removeItem(PREFIXO + eventoId);
+      return null;
+    }
+    return dados;
   } catch {
     return null;
   }

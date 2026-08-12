@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
-import { lerPixPendente, limparPixPendente, salvarPixPendente } from "@/lib/pixPendente";
+import { lerPixPendente, limparPixPendente, salvarPixPendente, type PixPendenteLocal } from "@/lib/pixPendente";
 import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
 
 const MAX_TENTATIVAS_POLLING = 30;
@@ -21,7 +21,7 @@ function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-type DadosPix = { pedidoPendenteId: string; copiaECola: string; qrCodeBase64: string; valor: number };
+type DadosPix = PixPendenteLocal;
 
 export function CheckoutForm({
   eventoId,
@@ -181,7 +181,7 @@ export function CheckoutForm({
       }
 
       salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), email: email.trim() });
-      const novoPix = { pedidoPendenteId: dados.pedidoPendenteId, valor: total, ...dados.pix };
+      const novoPix = { pedidoPendenteId: dados.pedidoPendenteId, valor: total, criadoEm: Date.now(), ...dados.pix };
       salvarPixPendente(eventoId, novoPix);
       setPix(novoPix);
       limparCarrinho(eventoId);
@@ -289,6 +289,7 @@ export function CheckoutForm({
             <button
               type="button"
               className="btn btn-secundario btn-bloco"
+              style={{ marginBottom: 10 }}
               onClick={() => {
                 tentativasRef.current = 0;
                 setTentativasEsgotadas(false);
@@ -298,6 +299,21 @@ export function CheckoutForm({
             </button>
           </>
         )}
+
+        <button
+          type="button"
+          className="texto-fraco"
+          style={{ marginTop: 10, textDecoration: "underline" }}
+          onClick={() => {
+            limparPixPendente(eventoId);
+            setPix(null);
+            setPedidoConfirmadoId(null);
+            setTentativasEsgotadas(false);
+            tentativasRef.current = 0;
+          }}
+        >
+          Não é isso que eu quero pagar — cancelar e fazer um novo pedido
+        </button>
       </div>
     );
   }
