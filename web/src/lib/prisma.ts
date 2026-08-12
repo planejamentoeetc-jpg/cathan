@@ -53,3 +53,40 @@ export const prisma = globalForPrisma.prisma ?? criarClient();
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+// P2028 ("Transaction API error") acontece quando uma query dentro de uma
+// transação interativa sofre um blip de conexão no meio do caminho — o retry
+// por query acima (ehErroDeConexao) não ajuda aqui, porque a transação em si já
+// morreu; só refazer a transação inteira, do zero, resolve. Visto em produção:
+// pagamento aprovado pelo Mercado Pago, mas o Pedido não chegou a ser criado
+// porque o Neon "acordando" derrubou a transação no meio.
+const CODIGOS_RETRIAVEIS_TRANSACAO = new Set(["P1001", "P1002", "P1008", "P1017", "P2028"]);
+const MAX_TENTATIVAS_TRANSACAO = 3;
+
+function ehErroRetriavelEmTransacao(erro: unknown): boolean {
+  if (erro instanceof Prisma.PrismaClientInitializationError) return true;
+  if (erro instanceof Prisma.PrismaClientKnownRequestError) {
+    return CODIGOS_RETRIAVEIS_TRANSACAO.has(erro.code);
+  }
+  return false;
+}
+
+// Recebe a chamada a $transaction já pronta (não o callback isolado) — assim o
+// call site continua escrevendo `prisma.$transaction(async (tx) => ...)`
+// normalmente, com inferência de tipo correta do client estendido, e esta
+// função só reexecuta a promise inteira do zero em caso de falha retriável.
+export async function transacaoComRetry<T>(tentar: () => Promise<T>): Promise<T> {
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_TRANSACAO; tentativa++) {
+    try {
+      return await tentar();
+    } catch (erro) {
+      const ultimaTentativa = tentativa === MAX_TENTATIVAS_TRANSACAO;
+      if (ultimaTentativa || !ehErroRetriavelEmTransacao(erro)) {
+        throw erro;
+      }
+      await esperar(ATRASO_BASE_MS * tentativa);
+    }
+  }
+  // inatingível (o loop sempre retorna ou lança), só pra satisfazer o compilador
+  throw new Error("Falha inesperada no retry de transação.");
+}

@@ -1,6 +1,6 @@
 import { FormaPagamento, ModalidadeQuiosque } from "@prisma/client";
 import { criarSubPedidoComCodigoUnico } from "@/lib/codigoRetirada";
-import { prisma } from "@/lib/prisma";
+import { prisma, transacaoComRetry } from "@/lib/prisma";
 
 export type ItemPedidoValidado = {
   produtoId: string;
@@ -81,7 +81,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     itensPorQuiosque.set(produto.quiosqueId, grupo);
   }
 
-  return prisma.$transaction(async (tx) => {
+  return transacaoComRetry(() => prisma.$transaction(async (tx) => {
     const cliente = await tx.cliente.upsert({
       where: { celular: clienteCelular },
       update: { nome: clienteNome },
@@ -141,5 +141,5 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     }
 
     return { pedidoId: pedido.id, subPedidos: subPedidosCriados };
-  });
+  }));
 }
