@@ -20,12 +20,17 @@ export const metadata: Metadata = {
 // (não é um reload de página de verdade), então a próxima tela abre com o zoom
 // torto até o usuário ajustar na mão. Travando a escala em 1, cada tela sempre
 // abre encaixada certinha.
+//
+// viewportFit NÃO é "cover" de propósito: cover faz o Chrome/Safari desenharem
+// a página por baixo do notch/barra de status (edge-to-edge), o que exige
+// padding com env(safe-area-inset-*) em .tela/.topo/.barra-inferior pra
+// compensar — sem isso (ainda não implementado), o topo da tela fica
+// escondido atrás da barra de status, parecendo "sem navegabilidade".
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
