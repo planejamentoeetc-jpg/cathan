@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
+import { lerPixPendente, limparPixPendente, salvarPixPendente } from "@/lib/pixPendente";
 import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
 
 const MAX_TENTATIVAS_POLLING = 30;
@@ -45,10 +46,14 @@ export function CheckoutForm({
   const [erro, setErro] = useState<string | null>(null);
   const [foraDoRaio, setForaDoRaio] = useState<{ distancia: number; raio: number } | null>(null);
 
-  const [pix, setPix] = useState<DadosPix | null>(null);
+  // restaura um Pix em andamento (ex.: a aba recarregou enquanto o cliente estava
+  // no app do banco pagando) em vez de sempre começar do formulário em branco
+  const [pix, setPix] = useState<DadosPix | null>(() => lerPixPendente(eventoId));
   const [copiado, setCopiado] = useState(false);
   const [tentativasEsgotadas, setTentativasEsgotadas] = useState(false);
-  const [pedidoConfirmadoId, setPedidoConfirmadoId] = useState<string | null>(null);
+  const [pedidoConfirmadoId, setPedidoConfirmadoId] = useState<string | null>(
+    () => lerPixPendente(eventoId)?.pedidoId ?? null
+  );
   const tentativasRef = useRef(0);
 
   useEffect(() => {
@@ -64,6 +69,7 @@ export function CheckoutForm({
         const dados = await resposta.json();
         if (dados.status === "CONFIRMADO" && dados.pedidoId) {
           clearInterval(intervalo);
+          salvarPixPendente(eventoId, { ...pix!, pedidoId: dados.pedidoId });
           setPedidoConfirmadoId(dados.pedidoId);
         }
       } catch {
@@ -175,7 +181,9 @@ export function CheckoutForm({
       }
 
       salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), email: email.trim() });
-      setPix({ pedidoPendenteId: dados.pedidoPendenteId, valor: total, ...dados.pix });
+      const novoPix = { pedidoPendenteId: dados.pedidoPendenteId, valor: total, ...dados.pix };
+      salvarPixPendente(eventoId, novoPix);
+      setPix(novoPix);
       limparCarrinho(eventoId);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro inesperado.");
@@ -224,6 +232,7 @@ export function CheckoutForm({
         <Link
           href={`/e/${eventoId}/pedido/${pedidoConfirmadoId}`}
           className="btn btn-primario btn-bloco"
+          onClick={() => limparPixPendente(eventoId)}
         >
           Ver meu pedido
         </Link>
