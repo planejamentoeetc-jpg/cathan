@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { STATUS_LABEL } from "@/lib/statusSubPedido";
 import { ItemPager, PagerPronto } from "@/components/PagerPronto";
+import { StatusPedidoStepper } from "@/components/StatusPedidoStepper";
 
 type SubPedido = {
   id: string;
@@ -37,15 +38,6 @@ type Pedido = {
 };
 
 const INTERVALO_POLLING_MS = 3000;
-
-function classeBadge(status: string) {
-  if (status === "RECEBIDO") return "badge-status recebido";
-  if (status === "PRONTO" || status === "CHAMADO") return "badge-status pronto";
-  if (status === "RETIRADO" || status === "CANCELADO" || status === "CONCLUIDO") {
-    return "badge-status retirado";
-  }
-  return "badge-status";
-}
 
 function chaveDispensados(pedidoId: string) {
   return `cathan:pager-dispensados:${pedidoId}`;
@@ -146,19 +138,18 @@ export default function Acompanhamento() {
       <div className="lista">
         {pedido?.subPedidos.map((sp) => (
           <div key={sp.id} className="cartao">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <b style={{ color: sp.quiosque.cor, fontFamily: "var(--font-sora)" }}>
-                {sp.quiosque.nome}
-              </b>
-              <span className={sp.vocEProximo ? "badge-status proximo" : classeBadge(sp.status)}>
-                {sp.vocEProximo
-                  ? sp.quiosque.mensagemPreparando ??
-                    (sp.quiosque.modalidade === "BRINCADEIRAS"
-                      ? "Você é o próximo!"
-                      : "Já vamos preparar o seu!")
-                  : STATUS_LABEL[sp.status]}
-              </span>
-            </div>
+            <b style={{ color: sp.quiosque.cor, fontFamily: "var(--font-sora)", fontSize: 15.5 }}>
+              {sp.quiosque.nome}
+            </b>
+
+            <StatusPedidoStepper
+              status={sp.status}
+              modalidade={sp.quiosque.modalidade}
+              cor={sp.quiosque.cor}
+              vocEProximo={sp.vocEProximo}
+              mensagemPreparando={sp.quiosque.mensagemPreparando}
+              mensagemPronto={sp.quiosque.mensagemPronto}
+            />
 
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
               {sp.itens.map((item) => (
@@ -208,11 +199,9 @@ export default function Acompanhamento() {
         {carregando ? "Atualizando…" : "Atualizado automaticamente a cada poucos segundos."}
       </p>
 
-      <div style={{ textAlign: "center", marginTop: 14 }}>
-        <Link href={`/e/${eventoId}`} className="texto-fraco">
-          ‹ Voltar à praça do evento
-        </Link>
-      </div>
+      <Link href={`/e/${eventoId}`} className="btn btn-secundario btn-bloco" style={{ marginTop: 14 }}>
+        ‹ Voltar à praça do evento
+      </Link>
     </main>
   );
 }

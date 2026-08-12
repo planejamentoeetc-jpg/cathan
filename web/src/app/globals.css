@@ -259,6 +259,75 @@ a {
   color: var(--festa);
 }
 
+/* ===== Stepper de status do pedido (tela de acompanhamento do cliente) ===== */
+
+.stepper-status {
+  display: flex;
+  align-items: flex-start;
+  margin: 12px 0 10px;
+}
+
+.stepper-status .etapa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 54px;
+}
+
+.stepper-status .bolha {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--linha);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.stepper-status .rotulo {
+  font-size: 9.5px;
+  color: var(--cinza);
+  text-align: center;
+  margin-top: 4px;
+  line-height: 1.2;
+}
+
+.stepper-status .etapa.concluida .rotulo,
+.stepper-status .etapa.atual .rotulo {
+  color: var(--grafite);
+  font-weight: 800;
+}
+
+.stepper-status .linha {
+  flex: 1 1 auto;
+  height: 2px;
+  background: var(--linha);
+  margin-top: 10px;
+  min-width: 6px;
+}
+
+.status-mensagem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--linha);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--neve);
+}
+
+.status-mensagem .ic {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
 .codigo-retirada {
   font-family: var(--font-mono);
   font-weight: 700;
