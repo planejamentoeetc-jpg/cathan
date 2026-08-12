@@ -8,6 +8,7 @@ export function StatusPedidoStepper({
   vocEProximo,
   mensagemPreparando,
   mensagemPronto,
+  aguardandoLiberacao,
 }: {
   status: StatusSubPedido;
   modalidade: ModalidadeQuiosque | string;
@@ -15,6 +16,11 @@ export function StatusPedidoStepper({
   vocEProximo?: boolean;
   mensagemPreparando?: string | null;
   mensagemPronto?: string | null;
+  // true quando NENHUM item deste sub-pedido foi liberado pra produção ainda —
+  // o pedido existe (foi pago) mas o quiosque nem sabe que ele existe. Precisa
+  // aparecer como uma etapa própria, antes de "Enviado", senão o cliente lê
+  // "Enviado" e acha que o quiosque já está com o pedido em mãos.
+  aguardandoLiberacao?: boolean;
 }) {
   if (status === "CANCELADO") {
     return (
@@ -25,9 +31,20 @@ export function StatusPedidoStepper({
     );
   }
 
-  const etapas = etapasStatus(modalidade);
-  const indiceAtual = etapas.indexOf(status);
-  const mensagem = mensagemAmigavel({ status, modalidade, vocEProximo, mensagemPreparando, mensagemPronto });
+  const etapasReais = etapasStatus(modalidade);
+  const indiceReal = etapasReais.indexOf(status);
+
+  // com aguardandoLiberacao, uma etapa extra ("Confirmar") entra na frente e fica
+  // marcada como a atual — nenhuma das etapas reais foi alcançada de verdade ainda.
+  const etapas = aguardandoLiberacao
+    ? [{ chave: "confirmar", rotulo: "Confirmar" }, ...etapasReais.map((e) => ({ chave: e, rotulo: STATUS_ROTULO_CURTO[e] }))]
+    : etapasReais.map((e) => ({ chave: e, rotulo: STATUS_ROTULO_CURTO[e] }));
+  const indiceAtual = aguardandoLiberacao ? 0 : indiceReal;
+
+  const mensagem = aguardandoLiberacao
+    ? "Seu pedido está pronto, mas ainda não foi enviado! Toque em \"Mandar pra produção\" abaixo quando quiser."
+    : mensagemAmigavel({ status, modalidade, vocEProximo, mensagemPreparando, mensagemPronto });
+  const icone = aguardandoLiberacao ? "📤" : vocEProximo ? "⏰" : STATUS_ICONE[status];
 
   return (
     <div>
@@ -36,7 +53,7 @@ export function StatusPedidoStepper({
           const concluida = indice < indiceAtual;
           const atual = indice === indiceAtual;
           return (
-            <div key={etapa} style={{ display: "contents" }}>
+            <div key={etapa.chave} style={{ display: "contents" }}>
               <div className={`etapa${concluida ? " concluida" : ""}${atual ? " atual" : ""}`}>
                 <div
                   className="bolha"
@@ -50,7 +67,7 @@ export function StatusPedidoStepper({
                 >
                   {concluida ? "✓" : ""}
                 </div>
-                <div className="rotulo">{STATUS_ROTULO_CURTO[etapa]}</div>
+                <div className="rotulo">{etapa.rotulo}</div>
               </div>
               {indice < etapas.length - 1 && (
                 <div className="linha" style={concluida ? { background: cor } : undefined} />
@@ -61,7 +78,7 @@ export function StatusPedidoStepper({
       </div>
 
       <div className="status-mensagem" style={{ borderColor: `${cor}55`, background: `${cor}14` }}>
-        <span className="ic">{vocEProximo ? "⏰" : STATUS_ICONE[status]}</span>
+        <span className="ic">{icone}</span>
         <span style={{ color: "var(--grafite)", fontWeight: 700, fontSize: 13.5 }}>{mensagem}</span>
       </div>
     </div>

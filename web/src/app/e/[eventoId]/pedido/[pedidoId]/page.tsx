@@ -149,6 +149,7 @@ export default function Acompanhamento() {
               vocEProximo={sp.vocEProximo}
               mensagemPreparando={sp.quiosque.mensagemPreparando}
               mensagemPronto={sp.quiosque.mensagemPronto}
+              aguardandoLiberacao={sp.itens.every((item) => !item.liberadoParaProducao)}
             />
 
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
