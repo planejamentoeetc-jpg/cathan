@@ -40,7 +40,16 @@ export async function POST(req: NextRequest) {
     throw erro;
   }
 
-  const payment = await new Payment(mercadoPagoClient).get({ id: dataId });
+  let payment;
+  try {
+    payment = await new Payment(mercadoPagoClient).get({ id: dataId });
+  } catch (erro) {
+    // acontece com o botão "Simular notificação" do MP (manda um ID fictício que
+    // não existe na conta) e, na vida real, com qualquer soneca da API do MP —
+    // nenhum dos dois casos vale insistir com 500 (o MP só reenvia sem sucesso)
+    console.error("Falha ao buscar pagamento no Mercado Pago", dataId, erro);
+    return NextResponse.json({ ok: true });
+  }
 
   if (payment.status !== "approved") {
     // pagamentos pendentes/rejeitados não geram pedido; uma futura notificação avisa se aprovar depois
