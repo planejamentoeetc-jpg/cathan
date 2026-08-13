@@ -143,15 +143,8 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
               </div>
 
               {sp.clienteACaminho && (sp.status === "PRONTO" || sp.status === "CHAMADO") && (
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    color: "var(--verde)",
-                  }}
-                >
-                  🚶 Cliente a caminho da retirada
+                <div style={{ marginTop: 8 }}>
+                  <span className="destaque-piscante">🚶 Cliente a caminho da retirada</span>
                 </div>
               )}
 
