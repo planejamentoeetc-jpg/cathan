@@ -57,6 +57,7 @@ export async function GET(_req: NextRequest, { params }: { params: { pedidoId: s
       id: sp.id,
       status: sp.status,
       codigoRetirada: sp.codigoRetirada,
+      rodada: sp.rodada,
       quiosque: sp.quiosque,
       vocEProximo:
         STATUS_EM_ESPERA.includes(sp.status) && frenteDaFilaPorQuiosque.get(sp.quiosqueId) === sp.id,

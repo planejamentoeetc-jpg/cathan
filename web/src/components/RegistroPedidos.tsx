@@ -17,6 +17,7 @@ type SubPedidoRegistro = {
   id: string;
   status: keyof typeof STATUS_LABEL;
   codigoRetirada: string;
+  rodada: number;
   quiosqueNome: string;
   quiosqueCor: string;
   criadoEm: string;
@@ -144,7 +145,12 @@ export function RegistroPedidos({ pedidos }: { pedidos: PedidoRegistro[] }) {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <b style={{ color: sp.quiosqueCor, fontSize: 13.5 }}>{sp.quiosqueNome}</b>
+                  <b style={{ color: sp.quiosqueCor, fontSize: 13.5 }}>
+                    {sp.quiosqueNome}
+                    {sp.rodada > 1 && (
+                      <span className="texto-fraco" style={{ fontWeight: 400, fontSize: 12 }}> · {sp.rodada}ª retirada</span>
+                    )}
+                  </b>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span className="mono texto-fraco" style={{ fontSize: 12 }}>
                       {sp.codigoRetirada}

@@ -231,6 +231,11 @@ model SubPedido {
   // 2 letras iniciais do quiosque + sequencial de 3 dígitos por quiosque no evento (ex.: "PA001")
   codigoRetirada String          @map("codigo_retirada") @db.VarChar(8)
   status         StatusSubPedido @default(RECEBIDO)
+  // "compra em massa" liberada aos poucos: se o cliente libera mais itens depois que
+  // este ticket já foi retirado/concluído, nasce um novo SubPedido pro mesmo
+  // pedido+quiosque, com o MESMO código, só que numa rodada nova (ver lib/liberarItem.ts).
+  // O cliente nunca vê nem precisa saber que o código é o mesmo "por baixo".
+  rodada Int @default(1)
 
   // --- fluxo alimentação/bebidas ---
   aceitoPorUsuarioId String?   @map("aceito_por_usuario_id")
@@ -257,8 +262,11 @@ model SubPedido {
 
   itens ItemSubPedido[]
 
-  // código de retirada único dentro do mesmo quiosque
-  @@unique([quiosqueId, codigoRetirada])
+  // código de retirada único dentro do mesmo quiosque, por rodada — permite a MESMA
+  // combinação (quiosque, código) se repetir entre rodadas do mesmo pedido, mas nunca
+  // entre pedidos diferentes (a rodada 1 de cada pedido é sempre gerada com um código
+  // novo e único; rodadas seguintes só reaproveitam o código já existente)
+  @@unique([quiosqueId, codigoRetirada, rodada])
   @@map("sub_pedidos")
 }
 

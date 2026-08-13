@@ -12,6 +12,7 @@ type PedidoTelao = {
   id: string;
   status: StatusTelao;
   codigoRetirada: string;
+  rodada: number;
   clienteNome: string;
   nomesCriancas: string[];
   duracaoMinutos: number;
@@ -76,7 +77,10 @@ export default function TelaDePedidos() {
               return (
                 <div key={p.id} className={`telao-card ${destaque ? "telao-card-destaque" : ""}`}>
                   <div className="telao-codigo">{p.codigoRetirada}</div>
-                  <div className="telao-nome">{nomeExibido}</div>
+                  <div className="telao-nome">
+                    {nomeExibido}
+                    {p.rodada > 1 && ` · ${p.rodada}ª retirada`}
+                  </div>
                   <div className="telao-status">{ROTULO_STATUS[p.status]}</div>
 
                   {p.status === "APROVEITANDO" && p.inicioAproveitamentoEm && (

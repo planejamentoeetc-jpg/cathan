@@ -41,6 +41,7 @@ export default async function RegistroPedidosPage({
       id: sp.id,
       status: sp.status,
       codigoRetirada: sp.codigoRetirada,
+      rodada: sp.rodada,
       quiosqueNome: sp.quiosque.nome,
       quiosqueCor: sp.quiosque.cor,
       criadoEm: sp.criadoEm.toISOString(),

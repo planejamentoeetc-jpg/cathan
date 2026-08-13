@@ -11,6 +11,7 @@ type SubPedido = {
   id: string;
   status: keyof typeof STATUS_LABEL;
   codigoRetirada: string;
+  rodada: number;
   quiosque: {
     id: string;
     nome: string;
@@ -91,11 +92,15 @@ export default function Acompanhamento() {
     return () => clearInterval(intervalo);
   }, [carregar, pedidoId]);
 
-  // some da tela assim que o quiosque marca como retirado/concluído — não há
-  // mais nada que o cliente precise acompanhar ali
-  const subPedidosAtivos = (pedido?.subPedidos ?? []).filter(
-    (sp) => sp.status !== "RETIRADO" && sp.status !== "CONCLUIDO"
-  );
+  // some da tela assim que o quiosque marca como retirado/concluído — exceto se
+  // ainda sobrar alguma unidade não liberada nesse item (compra em massa parcial):
+  // aí o card continua visível só pelo botão de liberar o resto, mesmo com o
+  // "ticket" dessa rodada já fechado
+  const subPedidosAtivos = (pedido?.subPedidos ?? []).filter((sp) => {
+    const fechado = sp.status === "RETIRADO" || sp.status === "CONCLUIDO";
+    if (!fechado) return true;
+    return sp.itens.some((item) => item.quantidade - item.quantidadeLiberada > 0);
+  });
 
   const prontos = subPedidosAtivos.filter(
     (sp) => (sp.status === "PRONTO" || sp.status === "CHAMADO") && !dispensados.includes(sp.id)
@@ -192,6 +197,11 @@ export default function Acompanhamento() {
             <b style={{ color: sp.quiosque.cor, fontFamily: "var(--font-sora)", fontSize: 15.5 }}>
               {sp.quiosque.nome}
             </b>
+            {sp.rodada > 1 && (
+              <span className="texto-fraco" style={{ marginLeft: 6, fontSize: 12 }}>
+                · {sp.rodada}ª retirada deste pedido
+              </span>
+            )}
 
             <StatusPedidoStepper
               status={sp.status}

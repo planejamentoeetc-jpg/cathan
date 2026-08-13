@@ -21,12 +21,16 @@ function prefixoQuiosque(nome: string): string {
  */
 export async function criarSubPedidoComCodigoUnico<
   T,
-  TxCliente extends { subPedido: { count: (args: { where: { quiosqueId: string } }) => Promise<number> } }
+  TxCliente extends {
+    subPedido: { count: (args: { where: { quiosqueId: string; rodada: number } }) => Promise<number> };
+  }
 >(tx: TxCliente, quiosqueId: string, quiosqueNome: string, criar: (codigo: string) => Promise<T>): Promise<T> {
   const prefixo = prefixoQuiosque(quiosqueNome);
 
   for (let tentativa = 0; tentativa < TENTATIVAS_MAX; tentativa++) {
-    const existentes = await tx.subPedido.count({ where: { quiosqueId } });
+    // conta só a rodada 1 de cada família (pedido+quiosque) — reaberturas de um
+    // mesmo pedido (rodada 2+) não avançam a numeração de códigos novos
+    const existentes = await tx.subPedido.count({ where: { quiosqueId, rodada: 1 } });
     const codigo = `${prefixo}${String(existentes + 1).padStart(3, "0")}`;
     try {
       return await criar(codigo);

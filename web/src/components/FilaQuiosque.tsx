@@ -24,6 +24,7 @@ type SubPedidoFila = {
   id: string;
   status: StatusFila;
   codigoRetirada: string;
+  rodada: number;
   clienteNome: string;
   clienteACaminho: boolean;
   nomesCriancas: string[];
@@ -130,7 +131,12 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
           return (
             <div key={sp.id} className="cartao">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <b style={{ fontFamily: "var(--font-sora)" }}>{nomeExibido}</b>
+                <b style={{ fontFamily: "var(--font-sora)" }}>
+                  {nomeExibido}
+                  {sp.rodada > 1 && (
+                    <span className="texto-fraco" style={{ fontWeight: 400, fontSize: 12 }}> · {sp.rodada}ª retirada</span>
+                  )}
+                </b>
                 <span className={`badge-status ${sp.status === "RECEBIDO" ? "recebido" : destaque ? "pronto" : ""}`}>
                   {ROTULO_STATUS[sp.status]}
                 </span>

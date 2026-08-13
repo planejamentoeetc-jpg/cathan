@@ -19,6 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: { eventoId: s
           id: true,
           status: true,
           codigoRetirada: true,
+          rodada: true,
           inicioAproveitamentoEm: true,
           pedido: { select: { cliente: { select: { nome: true } } } },
           itens: {
@@ -44,6 +45,7 @@ export async function GET(_req: NextRequest, { params }: { params: { eventoId: s
           id: sp.id,
           status: sp.status,
           codigoRetirada: sp.codigoRetirada,
+          rodada: sp.rodada,
           clienteNome: sp.pedido.cliente.nome,
           nomesCriancas: sp.itensLiberados.flatMap((item) => item.nomesCriancas),
           duracaoMinutos: Math.max(0, ...sp.itensLiberados.map((item) => item.produto.tempoProducaoMinutos)),

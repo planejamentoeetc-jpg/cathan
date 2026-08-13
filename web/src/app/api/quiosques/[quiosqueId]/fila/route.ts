@@ -38,6 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: { quiosqueId:
           id: sp.id,
           status: sp.status,
           codigoRetirada: sp.codigoRetirada,
+          rodada: sp.rodada,
           criadoEm: sp.criadoEm,
           clienteNome: sp.pedido.cliente.nome,
           clienteACaminho: sp.clienteACaminhoEm !== null,
