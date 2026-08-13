@@ -58,7 +58,7 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
   const gateway = statusGateway();
 
   return (
-    <main className="tela">
+    <main className="tela tela-larga">
       <AutoRefresh />
       <div
         className="topo"
@@ -99,66 +99,68 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
       <AnalisesEvento dados={dados} />
 
-      <div className="cartao" style={{ marginBottom: 16 }}>
-        <p style={{ marginBottom: 6 }}>
-          <b>Local:</b> {evento.local}
-        </p>
-        <p style={{ marginBottom: 6 }}>
-          <b>Data:</b> {formatarData(evento.data)}
-        </p>
-        <p style={{ marginBottom: 12 }}>
-          <b>Geofencing:</b>{" "}
-          {evento.raioPedidosMetros !== null
-            ? `raio de ${evento.raioPedidosMetros}m`
-            : "não aplicável"}
-        </p>
-        <Link href={`/gestor/eventos/${evento.id}/editar`} className="btn btn-secundario btn-bloco">
-          Editar evento / recalibrar raio
-        </Link>
-      </div>
+      <div className="g-linha-cartoes">
+        <div className="cartao" style={{ margin: 0 }}>
+          <p style={{ marginBottom: 6 }}>
+            <b>Local:</b> {evento.local}
+          </p>
+          <p style={{ marginBottom: 6 }}>
+            <b>Data:</b> {formatarData(evento.data)}
+          </p>
+          <p style={{ marginBottom: 12 }}>
+            <b>Geofencing:</b>{" "}
+            {evento.raioPedidosMetros !== null
+              ? `raio de ${evento.raioPedidosMetros}m`
+              : "não aplicável"}
+          </p>
+          <Link href={`/gestor/eventos/${evento.id}/editar`} className="btn btn-secundario btn-bloco">
+            Editar evento / recalibrar raio
+          </Link>
+        </div>
 
-      <div className="g-sec">
-        <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 4 }}>💳 Configurações de pagamento</h5>
-        <div className="g-row">
-          Gateway
-          <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
-            Mercado Pago
-          </span>
+        <div className="g-sec" style={{ margin: 0 }}>
+          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 4 }}>💳 Configurações de pagamento</h5>
+          <div className="g-row">
+            Gateway
+            <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
+              Mercado Pago
+            </span>
+          </div>
+          <div className="g-row">
+            Ambiente
+            <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
+              {gateway.ambiente}
+            </span>
+          </div>
+          <div className="g-row">
+            Status
+            <span className="val" style={{ color: gateway.conectado ? "var(--verde)" : "var(--festa)" }}>
+              {gateway.conectado ? "✓ conectado" : "não conectado"}
+            </span>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <LinkCopiavel rotulo="URL de webhook (configurada no painel do Mercado Pago)" url={linkWebhook} />
+          </div>
+          <p className="texto-fraco" style={{ marginTop: 10 }}>
+            Hoje é uma conta única (a do evento/Cathan) — sem split automático por quiosque ainda,
+            essa é a próxima etapa no roadmap de pagamentos.
+          </p>
+          <div className="aviso" style={{ marginTop: 10 }}>
+            <b>Regra de ouro:</b> a chave secreta (Access Token) nunca fica no navegador — ela vive
+            só nas variáveis de ambiente do servidor. O que aparece aqui é só informação pública de
+            status.
+          </div>
         </div>
-        <div className="g-row">
-          Ambiente
-          <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
-            {gateway.ambiente}
-          </span>
-        </div>
-        <div className="g-row">
-          Status
-          <span className="val" style={{ color: gateway.conectado ? "var(--verde)" : "var(--festa)" }}>
-            {gateway.conectado ? "✓ conectado" : "não conectado"}
-          </span>
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <LinkCopiavel rotulo="URL de webhook (configurada no painel do Mercado Pago)" url={linkWebhook} />
-        </div>
-        <p className="texto-fraco" style={{ marginTop: 10 }}>
-          Hoje é uma conta única (a do evento/Cathan) — sem split automático por quiosque ainda,
-          essa é a próxima etapa no roadmap de pagamentos.
-        </p>
-        <div className="aviso" style={{ marginTop: 10 }}>
-          <b>Regra de ouro:</b> a chave secreta (Access Token) nunca fica no navegador — ela vive
-          só nas variáveis de ambiente do servidor. O que aparece aqui é só informação pública de
-          status.
-        </div>
-      </div>
 
-      <div className="cartao" style={{ marginBottom: 16 }}>
-        <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 12 }}>
-          Links do evento
-        </b>
-        <LinkCopiavel rotulo="Link do cliente (QR Code / WhatsApp)" url={linkCliente} />
-        <LinkCopiavel rotulo="Login do painel do quiosque (mesmo link pra todos os quiosques)" url={linkQuiosque} />
-        <LinkCopiavel rotulo="Tela de Pedidos (telão, sem senha)" url={linkTelaDePedidos} />
-        <LinkCopiavel rotulo="Venda Manual / Caixa do Evento (login do operador)" url={linkCaixa} />
+        <div className="cartao" style={{ margin: 0 }}>
+          <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 12 }}>
+            Links do evento
+          </b>
+          <LinkCopiavel rotulo="Link do cliente (QR Code / WhatsApp)" url={linkCliente} />
+          <LinkCopiavel rotulo="Login do painel do quiosque (mesmo link pra todos os quiosques)" url={linkQuiosque} />
+          <LinkCopiavel rotulo="Tela de Pedidos (telão, sem senha)" url={linkTelaDePedidos} />
+          <LinkCopiavel rotulo="Venda Manual / Caixa do Evento (login do operador)" url={linkCaixa} />
+        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>

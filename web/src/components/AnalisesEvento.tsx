@@ -36,7 +36,7 @@ export function AnalisesEvento({ dados }: { dados: AnalyticsEvento }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr", marginBottom: 16 }}>
+      <div className="g-grid-graficos">
         <div className="g-sec" style={{ margin: 0 }}>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>💳 Formas de pagamento</h5>
           <GraficoDonut

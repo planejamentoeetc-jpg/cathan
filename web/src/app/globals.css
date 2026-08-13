@@ -364,6 +364,15 @@ a {
   color: var(--cinza);
 }
 
+/* Edge injeta seu próprio ícone de "mostrar senha" nativo dentro de todo
+   input[type=password] — some com o nosso botão customizado (CampoSenha.tsx),
+   ficando com dois olhos sobrepostos. Como sempre fornecemos o nosso, o nativo
+   fica redundante em todo lugar. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 .campo input,
 .campo textarea {
   border: 1.5px solid var(--linha);
@@ -588,11 +597,53 @@ a {
 
 /* ===== Dashboard do gestor (KPIs + vendas por quiosque) ===== */
 
+/* aplicada junto com .tela nas telas de dashboard (gestor/admin) — .tela sozinha
+   trava em 520px (pensada pra fluxo de celular do cliente, que deve continuar
+   estreita mesmo em desktop). Isso aqui é só o container ficar mais largo; o
+   reflow de colunas em si é feito por .g-grid/.g-grid-graficos/.g-linha-cartoes
+   abaixo, cada uma com seu próprio breakpoint. */
+.tela-larga {
+  max-width: 1400px;
+}
+
 .g-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.g-grid-graficos {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  margin-bottom: 16px;
+}
+
+.g-linha-cartoes {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 900px) {
+  .g-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .g-grid-graficos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .g-linha-cartoes {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1300px) {
+  .g-grid-graficos {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .kpi {

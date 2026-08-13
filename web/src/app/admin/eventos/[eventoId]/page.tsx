@@ -19,7 +19,7 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
   const repasse = dados.vendasTotal - comissao;
 
   return (
-    <main className="tela">
+    <main className="tela tela-larga">
       <AutoRefresh />
       <div
         className="topo"
