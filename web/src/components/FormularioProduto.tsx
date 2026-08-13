@@ -15,6 +15,8 @@ export function FormularioProduto({
   eventoId,
   quiosqueId,
   rotuloTempo,
+  // bebida é sempre pronta entrega — não faz sentido pedir um tempo de preparo
+  temCampoTempo = true,
   produtoInicial,
   criarUrl,
   editarUrlBase,
@@ -23,6 +25,7 @@ export function FormularioProduto({
   eventoId: string;
   quiosqueId: string;
   rotuloTempo: string;
+  temCampoTempo?: boolean;
   produtoInicial?: ProdutoInicial;
   // por padrão aponta pra API do painel do quiosque (senha do quiosque); o painel
   // do gestor passa suas próprias URLs (senha do gestor) pra reusar este formulário
@@ -51,7 +54,8 @@ export function FormularioProduto({
     setErro(null);
 
     const precoNumero = Number(preco.replace(",", "."));
-    const tempoNumero = Number(tempo);
+    // sem campo de tempo (ex.: bebida) = sempre pronta entrega
+    const tempoNumero = temCampoTempo ? Number(tempo) : 0;
     const estoqueNumero = semEstoque ? null : Number(estoque);
 
     if (!nome.trim()) {
@@ -62,7 +66,7 @@ export function FormularioProduto({
       setErro("Informe um preço válido.");
       return;
     }
-    if (!Number.isInteger(tempoNumero) || tempoNumero < 0) {
+    if (temCampoTempo && (!Number.isInteger(tempoNumero) || tempoNumero < 0)) {
       setErro(`Informe um valor válido para "${rotuloTempo}".`);
       return;
     }
@@ -125,16 +129,18 @@ export function FormularioProduto({
         />
       </div>
 
-      <div className="campo">
-        <label>{rotuloTempo}</label>
-        <input
-          type="number"
-          min={0}
-          value={tempo}
-          onChange={(e) => setTempo(e.target.value)}
-        />
-        <span className="texto-fraco">0 = pronta entrega</span>
-      </div>
+      {temCampoTempo && (
+        <div className="campo">
+          <label>{rotuloTempo}</label>
+          <input
+            type="number"
+            min={0}
+            value={tempo}
+            onChange={(e) => setTempo(e.target.value)}
+          />
+          <span className="texto-fraco">0 = pronta entrega</span>
+        </div>
+      )}
 
       <div className="campo">
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 400 }}>

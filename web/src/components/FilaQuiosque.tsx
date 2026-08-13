@@ -15,6 +15,7 @@ type Modalidade = "ALIMENTACAO" | "BEBIDAS" | "BRINCADEIRAS";
 type ItemFila = {
   nome: string;
   quantidade: number;
+  quantidadeTotal: number;
   observacao: string | null;
   nomesCriancas: string[];
 };
@@ -24,6 +25,7 @@ type SubPedidoFila = {
   status: StatusFila;
   codigoRetirada: string;
   clienteNome: string;
+  clienteACaminho: boolean;
   nomesCriancas: string[];
   duracaoMinutos: number;
   inicioAproveitamentoEm: string | null;
@@ -134,10 +136,26 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
                 </span>
               </div>
 
+              {sp.clienteACaminho && (sp.status === "PRONTO" || sp.status === "CHAMADO") && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--verde)",
+                  }}
+                >
+                  🚶 Cliente a caminho da retirada
+                </div>
+              )}
+
               <div style={{ marginTop: 10 }}>
                 {sp.itens.map((item, idx) => (
                   <div key={idx} style={{ fontSize: 13.5 }}>
                     {item.quantidade}× {item.nome}
+                    {item.quantidade < item.quantidadeTotal && (
+                      <span className="texto-fraco"> (de {item.quantidadeTotal} — resto ainda com o cliente)</span>
+                    )}
                     {item.observacao && (
                       <strong style={{ color: "var(--festa)" }}> — {item.observacao}</strong>
                     )}

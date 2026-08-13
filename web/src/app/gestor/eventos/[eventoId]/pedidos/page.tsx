@@ -56,7 +56,7 @@ export default async function RegistroPedidosPage({
         precoUnitario: Number(item.precoUnitario),
         observacao: item.observacao,
         nomesCriancas: item.nomesCriancas,
-        liberadoParaProducao: item.liberadoParaProducao,
+        quantidadeLiberada: item.quantidadeLiberada,
       })),
     })),
   }));

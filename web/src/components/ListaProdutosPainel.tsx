@@ -82,22 +82,25 @@ export function ListaProdutosPainel({
         <div key={produto.id} className="cartao">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ flex: 1 }}>
-              <Link
-                href={editarUrlBase ? `${editarUrlBase}/${produto.id}/editar` : `/painel/${eventoId}/q/${quiosqueId}/produtos/${produto.id}/editar`}
-                style={{ fontWeight: 700 }}
-              >
-                {produto.nome}
-              </Link>
+              <span style={{ fontWeight: 700 }}>{produto.nome}</span>
               <div className="texto-fraco">{formatarReais(produto.preco)}</div>
             </div>
-            <button
-              type="button"
-              className={produto.ativo ? "btn btn-secundario" : "btn btn-primario"}
-              disabled={emAndamento === produto.id}
-              onClick={() => alternar(produto.id)}
-            >
-              {emAndamento === produto.id ? "…" : produto.ativo ? "Esgotar" : "Reativar"}
-            </button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <Link
+                href={editarUrlBase ? `${editarUrlBase}/${produto.id}/editar` : `/painel/${eventoId}/q/${quiosqueId}/produtos/${produto.id}/editar`}
+                className="btn btn-secundario"
+              >
+                Editar
+              </Link>
+              <button
+                type="button"
+                className={produto.ativo ? "btn btn-secundario" : "btn btn-primario"}
+                disabled={emAndamento === produto.id}
+                onClick={() => alternar(produto.id)}
+              >
+                {emAndamento === produto.id ? "…" : produto.ativo ? "Esgotar" : "Reativar"}
+              </button>
+            </div>
           </div>
 
           {confirmandoId === produto.id ? (

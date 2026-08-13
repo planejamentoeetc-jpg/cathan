@@ -52,16 +52,21 @@ export function StatusPedidoStepper({
         {etapas.map((etapa, indice) => {
           const concluida = indice < indiceAtual;
           const atual = indice === indiceAtual;
+          // a bolinha preenchida é a fase em que o pedido ESTÁ agora, não só as já
+          // ultrapassadas — senão o cliente lê o stepper uma etapa "atrasado"
+          const preenchida = concluida || atual;
           return (
             <div key={etapa.chave} style={{ display: "contents" }}>
               <div className={`etapa${concluida ? " concluida" : ""}${atual ? " atual" : ""}`}>
                 <div
                   className="bolha"
                   style={
-                    concluida
-                      ? { background: cor, borderColor: cor }
-                      : atual
-                      ? { borderColor: cor, color: cor, boxShadow: `0 0 0 4px ${cor}22` }
+                    preenchida
+                      ? {
+                          background: cor,
+                          borderColor: cor,
+                          ...(atual ? { boxShadow: `0 0 0 4px ${cor}33` } : {}),
+                        }
                       : undefined
                   }
                 >

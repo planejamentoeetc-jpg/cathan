@@ -44,6 +44,7 @@ export default async function NovoProduto({
         eventoId={params.eventoId}
         quiosqueId={params.quiosqueId}
         rotuloTempo={rotuloTempo}
+        temCampoTempo={quiosque.modalidade !== "BEBIDAS"}
       />
     </main>
   );

@@ -48,6 +48,7 @@ export default async function EditarProduto({
         eventoId={params.eventoId}
         quiosqueId={params.quiosqueId}
         rotuloTempo={rotuloTempo}
+        temCampoTempo={quiosque.modalidade !== "BEBIDAS"}
         produtoInicial={{
           id: produto.id,
           nome: produto.nome,

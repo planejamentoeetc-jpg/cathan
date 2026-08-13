@@ -65,7 +65,6 @@ export function CaixaVenda({
 }) {
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [nome, setNome] = useState("");
-  const [celular, setCelular] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [conexaoImpressora, setConexaoImpressora] = useState<ConexaoImpressora | null>(null);
@@ -170,7 +169,6 @@ export function CaixaVenda({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clienteNome: nome.trim(),
-          clienteCelular: celular.trim() || undefined,
           itens: carrinho.map((i) => ({
             produtoId: i.produtoId,
             quantidade: i.quantidade,
@@ -191,7 +189,6 @@ export function CaixaVenda({
       setUltimaVenda(dados.subPedidos.map((sp: { codigoRetirada: string }) => sp.codigoRetirada));
       setCarrinho([]);
       setNome("");
-      setCelular("");
       carregarVendas();
     } catch {
       setErro("Erro inesperado ao registrar a venda.");
@@ -365,10 +362,6 @@ export function CaixaVenda({
             <div className="campo">
               <label>Nome do cliente</label>
               <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} />
-            </div>
-            <div className="campo">
-              <label>Celular (opcional)</label>
-              <input type="tel" value={celular} onChange={(e) => setCelular(e.target.value)} placeholder="(00) 00000-0000" />
             </div>
 
             {erro && (

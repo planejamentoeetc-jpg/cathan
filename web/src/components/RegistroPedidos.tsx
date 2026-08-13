@@ -10,7 +10,7 @@ type ItemRegistro = {
   precoUnitario: number;
   observacao: string | null;
   nomesCriancas: string[];
-  liberadoParaProducao: boolean;
+  quantidadeLiberada: number;
 };
 
 type SubPedidoRegistro = {
@@ -162,8 +162,14 @@ export function RegistroPedidos({ pedidos }: { pedidos: PedidoRegistro[] }) {
                         {item.nomesCriancas.length > 0 && (
                           <span className="texto-fraco"> ({item.nomesCriancas.join(", ")})</span>
                         )}
-                        {!item.liberadoParaProducao && (
+                        {item.quantidadeLiberada === 0 && (
                           <span className="texto-fraco" style={{ fontStyle: "italic" }}> · segurado</span>
+                        )}
+                        {item.quantidadeLiberada > 0 && item.quantidadeLiberada < item.quantidade && (
+                          <span className="texto-fraco" style={{ fontStyle: "italic" }}>
+                            {" "}
+                            · parcial ({item.quantidadeLiberada} de {item.quantidade})
+                          </span>
                         )}
                       </span>
                       <span className="texto-fraco">{formatarReais(item.precoUnitario * item.quantidade)}</span>

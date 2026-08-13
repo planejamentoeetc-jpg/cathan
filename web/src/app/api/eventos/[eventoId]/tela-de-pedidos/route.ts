@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: { eventoId: s
           inicioAproveitamentoEm: true,
           pedido: { select: { cliente: { select: { nome: true } } } },
           itens: {
-            select: { nomesCriancas: true, liberadoParaProducao: true, produto: { select: { tempoProducaoMinutos: true } } },
+            select: { nomesCriancas: true, quantidadeLiberada: true, produto: { select: { tempoProducaoMinutos: true } } },
           },
         },
       },
@@ -38,7 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: { eventoId: s
       // mesma regra da fila do quiosque: itens ainda segurados pelo cliente não
       // aparecem no telão público até serem liberados pra produção.
       pedidos: q.subPedidos
-        .map((sp) => ({ ...sp, itensLiberados: sp.itens.filter((item) => item.liberadoParaProducao) }))
+        .map((sp) => ({ ...sp, itensLiberados: sp.itens.filter((item) => item.quantidadeLiberada > 0) }))
         .filter((sp) => sp.itensLiberados.length > 0)
         .map((sp) => ({
           id: sp.id,

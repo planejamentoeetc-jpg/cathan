@@ -228,7 +228,8 @@ model SubPedido {
   pedido         Pedido          @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   quiosqueId     String          @map("quiosque_id")
   quiosque       Quiosque        @relation(fields: [quiosqueId], references: [id], onDelete: Restrict)
-  codigoRetirada String          @map("codigo_retirada") @db.VarChar(4)
+  // 2 letras iniciais do quiosque + sequencial de 3 dígitos por quiosque no evento (ex.: "PA001")
+  codigoRetirada String          @map("codigo_retirada") @db.VarChar(8)
   status         StatusSubPedido @default(RECEBIDO)
 
   // --- fluxo alimentação/bebidas ---
@@ -246,6 +247,10 @@ model SubPedido {
   chamadoEm              DateTime? @map("chamado_em")
   inicioAproveitamentoEm DateTime? @map("inicio_aproveitamento_em")
   concluidoEm            DateTime? @map("concluido_em")
+
+  // cliente tocou "Estou indo!" no pop-up de pronto/chamado — sinal pro quiosque
+  // de que ele já está a caminho, não é uma etapa formal do status
+  clienteACaminhoEm DateTime? @map("cliente_a_caminho_em")
 
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
@@ -269,11 +274,14 @@ model ItemSubPedido {
   observacao    String?
   // um nome por unidade (tamanho = quantidade); só usado quando quiosque.modalidade = BRINCADEIRAS
   nomesCriancas String[]  @map("nomes_criancas")
-  // controle de "compra em massa": o cliente pode ter pago o item sem querer que ele
-  // vá pra produção ainda. Enquanto false, o quiosque nem vê este item na fila dele.
-  // Venda Manual (Caixa) libera na hora, já que é uma compra presencial em tempo real.
-  liberadoParaProducao Boolean   @default(false) @map("liberado_para_producao")
-  liberadoEm           DateTime? @map("liberado_em")
+  // controle de "compra em massa": o cliente pode ter pago o item sem querer que
+  // todas as unidades vão pra produção ainda. quantidadeLiberada é quantas unidades
+  // (de 0 até quantidade) já foram mandadas pra produção — o quiosque só vê essa
+  // fatia na fila dele. Venda Manual (Caixa) libera tudo na hora, já que é uma
+  // compra presencial em tempo real.
+  quantidadeLiberada Int       @default(0) @map("quantidade_liberada")
+  // marca a primeira liberação (parcial ou total) deste item
+  liberadoEm         DateTime? @map("liberado_em")
 
   @@map("itens_sub_pedido")
 }

@@ -93,8 +93,12 @@ export function middleware(req: NextRequest) {
 
   const ehPaginaLogin = /^\/painel\/[^/]+\/entrar$/.test(pathname);
   const ehApiLogin = pathname === "/api/painel/entrar";
+  // chamado pelo cliente na tela de acompanhamento do próprio pedido (mesmo
+  // modelo de segurança de GET /api/pedidos/[pedidoId] e .../liberar) — não é
+  // uma ação de operador de quiosque, não pode exigir a senha do quiosque
+  const ehClienteACaminhoPublico = /^\/api\/sub-pedidos\/[^/]+\/cliente-a-caminho$/.test(pathname);
 
-  if (ehPaginaLogin || ehApiLogin) {
+  if (ehPaginaLogin || ehApiLogin || ehClienteACaminhoPublico) {
     return NextResponse.next();
   }
 

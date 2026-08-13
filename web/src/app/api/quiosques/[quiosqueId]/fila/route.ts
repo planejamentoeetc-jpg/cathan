@@ -25,9 +25,9 @@ export async function GET(_req: NextRequest, { params }: { params: { quiosqueId:
     quiosque,
     // itens ainda não liberados pelo cliente ("compra em massa" segurada) nem entram
     // aqui — o quiosque não vê nada até o cliente mandar pra produção. Um sub-pedido
-    // sem nenhum item liberado some da fila inteiro.
+    // sem nenhuma unidade liberada some da fila inteiro.
     pedidos: subPedidos
-      .map((sp) => ({ ...sp, itensLiberados: sp.itens.filter((item) => item.liberadoParaProducao) }))
+      .map((sp) => ({ ...sp, itensLiberados: sp.itens.filter((item) => item.quantidadeLiberada > 0) }))
       .filter((sp) => sp.itensLiberados.length > 0)
       .map((sp) => {
         const nomesCriancas = sp.itensLiberados.flatMap((item) => item.nomesCriancas);
@@ -40,12 +40,15 @@ export async function GET(_req: NextRequest, { params }: { params: { quiosqueId:
           codigoRetirada: sp.codigoRetirada,
           criadoEm: sp.criadoEm,
           clienteNome: sp.pedido.cliente.nome,
+          clienteACaminho: sp.clienteACaminhoEm !== null,
           nomesCriancas,
           duracaoMinutos,
           inicioAproveitamentoEm: sp.inicioAproveitamentoEm,
           itens: sp.itensLiberados.map((item) => ({
             nome: item.produto.nome,
-            quantidade: item.quantidade,
+            // só a fatia liberada — se for parcial, quantidadeTotal ajuda a UI avisar
+            quantidade: item.quantidadeLiberada,
+            quantidadeTotal: item.quantidade,
             observacao: item.observacao,
             nomesCriancas: item.nomesCriancas,
           })),

@@ -43,6 +43,7 @@ export default async function NovoProdutoGestor({
         eventoId={params.eventoId}
         quiosqueId={params.quiosqueId}
         rotuloTempo={rotuloTempo}
+        temCampoTempo={quiosque.modalidade !== "BEBIDAS"}
         criarUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos`}
         voltarUrl={voltar}
       />

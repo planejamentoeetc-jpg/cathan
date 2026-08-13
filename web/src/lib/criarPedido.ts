@@ -97,7 +97,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     for (const [quiosqueId, itensDoGrupo] of itensPorQuiosque) {
       const quiosque = produtosPorId.get(itensDoGrupo[0].produtoId)!.quiosque;
 
-      const subPedido = await criarSubPedidoComCodigoUnico((codigo) =>
+      const subPedido = await criarSubPedidoComCodigoUnico(tx, quiosqueId, quiosque.nome, (codigo) =>
         tx.subPedido.create({
           data: {
             pedidoId: pedido.id,
@@ -113,7 +113,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
                   quiosque.modalidade === ModalidadeQuiosque.BRINCADEIRAS
                     ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
                     : [],
-                liberadoParaProducao: liberarProducaoAutomaticamente,
+                quantidadeLiberada: liberarProducaoAutomaticamente ? item.quantidade : 0,
                 liberadoEm: liberarProducaoAutomaticamente ? new Date() : null,
               })),
             },

@@ -67,7 +67,7 @@ export async function GET(_req: NextRequest, { params }: { params: { pedidoId: s
         precoUnitario: Number(item.precoUnitario),
         observacao: item.observacao,
         nomesCriancas: item.nomesCriancas,
-        liberadoParaProducao: item.liberadoParaProducao,
+        quantidadeLiberada: item.quantidadeLiberada,
       })),
     })),
   });
