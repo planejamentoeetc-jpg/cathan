@@ -97,6 +97,14 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         </div>
       </div>
 
+      <Link
+        href={`/gestor/eventos/${evento.id}/pedidos`}
+        className="btn btn-secundario btn-bloco"
+        style={{ marginBottom: 16 }}
+      >
+        📋 Registro de pedidos — conferir cliente por cliente
+      </Link>
+
       <AnalisesEvento dados={dados} />
 
       <div className="g-linha-cartoes">
