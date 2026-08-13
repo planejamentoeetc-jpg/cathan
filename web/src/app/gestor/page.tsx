@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { BotaoSairGestor } from "@/components/BotaoSairGestor";
 
 // sem chamada a cookies()/headers(), o Next marcaria esta página como estática
@@ -12,7 +13,9 @@ function formatarData(data: Date) {
 }
 
 export default async function PainelGestor() {
+  const organizadorId = obterOrganizadorId();
   const eventos = await prisma.evento.findMany({
+    where: { organizadorId },
     orderBy: { data: "desc" },
     include: { _count: { select: { quiosques: true } } },
   });
@@ -30,7 +33,12 @@ export default async function PainelGestor() {
         }}
       >
         <span>Meus eventos</span>
-        <BotaoSairGestor />
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <Link href="/gestor/conexoes" style={{ fontSize: 12.5, color: "#BFD4DA" }}>
+            Conexões
+          </Link>
+          <BotaoSairGestor />
+        </div>
       </div>
 
       <Link href="/gestor/eventos/novo" className="btn btn-primario btn-bloco" style={{ marginBottom: 16 }}>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { RegistroPedidos, type PedidoRegistro } from "@/components/RegistroPedidos";
 import { AutoRefresh } from "@/components/AutoRefresh";
 
@@ -13,7 +14,9 @@ export default async function RegistroPedidosPage({
 }: {
   params: { eventoId: string };
 }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) notFound();
 
   const pedidos = await prisma.pedido.findMany({

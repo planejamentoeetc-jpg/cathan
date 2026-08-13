@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { FormularioEvento } from "@/components/FormularioEvento";
 
 // input datetime-local não entende fuso — formata em horário de Brasília,
@@ -25,7 +26,9 @@ export default async function EditarEvento({
 }: {
   params: { eventoId: string };
 }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) notFound();
 
   return (

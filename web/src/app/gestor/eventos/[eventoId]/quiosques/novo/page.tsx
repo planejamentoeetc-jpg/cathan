@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { CriarQuiosqueForm } from "@/components/CriarQuiosqueForm";
 
 export default async function NovoQuiosque({ params }: { params: { eventoId: string } }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) notFound();
 
   return (

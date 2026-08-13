@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { EditarQuiosqueForm } from "@/components/EditarQuiosqueForm";
 import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { ExcluirQuiosqueButton } from "@/components/ExcluirQuiosqueButton";
@@ -11,7 +12,7 @@ export default async function QuiosqueGestor({
   params: { eventoId: string; quiosqueId: string };
 }) {
   const quiosque = await prisma.quiosque.findFirst({
-    where: { id: params.quiosqueId, eventoId: params.eventoId },
+    where: { id: params.quiosqueId, eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
     include: { produtos: { orderBy: { nome: "asc" } } },
   });
 

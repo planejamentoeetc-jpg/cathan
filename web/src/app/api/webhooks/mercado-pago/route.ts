@@ -40,6 +40,11 @@ export async function POST(req: NextRequest) {
     throw erro;
   }
 
+  // client global mesmo aqui, mesmo pra pagamentos de organizador conectado: o
+  // token da aplicação Cathan (dona da conexão OAuth) tem acesso de leitura aos
+  // pagamentos feitos pelas contas conectadas — não precisa resolver de quem é
+  // o token antes de buscar (e nem daria: não sabemos de quem é até ler o
+  // external_reference, que só vem dentro do próprio payment).
   let payment;
   try {
     payment = await new Payment(mercadoPagoClient).get({ id: dataId });

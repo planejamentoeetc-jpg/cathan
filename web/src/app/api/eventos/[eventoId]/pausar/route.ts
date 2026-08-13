@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 
 export async function PATCH(req: NextRequest, { params }: { params: { eventoId: string } }) {
   let corpo: { pausado?: boolean };
@@ -13,7 +14,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { eventoId: 
     return NextResponse.json({ erro: "Campo 'pausado' é obrigatório." }, { status: 400 });
   }
 
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }

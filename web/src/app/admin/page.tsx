@@ -29,7 +29,12 @@ export default async function ConsoleCathan() {
         }}
       >
         <span>Console Cathan</span>
-        <BotaoSairAdmin />
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <Link href="/admin/organizadores" style={{ fontSize: 12.5, color: "#BFD4DA" }}>
+            Organizadores
+          </Link>
+          <BotaoSairAdmin />
+        </div>
       </div>
 
       <p className="texto-fraco" style={{ marginBottom: 16 }}>

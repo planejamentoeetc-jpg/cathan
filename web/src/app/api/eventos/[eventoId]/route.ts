@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { CamposEvento, validarCamposEvento } from "@/lib/validarEvento";
 import { prisma } from "@/lib/prisma";
 import { ehViolacaoRestrict } from "@/lib/erroRestrict";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 
 export async function PATCH(req: NextRequest, { params }: { params: { eventoId: string } }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }
@@ -30,7 +33,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { eventoId: 
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { eventoId: string } }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }

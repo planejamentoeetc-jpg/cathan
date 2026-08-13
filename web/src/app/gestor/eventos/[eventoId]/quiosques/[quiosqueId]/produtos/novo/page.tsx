@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { FormularioProduto } from "@/components/FormularioProduto";
 
 export default async function NovoProdutoGestor({
@@ -9,7 +10,7 @@ export default async function NovoProdutoGestor({
   params: { eventoId: string; quiosqueId: string };
 }) {
   const quiosque = await prisma.quiosque.findFirst({
-    where: { id: params.quiosqueId, eventoId: params.eventoId },
+    where: { id: params.quiosqueId, eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
   });
 
   if (!quiosque) notFound();

@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 
 export async function GET(_req: NextRequest, { params }: { params: { eventoId: string } }) {
   const mensagens = await prisma.mensagemSuporte.findMany({
-    where: { eventoId: params.eventoId },
+    where: { eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
     orderBy: { criadoEm: "asc" },
   });
   return NextResponse.json(mensagens);
 }
 
 export async function POST(req: NextRequest, { params }: { params: { eventoId: string } }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }

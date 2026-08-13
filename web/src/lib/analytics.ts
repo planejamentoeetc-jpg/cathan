@@ -1,8 +1,6 @@
 import { StatusSubPedido } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-export const TAXA_CATHAN = 0.049; // 4,9% — comissão de marketplace, percentual de teste
-
 const STATUS_ALIMENTACAO = [
   StatusSubPedido.RECEBIDO,
   StatusSubPedido.ACEITO,

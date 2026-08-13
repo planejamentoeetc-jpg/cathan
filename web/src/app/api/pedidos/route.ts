@@ -3,6 +3,7 @@ import { Payment } from "mercadopago";
 import { NextRequest, NextResponse } from "next/server";
 import { distanciaMetros } from "@/lib/geo";
 import { mercadoPagoClient } from "@/lib/mercadoPago";
+import { obterClienteOrganizador } from "@/lib/mercadoPagoOrganizador";
 import { prisma } from "@/lib/prisma";
 
 type ItemRequisicao = {
@@ -54,7 +55,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "Item de carrinho inválido." }, { status: 400 });
   }
 
-  const evento = await prisma.evento.findUnique({ where: { id: corpo.eventoId } });
+  const evento = await prisma.evento.findUnique({
+    where: { id: corpo.eventoId },
+    include: { organizador: true },
+  });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }
@@ -157,9 +161,20 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Se o organizador tiver conectado a própria conta Mercado Pago
+    // (/gestor/conexoes), o Pix cai direto na conta dele e a Cathan retém a
+    // comissão automaticamente via application_fee. Sem conexão, cai no client
+    // global de sempre, sem nenhuma mudança de comportamento.
+    const clienteOrganizador = evento.organizador
+      ? await obterClienteOrganizador(evento.organizador)
+      : null;
+    const applicationFee = clienteOrganizador
+      ? Math.round(valorTotal * (Number(evento.organizador!.comissaoPercentual) / 100) * 100) / 100
+      : undefined;
+
     // Pix direto (Payments API) — o pagamento acontece dentro do próprio app,
     // sem redirecionar o cliente pro checkout hospedado do Mercado Pago.
-    const payment = await new Payment(mercadoPagoClient).create({
+    const payment = await new Payment(clienteOrganizador ?? mercadoPagoClient).create({
       body: {
         transaction_amount: valorTotal,
         description: `${evento.nome} — pedido Cathan`,
@@ -171,6 +186,7 @@ export async function POST(req: NextRequest) {
         },
         notification_url: `${appUrl}/api/webhooks/mercado-pago`,
         external_reference: pedidoPendente.id,
+        ...(applicationFee !== undefined ? { application_fee: applicationFee } : {}),
       },
       requestOptions: { idempotencyKey: pedidoPendente.id },
     });

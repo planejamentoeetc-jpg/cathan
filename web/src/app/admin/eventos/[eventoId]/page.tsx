@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { calcularAnalyticsEvento, TAXA_CATHAN } from "@/lib/analytics";
+import { calcularAnalyticsEvento } from "@/lib/analytics";
 import { AnalisesEvento } from "@/components/AnalisesEvento";
 import { ChatSuporte } from "@/components/ChatSuporte";
 import { AutoRefresh } from "@/components/AutoRefresh";
@@ -11,11 +11,15 @@ function formatarReais(valor: number) {
 }
 
 export default async function EventoAdmin({ params }: { params: { eventoId: string } }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findUnique({
+    where: { id: params.eventoId },
+    include: { organizador: { select: { id: true, nome: true, comissaoPercentual: true } } },
+  });
   if (!evento) notFound();
 
   const dados = await calcularAnalyticsEvento(evento.id);
-  const comissao = dados.vendasTotal * TAXA_CATHAN;
+  const taxaCathan = Number(evento.organizador?.comissaoPercentual ?? 4.9) / 100;
+  const comissao = dados.vendasTotal * taxaCathan;
   const repasse = dados.vendasTotal - comissao;
 
   return (
@@ -46,7 +50,7 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
           <div className="n" style={{ color: "var(--verde)" }}>
             {formatarReais(comissao)}
           </div>
-          <div className="l">Faturamento Cathan · taxa {(TAXA_CATHAN * 100).toFixed(1)}%</div>
+          <div className="l">Faturamento Cathan · taxa {(taxaCathan * 100).toFixed(1)}%</div>
         </div>
         <div className="kpi">
           <div className="n">{formatarReais(repasse)}</div>
@@ -59,6 +63,26 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
           <div className="l">Status do sistema</div>
         </div>
       </div>
+
+      {evento.organizador && (
+        <div className="g-sec">
+          <div className="g-row">
+            Organizador
+            <span className="val">{evento.organizador.nome}</span>
+          </div>
+          <div className="g-row">
+            Comissão configurada
+            <span className="val">{Number(evento.organizador.comissaoPercentual).toFixed(1)}%</span>
+          </div>
+          <Link
+            href={`/admin/organizadores/${evento.organizador.id}`}
+            className="btn btn-secundario btn-bloco"
+            style={{ marginTop: 10 }}
+          >
+            Ajustar comissão deste organizador
+          </Link>
+        </div>
+      )}
 
       <AnalisesEvento dados={dados} />
 

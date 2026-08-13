@@ -61,11 +61,46 @@ enum StatusSubPedido {
 }
 
 // ---------------------------------------------------------------------------
+// Organizador (tenant real — um organizador loga uma vez e enxerga todos os
+// próprios eventos; a conexão Mercado Pago fica presa a ele, não ao Evento,
+// pra ser reaproveitada em eventos futuros do mesmo cliente)
+// ---------------------------------------------------------------------------
+
+model Organizador {
+  id                 String @id @default(cuid())
+  nome               String
+  email              String @unique
+  senhaHash          String @map("senha_hash")
+  // % que a Cathan retém automaticamente via application_fee do Mercado Pago;
+  // editável só pelo admin (não pelo próprio organizador) — ver admin/organizadores
+  comissaoPercentual Decimal @default(4.9) @map("comissao_percentual") @db.Decimal(5, 2)
+
+  // conexão OAuth Mercado Pago (marketplace/split) — null enquanto não conectado,
+  // nesse caso os pagamentos dos eventos deste organizador caem na conta global
+  // da Cathan (MP_ACCESS_TOKEN), sem split, exatamente como funciona hoje
+  mpUserId              String?   @map("mp_user_id")
+  mpAccessTokenCifrado  String?   @map("mp_access_token_cifrado")
+  mpRefreshTokenCifrado String?   @map("mp_refresh_token_cifrado")
+  mpTokenExpiraEm       DateTime? @map("mp_token_expira_em")
+
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  eventos Evento[]
+
+  @@map("organizadores")
+}
+
+// ---------------------------------------------------------------------------
 // Evento
 // ---------------------------------------------------------------------------
 
 model Evento {
   id                String   @id @default(cuid())
+  // nullable só durante a migração de backfill do Organizador bootstrap — vira
+  // obrigatório na migração seguinte
+  organizadorId     String?     @map("organizador_id")
+  organizador       Organizador? @relation(fields: [organizadorId], references: [id], onDelete: Restrict)
   nome              String
   local             String
   data              DateTime

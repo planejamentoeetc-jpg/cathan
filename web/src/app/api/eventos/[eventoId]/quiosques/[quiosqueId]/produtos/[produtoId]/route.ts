@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CamposProduto, validarCamposProduto } from "@/lib/validarProduto";
 import { ehViolacaoRestrict } from "@/lib/erroRestrict";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { eventoId: string; quiosqueId: string; produtoId: string } }
 ) {
   const produto = await prisma.produto.findFirst({
-    where: { id: params.produtoId, quiosqueId: params.quiosqueId, quiosque: { eventoId: params.eventoId } },
+    where: {
+      id: params.produtoId,
+      quiosqueId: params.quiosqueId,
+      quiosque: { eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
+    },
   });
   if (!produto) {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
@@ -44,7 +49,11 @@ export async function DELETE(
   { params }: { params: { eventoId: string; quiosqueId: string; produtoId: string } }
 ) {
   const produto = await prisma.produto.findFirst({
-    where: { id: params.produtoId, quiosqueId: params.quiosqueId, quiosque: { eventoId: params.eventoId } },
+    where: {
+      id: params.produtoId,
+      quiosqueId: params.quiosqueId,
+      quiosque: { eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
+    },
   });
   if (!produto) {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });

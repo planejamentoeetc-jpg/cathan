@@ -15,6 +15,7 @@ export default function EntrarGestor() {
 function EntrarGestorConteudo() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -26,7 +27,7 @@ function EntrarGestorConteudo() {
       const resposta = await fetch("/api/gestor/entrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ senha }),
+        body: JSON.stringify({ email, senha }),
       });
       if (!resposta.ok) {
         const dados = await resposta.json().catch(() => ({}));
@@ -50,12 +51,22 @@ function EntrarGestorConteudo() {
       </div>
 
       <div className="cartao">
+        <div className="campo">
+          <label>E-mail</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && entrar()}
+            autoFocus
+          />
+        </div>
+
         <CampoSenha
-          label="Senha do gestor"
+          label="Senha"
           value={senha}
           onChange={setSenha}
           onKeyDown={(e) => e.key === "Enter" && entrar()}
-          autoFocus
         />
 
         {erro && (
@@ -67,7 +78,7 @@ function EntrarGestorConteudo() {
         <button
           type="button"
           className="btn btn-primario btn-bloco"
-          disabled={enviando || !senha}
+          disabled={enviando || !senha || !email}
           onClick={entrar}
         >
           {enviando ? "Entrando…" : "Entrar"}

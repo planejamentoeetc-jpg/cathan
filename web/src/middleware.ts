@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verificarSessaoGestor } from "@/lib/sessaoGestor";
 
 const COOKIE_QUIOSQUE = "cathan_painel_auth";
 const COOKIE_GESTOR = "cathan_gestor_auth";
 const COOKIE_ADMIN = "cathan_admin_auth";
 const COOKIE_CAIXA = "cathan_caixa_auth";
+// header que carrega o organizadorId decodificado do JWT pro resto da requisição
+// (Server Components/Route Handlers lêem via web/src/lib/organizadorAtual.ts)
+const HEADER_ORGANIZADOR_ID = "x-organizador-id";
 
 function autenticado(req: NextRequest, cookie: string, envVar: string): boolean {
   const senha = process.env[envVar];
@@ -11,21 +15,31 @@ function autenticado(req: NextRequest, cookie: string, envVar: string): boolean 
   return req.cookies.get(cookie)?.value === senha;
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // --- área do gestor (criação de evento/quiosques) ---
-  if (pathname.startsWith("/gestor") || pathname.startsWith("/api/eventos")) {
+  // --- área do gestor (eventos/quiosques do organizador + conexão Mercado Pago) ---
+  if (
+    pathname.startsWith("/gestor") ||
+    pathname.startsWith("/api/eventos") ||
+    pathname.startsWith("/api/mercado-pago")
+  ) {
     const ehPaginaLoginGestor = pathname === "/gestor/entrar";
     // GET de tela-de-pedidos alimenta o telão público, visível a qualquer pessoa no evento
     const ehTelaDePedidosPublica = /^\/api\/eventos\/[^/]+\/tela-de-pedidos$/.test(pathname);
+    // é o próprio Mercado Pago quem chama esse callback — não tem cookie de gestor
+    // nessa requisição; a autenticidade vem do "state" assinado (ver a rota)
+    const ehCallbackOauthPublico = pathname === "/api/mercado-pago/oauth/callback";
 
-    if (ehPaginaLoginGestor || ehTelaDePedidosPublica) {
+    if (ehPaginaLoginGestor || ehTelaDePedidosPublica || ehCallbackOauthPublico) {
       return NextResponse.next();
     }
 
-    if (autenticado(req, COOKIE_GESTOR, "PAINEL_GESTOR_SENHA")) {
-      return NextResponse.next();
+    const organizadorId = await verificarSessaoGestor(req.cookies.get(COOKIE_GESTOR)?.value);
+    if (organizadorId) {
+      const headersComOrganizador = new Headers(req.headers);
+      headersComOrganizador.set(HEADER_ORGANIZADOR_ID, organizadorId);
+      return NextResponse.next({ request: { headers: headersComOrganizador } });
     }
 
     if (pathname.startsWith("/api/")) {
@@ -128,5 +142,6 @@ export const config = {
     "/api/eventos/:path*",
     "/api/admin/:path*",
     "/api/caixa/:path*",
+    "/api/mercado-pago/:path*",
   ],
 };

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CamposQuiosque, validarCamposQuiosque } from "@/lib/validarQuiosque";
 import { ehViolacaoRestrict } from "@/lib/erroRestrict";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 
 type CorpoRequisicao = CamposQuiosque & {
   dica?: string | null;
@@ -20,7 +21,7 @@ export async function PATCH(
   { params }: { params: { eventoId: string; quiosqueId: string } }
 ) {
   const quiosque = await prisma.quiosque.findFirst({
-    where: { id: params.quiosqueId, eventoId: params.eventoId },
+    where: { id: params.quiosqueId, eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
   });
   if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
@@ -65,7 +66,7 @@ export async function DELETE(
   { params }: { params: { eventoId: string; quiosqueId: string } }
 ) {
   const quiosque = await prisma.quiosque.findFirst({
-    where: { id: params.quiosqueId, eventoId: params.eventoId },
+    where: { id: params.quiosqueId, eventoId: params.eventoId, evento: { organizadorId: obterOrganizadorId() } },
   });
   if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });

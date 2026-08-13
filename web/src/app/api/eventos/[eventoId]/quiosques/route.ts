@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CamposQuiosque, validarCamposQuiosque } from "@/lib/validarQuiosque";
+import { obterOrganizadorId } from "@/lib/organizadorAtual";
 
 // Paleta rotativa — atribuída automaticamente conforme quiosques vão sendo criados no evento.
 const PALETA_CORES = ["#1E8E5A", "#FFB94A", "#FF7A45", "#16333D", "#1F4E5F"];
 
 export async function POST(req: NextRequest, { params }: { params: { eventoId: string } }) {
-  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  const evento = await prisma.evento.findFirst({
+    where: { id: params.eventoId, organizadorId: obterOrganizadorId() },
+  });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }
