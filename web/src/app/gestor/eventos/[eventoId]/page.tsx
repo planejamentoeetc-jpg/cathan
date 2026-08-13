@@ -9,6 +9,8 @@ import { PausarEventoToggle } from "@/components/PausarEventoToggle";
 import { ChatSuporte } from "@/components/ChatSuporte";
 import { ExcluirEventoButton } from "@/components/ExcluirEventoButton";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { SenhaOculta } from "@/components/SenhaOculta";
+import { gerarQrCodeDataUrl } from "@/lib/qrcode";
 
 const NOME_MODALIDADE: Record<string, string> = {
   ALIMENTACAO: "Alimentação",
@@ -56,6 +58,13 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
   const linkCaixa = `${baseUrl}/caixa/${evento.id}/entrar`;
   const linkWebhook = `${baseUrl}/api/webhooks/mercado-pago`;
   const gateway = statusGateway();
+
+  const [qrCliente, qrQuiosque, qrTelaDePedidos, qrCaixa] = await Promise.all([
+    gerarQrCodeDataUrl(linkCliente),
+    gerarQrCodeDataUrl(linkQuiosque),
+    gerarQrCodeDataUrl(linkTelaDePedidos),
+    gerarQrCodeDataUrl(linkCaixa),
+  ]);
 
   return (
     <main className="tela tela-larga">
@@ -164,10 +173,30 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
           <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 12 }}>
             Links do evento
           </b>
-          <LinkCopiavel rotulo="Link do cliente (QR Code / WhatsApp)" url={linkCliente} />
-          <LinkCopiavel rotulo="Login do painel do quiosque (mesmo link pra todos os quiosques)" url={linkQuiosque} />
-          <LinkCopiavel rotulo="Tela de Pedidos (telão, sem senha)" url={linkTelaDePedidos} />
-          <LinkCopiavel rotulo="Venda Manual / Caixa do Evento (login do operador)" url={linkCaixa} />
+          <LinkCopiavel rotulo="Link do cliente (QR Code / WhatsApp)" url={linkCliente} qrCodeDataUrl={qrCliente} />
+          <LinkCopiavel
+            rotulo="Login do painel do quiosque (mesmo link pra todos os quiosques)"
+            url={linkQuiosque}
+            qrCodeDataUrl={qrQuiosque}
+          />
+          <LinkCopiavel
+            rotulo="Tela de Pedidos (telão, sem senha)"
+            url={linkTelaDePedidos}
+            qrCodeDataUrl={qrTelaDePedidos}
+          />
+          <LinkCopiavel
+            rotulo="Venda Manual / Caixa do Evento (login do operador)"
+            url={linkCaixa}
+            qrCodeDataUrl={qrCaixa}
+          />
+
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--linha)" }}>
+            <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 12, fontSize: 13.5 }}>
+              Senhas de acesso — pra passar pra equipe
+            </b>
+            <SenhaOculta rotulo="Senha do painel do quiosque" senha={process.env.PAINEL_QUIOSQUE_SENHA ?? "não configurada"} />
+            <SenhaOculta rotulo="Senha do Caixa / Venda Manual" senha={process.env.PAINEL_CAIXA_SENHA ?? "não configurada"} />
+          </div>
         </div>
       </div>
 

@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 
-export function LinkCopiavel({ rotulo, url }: { rotulo: string; url: string }) {
+export function LinkCopiavel({
+  rotulo,
+  url,
+  qrCodeDataUrl,
+}: {
+  rotulo: string;
+  url: string;
+  // gerado no servidor (lib/qrcode.ts) e passado pronto — evita depender de uma
+  // biblioteca de QR code rodando no navegador
+  qrCodeDataUrl?: string;
+}) {
   const [copiado, setCopiado] = useState(false);
+  const [mostrarQr, setMostrarQr] = useState(false);
 
   async function copiar() {
     try {
@@ -39,7 +50,25 @@ export function LinkCopiavel({ rotulo, url }: { rotulo: string; url: string }) {
         <button type="button" className="btn btn-secundario" onClick={copiar}>
           {copiado ? "Copiado ✓" : "Copiar"}
         </button>
+        {qrCodeDataUrl && (
+          <button type="button" className="btn btn-secundario" onClick={() => setMostrarQr((v) => !v)}>
+            {mostrarQr ? "Ocultar QR" : "QR Code"}
+          </button>
+        )}
       </div>
+
+      {mostrarQr && qrCodeDataUrl && (
+        <div style={{ textAlign: "center", marginTop: 10 }}>
+          <img
+            src={qrCodeDataUrl}
+            alt={`QR code para ${rotulo}`}
+            style={{ width: 180, height: 180, borderRadius: 10, border: "1.5px solid var(--linha)" }}
+          />
+          <p className="texto-fraco" style={{ marginTop: 6, fontSize: 12 }}>
+            Aproxime a câmera do celular ou tablet pra abrir direto.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
