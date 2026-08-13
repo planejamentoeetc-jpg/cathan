@@ -75,6 +75,7 @@ export default async function QuiosqueGestor({
             criarUrl={`/gestor/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos/novo`}
             editarUrlBase={`/gestor/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos`}
             alternarAtivoUrlBase={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos`}
+            excluirUrlBase={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos`}
           />
         </div>
       </div>

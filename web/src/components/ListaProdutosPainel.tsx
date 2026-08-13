@@ -21,6 +21,7 @@ export function ListaProdutosPainel({
   criarUrl,
   editarUrlBase,
   alternarAtivoUrlBase,
+  excluirUrlBase,
 }: {
   eventoId: string;
   quiosqueId: string;
@@ -30,9 +31,12 @@ export function ListaProdutosPainel({
   criarUrl?: string;
   editarUrlBase?: string;
   alternarAtivoUrlBase?: string;
+  excluirUrlBase?: string;
 }) {
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [emAndamento, setEmAndamento] = useState<string | null>(null);
+  const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
+  const [erroExclusao, setErroExclusao] = useState<{ id: string; mensagem: string } | null>(null);
 
   async function alternar(id: string) {
     setEmAndamento(id);
@@ -48,6 +52,23 @@ export function ListaProdutosPainel({
     }
   }
 
+  async function excluir(id: string) {
+    setErroExclusao(null);
+    setEmAndamento(id);
+    try {
+      const resposta = await fetch(`${excluirUrlBase ?? "/api/produtos"}/${id}`, { method: "DELETE" });
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) {
+        setErroExclusao({ id, mensagem: dados.erro ?? "Não foi possível excluir o produto." });
+        setConfirmandoId(null);
+        return;
+      }
+      setProdutos((atual) => atual.filter((p) => p.id !== id));
+    } finally {
+      setEmAndamento(null);
+    }
+  }
+
   return (
     <div className="lista">
       <Link
@@ -58,24 +79,72 @@ export function ListaProdutosPainel({
       </Link>
 
       {produtos.map((produto) => (
-        <div key={produto.id} className="cartao" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ flex: 1 }}>
-            <Link
-              href={editarUrlBase ? `${editarUrlBase}/${produto.id}/editar` : `/painel/${eventoId}/q/${quiosqueId}/produtos/${produto.id}/editar`}
-              style={{ fontWeight: 700 }}
+        <div key={produto.id} className="cartao">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <Link
+                href={editarUrlBase ? `${editarUrlBase}/${produto.id}/editar` : `/painel/${eventoId}/q/${quiosqueId}/produtos/${produto.id}/editar`}
+                style={{ fontWeight: 700 }}
+              >
+                {produto.nome}
+              </Link>
+              <div className="texto-fraco">{formatarReais(produto.preco)}</div>
+            </div>
+            <button
+              type="button"
+              className={produto.ativo ? "btn btn-secundario" : "btn btn-primario"}
+              disabled={emAndamento === produto.id}
+              onClick={() => alternar(produto.id)}
             >
-              {produto.nome}
-            </Link>
-            <div className="texto-fraco">{formatarReais(produto.preco)}</div>
+              {emAndamento === produto.id ? "…" : produto.ativo ? "Esgotar" : "Reativar"}
+            </button>
           </div>
-          <button
-            type="button"
-            className={produto.ativo ? "btn btn-secundario" : "btn btn-primario"}
-            disabled={emAndamento === produto.id}
-            onClick={() => alternar(produto.id)}
-          >
-            {emAndamento === produto.id ? "…" : produto.ativo ? "Esgotar" : "Reativar"}
-          </button>
+
+          {confirmandoId === produto.id ? (
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button
+                type="button"
+                className="btn btn-secundario"
+                style={{ flex: 1, padding: "6px 10px", fontSize: 12.5 }}
+                onClick={() => setConfirmandoId(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                style={{
+                  flex: 1,
+                  padding: "6px 10px",
+                  fontSize: 12.5,
+                  borderRadius: 8,
+                  background: "#D64545",
+                  color: "#fff",
+                  fontWeight: 700,
+                }}
+                disabled={emAndamento === produto.id}
+                onClick={() => excluir(produto.id)}
+              >
+                {emAndamento === produto.id ? "Excluindo…" : "Confirmar exclusão"}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmandoId(produto.id);
+                setErroExclusao(null);
+              }}
+              style={{ marginTop: 8, fontSize: 12, color: "#B4441C", textDecoration: "underline" }}
+            >
+              Excluir produto
+            </button>
+          )}
+
+          {erroExclusao?.id === produto.id && (
+            <div className="aviso" style={{ marginTop: 8, fontSize: 12.5 }}>
+              {erroExclusao.mensagem}
+            </div>
+          )}
         </div>
       ))}
 

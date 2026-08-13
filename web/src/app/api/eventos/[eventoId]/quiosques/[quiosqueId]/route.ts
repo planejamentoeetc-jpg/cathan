@@ -1,7 +1,7 @@
-import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CamposQuiosque, validarCamposQuiosque } from "@/lib/validarQuiosque";
+import { ehViolacaoRestrict } from "@/lib/erroRestrict";
 
 type CorpoRequisicao = CamposQuiosque & {
   dica?: string | null;
@@ -74,13 +74,7 @@ export async function DELETE(
   try {
     await prisma.quiosque.delete({ where: { id: quiosque.id } });
   } catch (erro) {
-    // SubPedido.quiosque e ItemSubPedido.produto usam onDelete: Restrict — o banco recusa
-    // apagar um quiosque que já tem pedidos reais (mesma proteção do delete-evento, ver
-    // DELETE /api/eventos/[eventoId] pro motivo do SQLSTATE 23001 vs P2003).
-    const ehViolacaoRestrict =
-      (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2003") ||
-      (erro instanceof Prisma.PrismaClientUnknownRequestError && erro.message.includes("23001"));
-    if (ehViolacaoRestrict) {
+    if (ehViolacaoRestrict(erro)) {
       return NextResponse.json(
         {
           erro:

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CamposProduto, validarCamposProduto } from "@/lib/validarProduto";
+import { ehViolacaoRestrict } from "@/lib/erroRestrict";
 
 export async function PATCH(
   req: NextRequest,
@@ -36,4 +37,34 @@ export async function PATCH(
   });
 
   return NextResponse.json({ id: atualizado.id });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { eventoId: string; quiosqueId: string; produtoId: string } }
+) {
+  const produto = await prisma.produto.findFirst({
+    where: { id: params.produtoId, quiosqueId: params.quiosqueId, quiosque: { eventoId: params.eventoId } },
+  });
+  if (!produto) {
+    return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
+  }
+
+  try {
+    await prisma.produto.delete({ where: { id: produto.id } });
+  } catch (erro) {
+    if (ehViolacaoRestrict(erro)) {
+      return NextResponse.json(
+        {
+          erro:
+            "Não é possível excluir — esse produto já tem pedidos registrados. Use \"Esgotar\" " +
+            "pra escondê-lo do cardápio sem perder o histórico de vendas.",
+        },
+        { status: 409 }
+      );
+    }
+    throw erro;
+  }
+
+  return NextResponse.json({ ok: true });
 }
