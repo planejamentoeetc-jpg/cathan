@@ -174,22 +174,47 @@ export async function POST(req: NextRequest) {
 
     // Pix direto (Payments API) — o pagamento acontece dentro do próprio app,
     // sem redirecionar o cliente pro checkout hospedado do Mercado Pago.
-    const payment = await new Payment(clienteOrganizador ?? mercadoPagoClient).create({
-      body: {
-        transaction_amount: valorTotal,
-        description: `${evento.nome} — pedido Cathan`,
-        payment_method_id: "pix",
-        payer: {
-          email: corpo.clienteEmail.trim(),
-          first_name: primeiroNome,
-          last_name: restoNome.join(" ") || undefined,
-        },
-        notification_url: `${appUrl}/api/webhooks/mercado-pago`,
-        external_reference: pedidoPendente.id,
-        ...(applicationFee !== undefined ? { application_fee: applicationFee } : {}),
+    const corpoPagamentoBase = {
+      transaction_amount: valorTotal,
+      description: `${evento.nome} — pedido Cathan`,
+      payment_method_id: "pix",
+      payer: {
+        email: corpo.clienteEmail.trim(),
+        first_name: primeiroNome,
+        last_name: restoNome.join(" ") || undefined,
       },
-      requestOptions: { idempotencyKey: pedidoPendente.id },
-    });
+      notification_url: `${appUrl}/api/webhooks/mercado-pago`,
+      external_reference: pedidoPendente.id,
+    };
+
+    let payment;
+    try {
+      payment = await new Payment(clienteOrganizador ?? mercadoPagoClient).create({
+        body: {
+          ...corpoPagamentoBase,
+          ...(applicationFee !== undefined ? { application_fee: applicationFee } : {}),
+        },
+        requestOptions: { idempotencyKey: pedidoPendente.id },
+      });
+    } catch (erroPagamento) {
+      const mensagem = erroPagamento instanceof Error ? erroPagamento.message : String(erroPagamento);
+      if (applicationFee === undefined || !mensagem.includes("application_fee")) {
+        throw erroPagamento;
+      }
+      // Mercado Pago recusou o split pra essa conta (ex.: verificação de
+      // marketplace pendente do organizador) — tenta de novo sem comissão
+      // automática, pra não travar o checkout do evento. A comissão nesse
+      // caso precisa ser acertada à parte até a conta ficar habilitada.
+      console.error(
+        "MP recusou application_fee do organizador, tentando sem split",
+        evento.organizador?.id,
+        mensagem
+      );
+      payment = await new Payment(clienteOrganizador ?? mercadoPagoClient).create({
+        body: corpoPagamentoBase,
+        requestOptions: { idempotencyKey: pedidoPendente.id },
+      });
+    }
 
     const dadosPix = payment.point_of_interaction?.transaction_data;
     if (!payment.id || !dadosPix?.qr_code || !dadosPix?.qr_code_base64) {
