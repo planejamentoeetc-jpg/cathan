@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { criarPedidoAPartirDeItensValidados, PedidoInvalidoError } from "@/lib/criarPedido";
 import { prisma } from "@/lib/prisma";
 
+// margem acima do timeout de 15s da transação em criarPedido.ts
+export const maxDuration = 30;
+
 type ItemRequisicao = {
   produtoId: string;
   quantidade: number;

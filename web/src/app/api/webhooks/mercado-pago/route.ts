@@ -8,6 +8,9 @@ import { ItemPedidoValidado, PedidoInvalidoError, criarPedidoAPartirDeItensValid
 import { mercadoPagoClient } from "@/lib/mercadoPago";
 import { prisma } from "@/lib/prisma";
 
+// margem acima do timeout de 15s da transação em criarPedido.ts
+export const maxDuration = 30;
+
 // Endpoint público (sem autenticação de sessão) — a autenticidade é garantida
 // pela validação de assinatura abaixo, não pelo gate de senha do painel.
 export async function POST(req: NextRequest) {

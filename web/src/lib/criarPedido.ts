@@ -141,5 +141,9 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     }
 
     return { pedidoId: pedido.id, subPedidos: subPedidosCriados };
-  }));
+  // timeout padrão do Prisma (5s) é curto demais aqui: a transação faz várias
+  // idas ao banco (upsert de cliente, criação por quiosque com retry de código
+  // único, baixa de estoque) e já foi vista estourando em produção, mesmo com
+  // o retry de transacaoComRetry — cada tentativa individual precisa de folga.
+  }, { timeout: 15000, maxWait: 5000 }));
 }
