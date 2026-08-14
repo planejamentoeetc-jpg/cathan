@@ -5,6 +5,7 @@ import { calcularAnalyticsEvento } from "@/lib/analytics";
 import { AnalisesEvento } from "@/components/AnalisesEvento";
 import { ChatSuporte } from "@/components/ChatSuporte";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { FormularioComissaoEvento } from "@/components/FormularioComissaoEvento";
 
 function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -13,12 +14,12 @@ function formatarReais(valor: number) {
 export default async function EventoAdmin({ params }: { params: { eventoId: string } }) {
   const evento = await prisma.evento.findUnique({
     where: { id: params.eventoId },
-    include: { organizador: { select: { id: true, nome: true, comissaoPercentual: true } } },
+    include: { organizador: { select: { id: true, nome: true } } },
   });
   if (!evento) notFound();
 
   const dados = await calcularAnalyticsEvento(evento.id);
-  const taxaCathan = Number(evento.organizador?.comissaoPercentual ?? 4.9) / 100;
+  const taxaCathan = Number(evento.comissaoPercentual) / 100;
   const comissao = dados.vendasTotal * taxaCathan;
   const repasse = dados.vendasTotal - comissao;
 
@@ -70,17 +71,18 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
             Organizador
             <span className="val">{evento.organizador.nome}</span>
           </div>
-          <div className="g-row">
-            Comissão configurada
-            <span className="val">{Number(evento.organizador.comissaoPercentual).toFixed(1)}%</span>
-          </div>
           <Link
             href={`/admin/organizadores/${evento.organizador.id}`}
-            className="btn btn-secundario btn-bloco"
-            style={{ marginTop: 10 }}
+            style={{ fontSize: 12.5, color: "var(--verde)", display: "block", marginTop: 4 }}
           >
-            Ajustar comissão deste organizador
+            Ver organizador
           </Link>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--linha)" }}>
+            <FormularioComissaoEvento
+              eventoId={evento.id}
+              comissaoInicial={Number(evento.comissaoPercentual)}
+            />
+          </div>
         </div>
       )}
 

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { FormularioComissaoOrganizador } from "@/components/FormularioComissaoOrganizador";
 
 function formatarData(data: Date) {
   return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -43,14 +42,11 @@ export default async function OrganizadorAdmin({ params }: { params: { id: strin
             {organizador.mpUserId ? "✓ conectado" : "não conectado"}
           </span>
         </div>
-
-        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--linha)" }}>
-          <FormularioComissaoOrganizador
-            organizadorId={organizador.id}
-            comissaoInicial={Number(organizador.comissaoPercentual)}
-          />
-        </div>
       </div>
+
+      <p className="texto-fraco" style={{ marginBottom: 16 }}>
+        A % de comissão é configurada por evento — abra o evento abaixo pra ajustar.
+      </p>
 
       <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 10 }}>
         Eventos ({organizador.eventos.length})

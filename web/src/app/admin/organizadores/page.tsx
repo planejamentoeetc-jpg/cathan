@@ -45,7 +45,6 @@ export default async function OrganizadoresAdmin() {
               <span className="texto-fraco">
                 {organizador.email} — {organizador._count.eventos}{" "}
                 {organizador._count.eventos === 1 ? "evento" : "eventos"} —{" "}
-                {Number(organizador.comissaoPercentual).toFixed(1)}% de comissão —{" "}
                 {organizador.mpUserId ? "MP conectado" : "MP não conectado"}
               </span>
             </div>

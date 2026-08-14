@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function FormularioComissaoOrganizador({
-  organizadorId,
+export function FormularioComissaoEvento({
+  eventoId,
   comissaoInicial,
 }: {
-  organizadorId: string;
+  eventoId: string;
   comissaoInicial: number;
 }) {
   const router = useRouter();
@@ -28,7 +28,7 @@ export function FormularioComissaoOrganizador({
 
     setEnviando(true);
     try {
-      const resposta = await fetch(`/api/admin/organizadores/${organizadorId}`, {
+      const resposta = await fetch(`/api/admin/eventos/${eventoId}/comissao`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comissaoPercentual: valor }),
@@ -49,7 +49,7 @@ export function FormularioComissaoOrganizador({
 
   return (
     <div className="campo">
-      <label>% de comissão da Cathan</label>
+      <label>% de comissão da Cathan neste evento</label>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input
           type="text"

@@ -71,9 +71,6 @@ model Organizador {
   nome               String
   email              String @unique
   senhaHash          String @map("senha_hash")
-  // % que a Cathan retém automaticamente via application_fee do Mercado Pago;
-  // editável só pelo admin (não pelo próprio organizador) — ver admin/organizadores
-  comissaoPercentual Decimal @default(4.9) @map("comissao_percentual") @db.Decimal(5, 2)
 
   // conexão OAuth Mercado Pago (marketplace/split) — null enquanto não conectado,
   // nesse caso os pagamentos dos eventos deste organizador caem na conta global
@@ -101,6 +98,10 @@ model Evento {
   // obrigatório na migração seguinte
   organizadorId     String?     @map("organizador_id")
   organizador       Organizador? @relation(fields: [organizadorId], references: [id], onDelete: Restrict)
+  // % que a Cathan retém automaticamente via application_fee do Mercado Pago,
+  // configurável por evento (não por organizador) — editável só pelo admin em
+  // /admin/eventos/[eventoId]
+  comissaoPercentual Decimal @default(4.9) @map("comissao_percentual") @db.Decimal(5, 2)
   nome              String
   local             String
   data              DateTime

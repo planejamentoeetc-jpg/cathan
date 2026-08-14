@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: { eventoId: string } }) {
   let corpo: { comissaoPercentual?: number };
   try {
     corpo = await req.json();
@@ -18,13 +18,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ erro: "Informe uma % entre 0 e 100." }, { status: 400 });
   }
 
-  const organizador = await prisma.organizador.findUnique({ where: { id: params.id } });
-  if (!organizador) {
-    return NextResponse.json({ erro: "Organizador não encontrado." }, { status: 404 });
+  const evento = await prisma.evento.findUnique({ where: { id: params.eventoId } });
+  if (!evento) {
+    return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }
 
-  const atualizado = await prisma.organizador.update({
-    where: { id: params.id },
+  const atualizado = await prisma.evento.update({
+    where: { id: params.eventoId },
     data: { comissaoPercentual: corpo.comissaoPercentual },
   });
 

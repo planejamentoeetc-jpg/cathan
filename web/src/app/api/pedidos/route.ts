@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
       ? await obterClienteOrganizador(evento.organizador)
       : null;
     const applicationFee = clienteOrganizador
-      ? Math.round(valorTotal * (Number(evento.organizador!.comissaoPercentual) / 100) * 100) / 100
+      ? Math.round(valorTotal * (Number(evento.comissaoPercentual) / 100) * 100) / 100
       : undefined;
 
     // Pix direto (Payments API) — o pagamento acontece dentro do próprio app,
