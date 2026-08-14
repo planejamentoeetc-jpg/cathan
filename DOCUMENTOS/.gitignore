@@ -1,0 +1,6 @@
+web/node_modules/
+web/.env
+web/.next/
+web/next-env.d.ts
+.DS_Store
+Thumbs.db
