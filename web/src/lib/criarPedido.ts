@@ -1,4 +1,4 @@
-import { FormaPagamento, ModalidadeQuiosque } from "@prisma/client";
+import { FormaPagamento, ModalidadeQuiosque, StatusSubPedido } from "@prisma/client";
 import { criarSubPedidoComCodigoUnico } from "@/lib/codigoRetirada";
 import { prisma, transacaoComRetry } from "@/lib/prisma";
 
@@ -112,12 +112,22 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     for (const { quiosqueId, itens: itensDoGrupo } of grupos.values()) {
       const quiosque = produtosPorId.get(itensDoGrupo[0].produtoId)!.quiosque;
 
+      // Bebida não tem preparo -- já nasce PRONTA pra retirar, pulando os passos
+      // de aceitar/produzir. O cliente já recebe o aviso de "pode buscar" assim
+      // que o item é liberado (ver quantidadeLiberada abaixo), e o quiosque só
+      // precisa apertar "entregue" quando a pessoa chegar no balcão.
+      const jaNasceProntaBebida = quiosque.modalidade === ModalidadeQuiosque.BEBIDAS;
+      const agora = new Date();
+
       const subPedido = await criarSubPedidoComCodigoUnico(tx, quiosqueId, quiosque.nome, (codigo) =>
         tx.subPedido.create({
           data: {
             pedidoId: pedido.id,
             quiosqueId,
             codigoRetirada: codigo,
+            ...(jaNasceProntaBebida
+              ? { status: StatusSubPedido.PRONTO, aceitoEm: agora, prontoEm: agora }
+              : {}),
             itens: {
               create: itensDoGrupo.map((item) => {
                 // Comprou só 1 unidade? Manda direto pra produção, sem esperar

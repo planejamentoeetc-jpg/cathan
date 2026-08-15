@@ -38,6 +38,13 @@ export function etapasStatus(modalidade: ModalidadeQuiosque | string): StatusSub
       StatusSubPedido.CONCLUIDO,
     ];
   }
+  // Bebida não tem preparo -- já nasce PRONTA (ver criarPedido.ts), pulando
+  // "aceito" de verdade. Sem essa etapa própria, o stepper mostraria uma
+  // bolinha "Aceito" sempre acesa magicamente junto com "Pronto", sem nunca
+  // ter existido como uma transição real.
+  if (modalidade === ModalidadeQuiosque.BEBIDAS) {
+    return [StatusSubPedido.RECEBIDO, StatusSubPedido.PRONTO, StatusSubPedido.RETIRADO];
+  }
   // "Em produção" não entra aqui: o quiosque só tem 3 ações reais (aceitar, pronto,
   // entregar) — nunca existe uma transição pra EM_PRODUCAO de verdade, então essa
   // bolinha nunca acendia e o cliente via o status sempre "uma fase atrasado".
