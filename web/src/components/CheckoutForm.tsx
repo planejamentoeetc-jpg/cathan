@@ -7,8 +7,17 @@ import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
 import { lerPixPendente, limparPixPendente, salvarPixPendente, type PixPendenteLocal } from "@/lib/pixPendente";
 import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
 
-const MAX_TENTATIVAS_POLLING = 30;
 const INTERVALO_POLLING_MS = 2000;
+// depois desse tanto de tentativas rápidas (1min), passa a checar mais devagar em
+// vez de desistir -- pagar Pix de verdade (abrir o app do banco, achar a opção,
+// confirmar) rotineiramente leva mais de 1min, ainda mais com muita gente na
+// wifi do evento ao mesmo tempo. Checar rápido demais por 20min esgotaria o
+// servidor à toa; checar devagar demais faz o cliente achar que travou.
+const TENTATIVAS_RAPIDAS = 30;
+const INTERVALO_POLLING_LENTO_MS = 10000;
+// mesmo horizonte do pixPendente (lib/pixPendente.ts) -- não faz sentido desistir
+// de checar antes desse prazo, já que o Pix ainda é válido até lá
+const LIMITE_POLLING_MS = 20 * 60 * 1000;
 
 function formatarDistancia(metros: number) {
   if (metros >= 1000) {
@@ -59,6 +68,8 @@ export function CheckoutForm({
     if (!pix || pedidoConfirmadoId) return;
 
     let cancelado = false;
+    const inicioMs = Date.now();
+
     async function verificar() {
       try {
         const resposta = await fetch(`/api/pedidos-pendentes/${pix!.pedidoPendenteId}`, {
@@ -67,7 +78,7 @@ export function CheckoutForm({
         if (!resposta.ok || cancelado) return;
         const dados = await resposta.json();
         if (dados.status === "CONFIRMADO" && dados.pedidoId) {
-          clearInterval(intervalo);
+          clearTimeout(proximoTimeout);
           salvarPixPendente(eventoId, { ...pix!, pedidoId: dados.pedidoId });
           setPedidoConfirmadoId(dados.pedidoId);
         }
@@ -76,20 +87,39 @@ export function CheckoutForm({
       }
     }
 
-    verificar();
-    const intervalo = setInterval(() => {
-      tentativasRef.current += 1;
-      if (tentativasRef.current >= MAX_TENTATIVAS_POLLING) {
-        clearInterval(intervalo);
+    // assim que o cliente volta pra aba (ex.: depois de pagar no app do banco),
+    // confere na hora em vez de esperar o próximo ciclo do timer -- é o momento
+    // exato em que o pagamento mais provavelmente já foi confirmado
+    function aoVoltarPraAba() {
+      if (document.visibilityState === "visible") verificar();
+    }
+    document.addEventListener("visibilitychange", aoVoltarPraAba);
+    window.addEventListener("focus", aoVoltarPraAba);
+
+    let proximoTimeout: ReturnType<typeof setTimeout>;
+    function agendarProximaChecagem() {
+      const decorridoMs = Date.now() - inicioMs;
+      if (decorridoMs >= LIMITE_POLLING_MS) {
         setTentativasEsgotadas(true);
         return;
       }
-      verificar();
-    }, INTERVALO_POLLING_MS);
+      tentativasRef.current += 1;
+      const intervaloAtual =
+        tentativasRef.current <= TENTATIVAS_RAPIDAS ? INTERVALO_POLLING_MS : INTERVALO_POLLING_LENTO_MS;
+      proximoTimeout = setTimeout(async () => {
+        await verificar();
+        if (!cancelado) agendarProximaChecagem();
+      }, intervaloAtual);
+    }
+
+    verificar();
+    agendarProximaChecagem();
 
     return () => {
       cancelado = true;
-      clearInterval(intervalo);
+      clearTimeout(proximoTimeout);
+      document.removeEventListener("visibilitychange", aoVoltarPraAba);
+      window.removeEventListener("focus", aoVoltarPraAba);
     };
   }, [pix, pedidoConfirmadoId]);
 
@@ -281,8 +311,8 @@ export function CheckoutForm({
         ) : (
           <>
             <p className="texto-fraco" style={{ marginBottom: 10 }}>
-              O pagamento ainda está sendo processado. Você pode fechar esta tela — assim que for
-              confirmado, seu pedido aparece pronto para acompanhamento.
+              Ainda não recebemos a confirmação do seu pagamento. Se você já pagou, toque em
+              "Verificar novamente" — se ainda não pagou, o código pode ter expirado.
             </p>
             <button
               type="button"
@@ -291,6 +321,10 @@ export function CheckoutForm({
               onClick={() => {
                 tentativasRef.current = 0;
                 setTentativasEsgotadas(false);
+                // nova referência reinicia o efeito de polling do zero (novo prazo de
+                // 20min + checagem imediata) -- só resetar o estado acima não bastava,
+                // o timer anterior já tinha sido de fato encerrado
+                setPix((atual) => (atual ? { ...atual } : atual));
               }}
             >
               Verificar novamente
