@@ -31,6 +31,13 @@ export async function criarPedidoAPartirDeItensValidados(params: {
   // tempo real, não faz sentido segurar. Pedidos do cliente (Pix) nascem segurados
   // (false): o próprio cliente decide, item a item, quando mandar pra produção.
   liberarProducaoAutomaticamente?: boolean;
+  // Só a Venda Manual usa isso (true): gera um ticket/código separado por PRODUTO,
+  // mesmo quando são do mesmo quiosque -- sem isso, dois produtos diferentes do
+  // mesmo quiosque numa mesma venda caem no mesmo ticket, e o quiosque não
+  // consegue fechar/retirar um produto sem esperar o outro ficar pronto junto.
+  // O checkout do cliente (Pix) continua agrupando por quiosque como sempre
+  // (default false) -- não foi pedido mudar esse fluxo.
+  umTicketPorProduto?: boolean;
 }) {
   const {
     eventoId,
@@ -39,6 +46,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     itens,
     formaPagamento = FormaPagamento.MERCADO_PAGO,
     liberarProducaoAutomaticamente = false,
+    umTicketPorProduto = false,
   } = params;
 
   const produtoIds = [...new Set(itens.map((i) => i.produtoId))];
@@ -73,12 +81,13 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     }
   }
 
-  const itensPorQuiosque = new Map<string, ItemPedidoValidado[]>();
+  const grupos = new Map<string, { quiosqueId: string; itens: ItemPedidoValidado[] }>();
   for (const item of itens) {
     const produto = produtosPorId.get(item.produtoId)!;
-    const grupo = itensPorQuiosque.get(produto.quiosqueId) ?? [];
-    grupo.push(item);
-    itensPorQuiosque.set(produto.quiosqueId, grupo);
+    const chave = umTicketPorProduto ? `${produto.quiosqueId}::${item.produtoId}` : produto.quiosqueId;
+    const grupo = grupos.get(chave) ?? { quiosqueId: produto.quiosqueId, itens: [] };
+    grupo.itens.push(item);
+    grupos.set(chave, grupo);
   }
 
   return transacaoComRetry(() => prisma.$transaction(async (tx) => {
@@ -94,7 +103,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
 
     const subPedidosCriados = [];
 
-    for (const [quiosqueId, itensDoGrupo] of itensPorQuiosque) {
+    for (const { quiosqueId, itens: itensDoGrupo } of grupos.values()) {
       const quiosque = produtosPorId.get(itensDoGrupo[0].produtoId)!.quiosque;
 
       const subPedido = await criarSubPedidoComCodigoUnico(tx, quiosqueId, quiosque.nome, (codigo) =>

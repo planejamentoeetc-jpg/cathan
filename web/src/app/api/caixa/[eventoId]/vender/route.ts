@@ -81,6 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: { eventoId: s
       clienteCelular,
       formaPagamento: "DINHEIRO",
       liberarProducaoAutomaticamente: true,
+      umTicketPorProduto: true,
       itens: corpo.itens.map((item) => {
         const produto = produtosPorId.get(item.produtoId)!;
         return {

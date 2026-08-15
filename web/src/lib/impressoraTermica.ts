@@ -149,7 +149,7 @@ export async function imprimirRecibo(conexao: ConexaoImpressora, venda: VendaPar
   partes.push(
     ...enc.encode(
       `--------------------------\nPago em dinheiro - Caixa\n${
-        venda.subPedidos.length > 1 ? "Uma retirada por quiosque\n" : ""
+        venda.subPedidos.length > 1 ? "Uma retirada por código\n" : ""
       }Acompanhe seus codigos na Tela de Pedidos\n\n\n`
     ),
     0x1d,
