@@ -113,7 +113,17 @@ export default function Acompanhamento() {
   // continua na tela de "pronto" mesmo depois do cliente confirmar "Estou indo!"
   // (pra ele poder mostrar o código no balcão) — só sai daqui quando o quiosque
   // marca como retirado, o que já tira o sub-pedido de subPedidosAtivos.
-  const prontos = subPedidosAtivos.filter((sp) => sp.status === "PRONTO" || sp.status === "CHAMADO");
+  //
+  // Também exige que ALGUM item já tenha sido liberado: bebida nasce com
+  // status=PRONTO direto da criação (ver criarPedido.ts), mas numa compra de
+  // 2+ unidades isso não significa que o cliente já liberou alguma -- sem essa
+  // checagem o pager de tela cheia disparava "vem buscar" mesmo com tudo ainda
+  // "segurado" e o quiosque sem ver nada na fila dele (aconteceu de verdade).
+  const prontos = subPedidosAtivos.filter(
+    (sp) =>
+      (sp.status === "PRONTO" || sp.status === "CHAMADO") &&
+      sp.itens.some((item) => item.quantidadeLiberada > 0)
+  );
 
   useEffect(() => {
     const novos = prontos.filter((sp) => !idsJaAvisados.current.has(sp.id));
