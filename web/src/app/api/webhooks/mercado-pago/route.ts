@@ -82,12 +82,56 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const itens = pedidoPendente.itens as unknown as ItemPedidoValidado[];
+    const itensOriginais = pedidoPendente.itens as unknown as ItemPedidoValidado[];
+
+    // Revalida ativo/estoque ANTES de tentar criar, pra poder excluir só os itens
+    // que pararam de existir/esgotaram nesse meio tempo, em vez de derrubar o
+    // pedido inteiro por causa de 1 item — dinheiro já foi cobrado do cliente,
+    // não dá pra simplesmente não honrar nada dele por causa de outra pessoa ter
+    // esgotado 1 produto enquanto ele pagava (aconteceu de verdade em produção).
+    const produtoIds = [...new Set(itensOriginais.map((i) => i.produtoId))];
+    const produtos = await prisma.produto.findMany({ where: { id: { in: produtoIds } } });
+    const produtosPorId = new Map(produtos.map((p) => [p.id, p]));
+
+    const itensInvalidos: string[] = [];
+    const itensValidos = itensOriginais.filter((item) => {
+      const produto = produtosPorId.get(item.produtoId);
+      if (!produto) {
+        itensInvalidos.push(`item removido do cardápio (${item.quantidade}×)`);
+        return false;
+      }
+      if (!produto.ativo) {
+        itensInvalidos.push(`"${produto.nome}" esgotado (${item.quantidade}×)`);
+        return false;
+      }
+      if (produto.estoque !== null && produto.estoque < item.quantidade) {
+        itensInvalidos.push(`estoque insuficiente pra "${produto.nome}" (pediu ${item.quantidade}×)`);
+        return false;
+      }
+      return true;
+    });
+
+    if (itensValidos.length === 0) {
+      await prisma.pedidoPendente.update({
+        where: { id: pedidoPendente.id },
+        data: {
+          status: "FALHOU",
+          mpPaymentId: String(payment.id),
+          motivoFalha: `Nenhum item pôde ser honrado: ${itensInvalidos.join(", ")}`,
+        },
+      });
+      console.error("Pagamento aprovado mas NENHUM item pôde ser honrado; requer reconciliação manual", {
+        pedidoPendenteId: pedidoPendente.id,
+        paymentId: payment.id,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     const resultado = await criarPedidoAPartirDeItensValidados({
       eventoId: pedidoPendente.eventoId,
       clienteNome: pedidoPendente.clienteNome,
       clienteCelular: pedidoPendente.clienteCelular,
-      itens,
+      itens: itensValidos,
     });
 
     await prisma.pedidoPendente.update({
@@ -96,12 +140,23 @@ export async function POST(req: NextRequest) {
         status: "CONFIRMADO",
         pedidoId: resultado.pedidoId,
         mpPaymentId: String(payment.id),
+        motivoFalha:
+          itensInvalidos.length > 0
+            ? `Item(ns) removido(s) automaticamente (indisponível): ${itensInvalidos.join(", ")} — acertar diferença de valor com o cliente`
+            : null,
       },
     });
   } catch (erro) {
     if (erro instanceof PedidoInvalidoError) {
-      // pagamento já foi aprovado pelo MP mas não conseguimos honrar o carrinho
-      // (ex: estoque esgotou enquanto o cliente pagava) — requer reconciliação manual
+      // não deveria mais acontecer pro caso comum (esgotado/estoque, já filtrado
+      // acima) — sobra pra casos residuais (ex.: race condition bem no instante
+      // da revalidação). Ainda assim marca como falha visível em vez de só logar.
+      await prisma.pedidoPendente
+        .update({
+          where: { id: pedidoPendente.id },
+          data: { status: "FALHOU", mpPaymentId: String(payment.id), motivoFalha: erro.message },
+        })
+        .catch(() => {});
       console.error("Pagamento aprovado mas pedido não pôde ser criado; requer reconciliação manual", {
         pedidoPendenteId: pedidoPendente.id,
         paymentId: payment.id,

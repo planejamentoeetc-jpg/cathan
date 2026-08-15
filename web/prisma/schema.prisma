@@ -44,6 +44,10 @@ enum StatusPedidoPendente {
   PENDENTE
   CONFIRMADO
   EXPIRADO
+  // pagamento foi aprovado pelo Mercado Pago mas NENHUM item pôde ser honrado
+  // (ex.: todos os produtos ficaram esgotados entre o checkout e a confirmação)
+  // -- dinheiro já foi cobrado, precisa de reconciliação manual com o cliente
+  FALHOU
 }
 
 enum StatusSubPedido {
@@ -231,6 +235,11 @@ model PedidoPendente {
   status         StatusPedidoPendente @default(PENDENTE)
   mpPreferenceId String?              @map("mp_preference_id")
   mpPaymentId    String?              @map("mp_payment_id")
+  // preenchido quando 1+ item precisou ser removido automaticamente (esgotado/
+  // estoque insuficiente) pra ainda assim honrar o resto do pedido já pago, ou
+  // quando nada pôde ser honrado (status=FALHOU) -- fica visível pro gestor/
+  // admin saberem que precisam acertar diferença de valor com o cliente
+  motivoFalha    String?              @map("motivo_falha")
   pedidoId       String?              @unique @map("pedido_id")
   pedido         Pedido?              @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
   criadoEm       DateTime             @default(now()) @map("criado_em")
