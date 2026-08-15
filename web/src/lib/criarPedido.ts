@@ -104,18 +104,24 @@ export async function criarPedidoAPartirDeItensValidados(params: {
             quiosqueId,
             codigoRetirada: codigo,
             itens: {
-              create: itensDoGrupo.map((item) => ({
-                produtoId: item.produtoId,
-                quantidade: item.quantidade,
-                precoUnitario: item.precoUnitario,
-                observacao: item.observacao,
-                nomesCriancas:
-                  quiosque.modalidade === ModalidadeQuiosque.BRINCADEIRAS
-                    ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
-                    : [],
-                quantidadeLiberada: liberarProducaoAutomaticamente ? item.quantidade : 0,
-                liberadoEm: liberarProducaoAutomaticamente ? new Date() : null,
-              })),
+              create: itensDoGrupo.map((item) => {
+                // Comprou só 1 unidade? Manda direto pra produção, sem esperar
+                // comando do cliente — igual qualquer compra online. A escolha de
+                // liberar aos poucos só faz sentido quando ele levou mais de 1.
+                const liberaAgora = liberarProducaoAutomaticamente || item.quantidade === 1;
+                return {
+                  produtoId: item.produtoId,
+                  quantidade: item.quantidade,
+                  precoUnitario: item.precoUnitario,
+                  observacao: item.observacao,
+                  nomesCriancas:
+                    quiosque.modalidade === ModalidadeQuiosque.BRINCADEIRAS
+                      ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
+                      : [],
+                  quantidadeLiberada: liberaAgora ? item.quantidade : 0,
+                  liberadoEm: liberaAgora ? new Date() : null,
+                };
+              }),
             },
           },
         })

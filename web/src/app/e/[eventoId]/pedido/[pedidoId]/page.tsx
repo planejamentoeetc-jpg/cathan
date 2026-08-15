@@ -238,42 +238,87 @@ export default function Acompanhamento() {
                     )}
 
                     {restante > 0 && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                      <div
+                        style={{
+                          marginTop: 10,
+                          padding: "16px 14px",
+                          borderRadius: 16,
+                          background: "var(--verde-suave)",
+                          border: "1.5px solid var(--verde)",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 14,
+                        }}
+                      >
                         {restante > 1 && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <button
-                              type="button"
-                              className="btn btn-secundario"
-                              style={{ padding: "4px 10px" }}
-                              disabled={liberando.has(item.id) || escolha <= 1}
-                              onClick={() => ajustarQuantidadeEscolhida(item, -1)}
-                            >
-                              −
-                            </button>
-                            <span className="mono">{escolha}</span>
-                            <button
-                              type="button"
-                              className="btn btn-secundario"
-                              style={{ padding: "4px 10px" }}
-                              disabled={liberando.has(item.id) || escolha >= restante}
-                              onClick={() => ajustarQuantidadeEscolhida(item, 1)}
-                            >
-                              +
-                            </button>
-                          </div>
+                          <>
+                            <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--verde)" }}>
+                              QUANTAS UNIDADES ENVIAR AGORA?
+                            </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+                              <button
+                                type="button"
+                                aria-label="Diminuir quantidade"
+                                disabled={liberando.has(item.id) || escolha <= 1}
+                                onClick={() => ajustarQuantidadeEscolhida(item, -1)}
+                                style={{
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: "50%",
+                                  border: "none",
+                                  background: "var(--verde)",
+                                  color: "#fff",
+                                  fontSize: 24,
+                                  fontWeight: 800,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  opacity: liberando.has(item.id) || escolha <= 1 ? 0.4 : 1,
+                                }}
+                              >
+                                −
+                              </button>
+                              <span style={{ fontSize: 30, fontWeight: 800, minWidth: 34, textAlign: "center" }}>
+                                {escolha}
+                              </span>
+                              <button
+                                type="button"
+                                aria-label="Aumentar quantidade"
+                                disabled={liberando.has(item.id) || escolha >= restante}
+                                onClick={() => ajustarQuantidadeEscolhida(item, 1)}
+                                style={{
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: "50%",
+                                  border: "none",
+                                  background: "var(--verde)",
+                                  color: "#fff",
+                                  fontSize: 24,
+                                  fontWeight: 800,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  opacity: liberando.has(item.id) || escolha >= restante ? 0.4 : 1,
+                                }}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </>
                         )}
                         <button
                           type="button"
-                          className="btn btn-secundario"
-                          style={{ padding: "6px 10px", fontSize: 12.5, whiteSpace: "nowrap" }}
+                          className="btn btn-primario btn-bloco"
+                          style={{ padding: "16px 18px", fontSize: 16.5, borderRadius: 14 }}
                           disabled={liberando.has(item.id)}
                           onClick={() => liberarItem(item.id, escolha)}
                         >
                           {liberando.has(item.id)
                             ? "Enviando…"
                             : escolha < item.quantidade
-                            ? `Mandar ${escolha} pra produção`
-                            : "Mandar pra produção"}
+                            ? `📤 Mandar ${escolha} pra produção`
+                            : "📤 Mandar pra produção"}
                         </button>
                       </div>
                     )}
