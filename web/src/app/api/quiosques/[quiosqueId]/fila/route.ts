@@ -54,6 +54,11 @@ export async function GET(_req: NextRequest, { params }: { params: { quiosqueId:
             nomesCriancas: item.nomesCriancas,
           })),
         };
-      }),
+      })
+      // cliente a caminho primeiro -- é quem vai chegar no balcão a qualquer
+      // momento, precisa pular na frente de quem ainda nem avisou que vem
+      // buscar. .sort() é estável, então dentro de cada grupo a ordem por
+      // horário de chegada (mais antigo primeiro) continua preservada.
+      .sort((a, b) => Number(b.clienteACaminho) - Number(a.clienteACaminho)),
   });
 }
