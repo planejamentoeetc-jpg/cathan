@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { calcularAnalyticsEvento } from "@/lib/analytics";
-import { AnalisesEvento } from "@/components/AnalisesEvento";
+import { PainelComOlho } from "@/components/PainelComOlho";
 import { ChatSuporte } from "@/components/ChatSuporte";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { FormularioComissaoEvento } from "@/components/FormularioComissaoEvento";
@@ -42,28 +42,19 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
         </Link>
       </div>
 
-      <div className="g-grid">
-        <div className="kpi">
-          <div className="n">{formatarReais(dados.vendasTotal)}</div>
-          <div className="l">Movimentado no evento (GMV)</div>
-        </div>
-        <div className="kpi">
-          <div className="n" style={{ color: "var(--verde)" }}>
-            {formatarReais(comissao)}
-          </div>
-          <div className="l">Faturamento Cathan · taxa {(taxaCathan * 100).toFixed(1)}%</div>
-        </div>
-        <div className="kpi">
-          <div className="n">{formatarReais(repasse)}</div>
-          <div className="l">Repasse aos lojistas</div>
-        </div>
-        <div className="kpi">
-          <div className="n" style={{ color: "var(--verde)" }}>
-            ● Operacional
-          </div>
-          <div className="l">Status do sistema</div>
-        </div>
-      </div>
+      <PainelComOlho
+        dados={dados}
+        kpis={[
+          { valor: formatarReais(dados.vendasTotal), rotulo: "Movimentado no evento (GMV)" },
+          {
+            valor: formatarReais(comissao),
+            rotulo: `Faturamento Cathan · taxa ${(taxaCathan * 100).toFixed(1)}%`,
+            cor: "var(--verde)",
+          },
+          { valor: formatarReais(repasse), rotulo: "Repasse aos lojistas" },
+          { valor: "● Operacional", rotulo: "Status do sistema", cor: "var(--verde)", oculta: false },
+        ]}
+      />
 
       {evento.organizador && (
         <div className="g-sec">
@@ -85,8 +76,6 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
           </div>
         </div>
       )}
-
-      <AnalisesEvento dados={dados} />
 
       <div className="g-sec">
         <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>

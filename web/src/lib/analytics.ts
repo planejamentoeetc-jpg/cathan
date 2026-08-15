@@ -1,5 +1,6 @@
 import { StatusSubPedido } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { formatarMinutos } from "@/lib/formatarMinutos";
 
 const STATUS_ALIMENTACAO = [
   StatusSubPedido.RECEBIDO,
@@ -209,7 +210,3 @@ export async function calcularAnalyticsEvento(eventoId: string): Promise<Analyti
   };
 }
 
-export function formatarMinutos(min: number): string {
-  if (min < 1) return `${Math.round(min * 60)} s`;
-  return `${min.toFixed(1)} min`;
-}

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { calcularAnalyticsEvento } from "@/lib/analytics";
-import { AnalisesEvento } from "@/components/AnalisesEvento";
+import { PainelComOlho } from "@/components/PainelComOlho";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { LinkCopiavel } from "@/components/LinkCopiavel";
 import { PausarEventoToggle } from "@/components/PausarEventoToggle";
@@ -88,34 +88,23 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
       <PausarEventoToggle eventoId={evento.id} pausadoInicial={evento.pedidosPausados} />
 
-      <div className="g-grid">
-        <div className="kpi">
-          <div className="n">{formatarReais(dados.vendasTotal)}</div>
-          <div className="l">Vendas do evento</div>
-        </div>
-        <div className="kpi">
-          <div className="n">{dados.totalPedidos}</div>
-          <div className="l">Pedidos</div>
-        </div>
-        <div className="kpi">
-          <div className="n">{formatarReais(dados.vendasPorForma.mercadoPago)}</div>
-          <div className="l">Via plataforma (split)</div>
-        </div>
-        <div className="kpi">
-          <div className="n">{formatarReais(dados.vendasPorForma.dinheiro)}</div>
-          <div className="l">Em caixa (dinheiro)</div>
-        </div>
-      </div>
-
-      <Link
-        href={`/gestor/eventos/${evento.id}/pedidos`}
-        className="btn btn-secundario btn-bloco"
-        style={{ marginBottom: 16 }}
+      <PainelComOlho
+        dados={dados}
+        kpis={[
+          { valor: formatarReais(dados.vendasTotal), rotulo: "Vendas do evento" },
+          { valor: String(dados.totalPedidos), rotulo: "Pedidos", oculta: false },
+          { valor: formatarReais(dados.vendasPorForma.mercadoPago), rotulo: "Via plataforma (split)" },
+          { valor: formatarReais(dados.vendasPorForma.dinheiro), rotulo: "Em caixa (dinheiro)" },
+        ]}
       >
-        📋 Registro de pedidos — conferir cliente por cliente
-      </Link>
-
-      <AnalisesEvento dados={dados} />
+        <Link
+          href={`/gestor/eventos/${evento.id}/pedidos`}
+          className="btn btn-secundario btn-bloco"
+          style={{ marginBottom: 16 }}
+        >
+          📋 Registro de pedidos — conferir cliente por cliente
+        </Link>
+      </PainelComOlho>
 
       <div className="g-linha-cartoes">
         <div className="cartao" style={{ margin: 0 }}>
