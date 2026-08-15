@@ -60,7 +60,10 @@ export default function TelaDePedidos() {
     <div className="telao-wrap">
       <div className="telao-titulo">Fila dos quiosques</div>
 
-      <div className="telao-colunas">
+      <div
+        className="telao-colunas"
+        style={{ gridTemplateColumns: `repeat(${Math.max(quiosques.length, 1)}, minmax(0, 1fr))` }}
+      >
         {quiosques.map((q) => (
           <div key={q.id} className="telao-coluna">
             <div className="telao-coluna-titulo" style={{ color: q.cor }}>

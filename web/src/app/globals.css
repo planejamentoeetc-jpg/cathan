@@ -438,13 +438,20 @@ input[type="password"]::-ms-clear {
 }
 
 .telao-colunas {
-  display: flex;
+  display: grid;
+  /* grid-template-columns vem inline do componente, calculado a partir da
+     quantidade real de quiosques -- sempre divide a largura toda da tela,
+     nunca deixa quiosque escondido fora da área visível */
   gap: 20px;
-  align-items: flex-start;
+  align-items: start;
 }
 
 .telao-coluna {
-  flex: 0 0 320px;
+  min-width: 0;
+  /* torna esta coluna uma container query: o tamanho de fonte do código (abaixo)
+     escala com a largura REAL da coluna, não da tela -- essencial porque a
+     largura da coluna muda sozinha conforme a quantidade de quiosques */
+  container-type: inline-size;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 16px;
@@ -456,7 +463,7 @@ input[type="password"]::-ms-clear {
 .telao-coluna-titulo {
   font-family: var(--font-sora);
   font-weight: 800;
-  font-size: 20px;
+  font-size: clamp(13px, 11cqw, 20px);
   padding-bottom: 10px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
@@ -475,11 +482,11 @@ input[type="password"]::-ms-clear {
 .telao-card .telao-codigo {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 22px;
+  font-size: clamp(13px, 10cqw, 22px);
 }
 
 .telao-card .telao-nome {
-  font-size: 14px;
+  font-size: clamp(11px, 7cqw, 14px);
   color: #bfd4da;
 }
 
@@ -494,7 +501,7 @@ input[type="password"]::-ms-clear {
 }
 
 .telao-card-destaque .telao-codigo {
-  font-size: 40px;
+  font-size: clamp(18px, 18cqw, 40px);
   line-height: 1.1;
 }
 
