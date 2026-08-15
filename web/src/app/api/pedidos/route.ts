@@ -18,7 +18,6 @@ type CorpoRequisicao = {
   eventoId: string;
   clienteNome: string;
   clienteCelular: string;
-  clienteEmail: string;
   latitude?: number;
   longitude?: number;
   itens: ItemRequisicao[];
@@ -40,12 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "JSON inválido." }, { status: 400 });
   }
 
-  if (
-    !corpo.eventoId ||
-    !corpo.clienteNome?.trim() ||
-    !corpo.clienteCelular?.trim() ||
-    !corpo.clienteEmail?.trim()
-  ) {
+  if (!corpo.eventoId || !corpo.clienteNome?.trim() || !corpo.clienteCelular?.trim()) {
     return NextResponse.json({ erro: "Dados do cliente incompletos." }, { status: 400 });
   }
   if (!Array.isArray(corpo.itens) || corpo.itens.length === 0) {
@@ -179,7 +173,10 @@ export async function POST(req: NextRequest) {
       description: `${evento.nome} — pedido Cathan`,
       payment_method_id: "pix",
       payer: {
-        email: corpo.clienteEmail.trim(),
+        // O checkout não pede e-mail do cliente (reduz fricção e ele nunca é
+        // usado em nenhum outro lugar do sistema) — o Mercado Pago só exige o
+        // campo pra gerar o Pix, sem verificar se é entregável.
+        email: `pedido-${pedidoPendente.id}@cathan.com.br`,
         first_name: primeiroNome,
         last_name: restoNome.join(" ") || undefined,
       },

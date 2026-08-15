@@ -5,7 +5,6 @@ const CHAVE = "cathan:cliente";
 export type ClienteLocal = {
   nome: string;
   celular: string;
-  email?: string;
 };
 
 export function lerClienteLocal(): ClienteLocal | null {

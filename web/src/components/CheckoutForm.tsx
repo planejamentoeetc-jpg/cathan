@@ -39,7 +39,6 @@ export function CheckoutForm({
   const clienteSalvo = lerClienteLocal();
   const [nome, setNome] = useState(clienteSalvo?.nome ?? "");
   const [celular, setCelular] = useState(clienteSalvo?.celular ?? "");
-  const [email, setEmail] = useState(clienteSalvo?.email ?? "");
   // um nome por unidade, por produto (índice 0..quantidade-1)
   const [nomesCriancasPorProduto, setNomesCriancasPorProduto] = useState<Record<string, string[]>>({});
   const [enviando, setEnviando] = useState(false);
@@ -130,8 +129,8 @@ export function CheckoutForm({
     setErro(null);
     setForaDoRaio(null);
 
-    if (!nome.trim() || !celular.trim() || !email.trim()) {
-      setErro("Informe nome, celular e e-mail para continuar.");
+    if (!nome.trim() || !celular.trim()) {
+      setErro("Informe nome e celular para continuar.");
       return;
     }
     if (itens.length === 0) {
@@ -153,7 +152,6 @@ export function CheckoutForm({
           eventoId,
           clienteNome: nome.trim(),
           clienteCelular: celular.trim(),
-          clienteEmail: email.trim(),
           latitude: localizacao?.latitude,
           longitude: localizacao?.longitude,
           itens: itens.map((i) => ({
@@ -180,7 +178,7 @@ export function CheckoutForm({
         return;
       }
 
-      salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), email: email.trim() });
+      salvarClienteLocal({ nome: nome.trim(), celular: celular.trim() });
       const novoPix = { pedidoPendenteId: dados.pedidoPendenteId, valor: total, criadoEm: Date.now(), ...dados.pix };
       salvarPixPendente(eventoId, novoPix);
       setPix(novoPix);
@@ -403,19 +401,6 @@ export function CheckoutForm({
             placeholder="(00) 00000-0000"
           />
         </div>
-        <div className="campo">
-          <label>E-mail</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="seuemail@exemplo.com"
-          />
-          <span className="texto-fraco" style={{ fontSize: 11.5 }}>
-            Exigido pelo Mercado Pago para gerar o Pix.
-          </span>
-        </div>
-
         {exigeLocalizacao && (
           <p className="texto-fraco" style={{ marginBottom: 10 }}>
             Este evento exige que você esteja dentro do raio de pedidos. Vamos pedir sua
