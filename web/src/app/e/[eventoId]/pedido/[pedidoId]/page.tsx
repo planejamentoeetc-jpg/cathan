@@ -40,13 +40,13 @@ type Pedido = {
 
 const INTERVALO_POLLING_MS = 3000;
 
-function chaveDispensados(pedidoId: string) {
+function chaveConfirmados(pedidoId: string) {
   return `cathan:pager-dispensados:${pedidoId}`;
 }
 
-function lerDispensados(pedidoId: string): string[] {
+function lerConfirmados(pedidoId: string): string[] {
   try {
-    const bruto = window.localStorage.getItem(chaveDispensados(pedidoId));
+    const bruto = window.localStorage.getItem(chaveConfirmados(pedidoId));
     return bruto ? (JSON.parse(bruto) as string[]) : [];
   } catch {
     return [];
@@ -58,7 +58,7 @@ export default function Acompanhamento() {
   const [pedido, setPedido] = useState<Pedido | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [dispensados, setDispensados] = useState<string[]>([]);
+  const [confirmados, setConfirmados] = useState<string[]>([]);
   const [liberando, setLiberando] = useState<Set<string>>(new Set());
   // quantas unidades o cliente escolheu liberar agora, por item (default = tudo que resta)
   const [quantidadesEscolhidas, setQuantidadesEscolhidas] = useState<Record<string, number>>({});
@@ -86,7 +86,7 @@ export default function Acompanhamento() {
   }, [pedidoId]);
 
   useEffect(() => {
-    setDispensados(lerDispensados(pedidoId));
+    setConfirmados(lerConfirmados(pedidoId));
     carregar();
     const intervalo = setInterval(carregar, INTERVALO_POLLING_MS);
     return () => clearInterval(intervalo);
@@ -102,9 +102,10 @@ export default function Acompanhamento() {
     return sp.itens.some((item) => item.quantidade - item.quantidadeLiberada > 0);
   });
 
-  const prontos = subPedidosAtivos.filter(
-    (sp) => (sp.status === "PRONTO" || sp.status === "CHAMADO") && !dispensados.includes(sp.id)
-  );
+  // continua na tela de "pronto" mesmo depois do cliente confirmar "Estou indo!"
+  // (pra ele poder mostrar o código no balcão) — só sai daqui quando o quiosque
+  // marca como retirado, o que já tira o sub-pedido de subPedidosAtivos.
+  const prontos = subPedidosAtivos.filter((sp) => sp.status === "PRONTO" || sp.status === "CHAMADO");
 
   useEffect(() => {
     const novos = prontos.filter((sp) => !idsJaAvisados.current.has(sp.id));
@@ -157,14 +158,14 @@ export default function Acompanhamento() {
     });
   }
 
-  function fecharPager() {
-    const novosDispensados = [...dispensados, ...prontos.map((sp) => sp.id)];
-    setDispensados(novosDispensados);
-    window.localStorage.setItem(chaveDispensados(pedidoId), JSON.stringify(novosDispensados));
+  // confirma só o item que o cliente tocou — os outros que já estavam prontos
+  // (ou os que ficarem prontos depois) mantêm seu próprio estado independente
+  function confirmarItem(subPedidoId: string) {
+    const novosConfirmados = [...confirmados, subPedidoId];
+    setConfirmados(novosConfirmados);
+    window.localStorage.setItem(chaveConfirmados(pedidoId), JSON.stringify(novosConfirmados));
     // avisa o quiosque que o cliente já está a caminho da retirada
-    prontos.forEach((sp) => {
-      fetch(`/api/sub-pedidos/${sp.id}/cliente-a-caminho`, { method: "POST" }).catch(() => {});
-    });
+    fetch(`/api/sub-pedidos/${subPedidoId}/cliente-a-caminho`, { method: "POST" }).catch(() => {});
   }
 
   const itensPager: ItemPager[] = prontos.map((sp) => ({
@@ -173,11 +174,12 @@ export default function Acompanhamento() {
     quiosqueNome: sp.quiosque.nome,
     brincadeira: sp.quiosque.modalidade === "BRINCADEIRAS",
     mensagemPronto: sp.quiosque.mensagemPronto,
+    confirmado: confirmados.includes(sp.id),
   }));
 
   return (
     <main className="tela">
-      <PagerPronto itens={itensPager} onFechar={fecharPager} />
+      <PagerPronto itens={itensPager} onConfirmar={confirmarItem} />
 
       <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
         Acompanhar pedido
