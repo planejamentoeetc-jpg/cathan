@@ -82,13 +82,19 @@ export async function criarPedidoAPartirDeItensValidados(params: {
   }
 
   const grupos = new Map<string, { quiosqueId: string; itens: ItemPedidoValidado[] }>();
-  for (const item of itens) {
+  itens.forEach((item, indice) => {
     const produto = produtosPorId.get(item.produtoId)!;
-    const chave = umTicketPorProduto ? `${produto.quiosqueId}::${item.produtoId}` : produto.quiosqueId;
+    // com umTicketPorProduto, cada ENTRADA da lista vira seu próprio ticket --
+    // a chave usa o índice, não o produtoId, então nem duas entradas do mesmo
+    // produto se juntam. Isso só funciona porque quem chama (Venda Manual) já
+    // explode a quantidade em entradas de 1 unidade cada antes de chegar aqui
+    // (ver api/caixa/[eventoId]/vender/route.ts) -- sem isso, um "3x Pastel" em
+    // uma única entrada continuaria virando 1 ticket só, como sempre foi.
+    const chave = umTicketPorProduto ? `${produto.quiosqueId}::${indice}` : produto.quiosqueId;
     const grupo = grupos.get(chave) ?? { quiosqueId: produto.quiosqueId, itens: [] };
     grupo.itens.push(item);
     grupos.set(chave, grupo);
-  }
+  });
 
   return transacaoComRetry(() => prisma.$transaction(async (tx) => {
     const cliente = await tx.cliente.upsert({

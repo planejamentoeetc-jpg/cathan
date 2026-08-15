@@ -82,18 +82,23 @@ export async function POST(req: NextRequest, { params }: { params: { eventoId: s
       formaPagamento: "DINHEIRO",
       liberarProducaoAutomaticamente: true,
       umTicketPorProduto: true,
-      itens: corpo.itens.map((item) => {
+      // uma entrada por UNIDADE, mesmo repetindo o mesmo produto -- vira um
+      // ticket/código próprio pra cada uma (ver criarPedido.ts). Sem isso,
+      // "2x Doce" imprimia num código só, e o quiosque não tinha como marcar
+      // que só 1 das 2 unidades foi retirada.
+      itens: corpo.itens.flatMap((item) => {
         const produto = produtosPorId.get(item.produtoId)!;
-        return {
+        const nomesCriancas =
+          produto.quiosque.modalidade === "BRINCADEIRAS"
+            ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
+            : [];
+        return Array.from({ length: item.quantidade }, (_, indice) => ({
           produtoId: item.produtoId,
-          quantidade: item.quantidade,
+          quantidade: 1,
           precoUnitario: Number(produto.preco),
           observacao: item.observacao,
-          nomesCriancas:
-            produto.quiosque.modalidade === "BRINCADEIRAS"
-              ? (item.nomesCriancas ?? []).map((n) => n.trim()).filter(Boolean)
-              : [],
-        };
+          nomesCriancas: nomesCriancas[indice] ? [nomesCriancas[indice]] : [],
+        }));
       }),
     });
 
