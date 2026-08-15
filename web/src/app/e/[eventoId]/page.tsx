@@ -5,6 +5,7 @@ import { STATUS_ATIVOS } from "@/lib/statusSubPedido";
 import { calcularEsperaEstimadaMinutos, formatarEspera } from "@/lib/esperaEstimada";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
+import { MeusPedidosBanner } from "@/components/MeusPedidosBanner";
 
 export default async function PracaDoEvento({
   params,
@@ -45,6 +46,8 @@ export default async function PracaDoEvento({
         <div className="nome">{evento.nome}</div>
         <div className="sub">{evento.local}</div>
       </div>
+
+      <MeusPedidosBanner eventoId={evento.id} />
 
       {evento.pedidosPausados && (
         <div className="aviso" style={{ marginBottom: 16 }}>

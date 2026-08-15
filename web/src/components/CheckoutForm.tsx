@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
 import { lerPixPendente, limparPixPendente, salvarPixPendente, type PixPendenteLocal } from "@/lib/pixPendente";
+import { adicionarPedidoLocal } from "@/lib/meusPedidos";
 import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
 
 const INTERVALO_POLLING_MS = 2000;
@@ -122,6 +123,13 @@ export function CheckoutForm({
       window.removeEventListener("focus", aoVoltarPraAba);
     };
   }, [pix, pedidoConfirmadoId]);
+
+  // registra num histórico que não expira (diferente do pixPendente, que some
+  // em 20min) -- é o que permite o cliente achar o pedido de volta na praça do
+  // evento mesmo saindo do checkout e voltando bem depois (ver MeusPedidosBanner)
+  useEffect(() => {
+    if (pedidoConfirmadoId) adicionarPedidoLocal(eventoId, pedidoConfirmadoId);
+  }, [eventoId, pedidoConfirmadoId]);
 
   function nomeCrianca(produtoId: string, indice: number) {
     return nomesCriancasPorProduto[produtoId]?.[indice] ?? "";

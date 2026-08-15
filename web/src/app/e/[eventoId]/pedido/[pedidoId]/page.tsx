@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { STATUS_LABEL } from "@/lib/statusSubPedido";
+import { adicionarPedidoLocal } from "@/lib/meusPedidos";
 import { ItemPager, PagerPronto } from "@/components/PagerPronto";
 import { StatusPedidoStepper } from "@/components/StatusPedidoStepper";
 
@@ -91,6 +92,13 @@ export default function Acompanhamento() {
     const intervalo = setInterval(carregar, INTERVALO_POLLING_MS);
     return () => clearInterval(intervalo);
   }, [carregar, pedidoId]);
+
+  // garante que chegar aqui de qualquer jeito (link direto, "Ver meu pedido",
+  // ou já restaurado do checkout) deixa este pedido gravado no histórico local
+  // que alimenta o banner "Meus pedidos" na praça do evento
+  useEffect(() => {
+    adicionarPedidoLocal(eventoId, pedidoId);
+  }, [eventoId, pedidoId]);
 
   // some da tela assim que o quiosque marca como retirado/concluído — exceto se
   // ainda sobrar alguma unidade não liberada nesse item (compra em massa parcial):
