@@ -30,17 +30,21 @@ export function validarCamposQuiosque(
   if (!Object.values(TipoQuiosque).includes(tipo)) {
     return { erro: "Tipo de quiosque inválido." };
   }
-  if (tipo === TipoQuiosque.INDEPENDENTE && (!corpo.cnpj?.trim() || !corpo.chavePix?.trim())) {
-    return { erro: "Quiosque independente precisa de CNPJ/CPF e chave PIX de recebimento." };
-  }
+
+  // CNPJ/chave PIX são opcionais mesmo pra INDEPENDENTE -- a conexão real de
+  // pagamento é feita via OAuth do Mercado Pago (mpAccessTokenCifrado), não
+  // por esses campos. Ficam só como informação de referência do gestor,
+  // preenchíveis a qualquer momento na tela do quiosque.
+  const cnpj = corpo.cnpj?.trim() || null;
+  const chavePix = corpo.chavePix?.trim() || null;
 
   return {
     dados: {
       nome: corpo.nome.trim(),
       modalidade: corpo.modalidade,
       tipo,
-      cnpj: tipo === TipoQuiosque.INDEPENDENTE ? corpo.cnpj!.trim() : null,
-      chavePix: tipo === TipoQuiosque.INDEPENDENTE ? corpo.chavePix!.trim() : null,
+      cnpj: tipo === TipoQuiosque.INDEPENDENTE ? cnpj : null,
+      chavePix: tipo === TipoQuiosque.INDEPENDENTE ? chavePix : null,
     },
   };
 }

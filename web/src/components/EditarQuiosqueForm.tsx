@@ -67,11 +67,6 @@ export function EditarQuiosqueForm({
       setErro("Informe o nome do quiosque.");
       return;
     }
-    if (tipo === "INDEPENDENTE" && (!cnpj.trim() || !chavePix.trim())) {
-      setErro("Quiosque independente precisa de CNPJ/CPF e chave PIX de recebimento.");
-      return;
-    }
-
     setEnviando(true);
     try {
       const resposta = await fetch(`/api/eventos/${eventoId}/quiosques/${quiosqueId}`, {

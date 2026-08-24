@@ -25,8 +25,6 @@ export function CriarQuiosqueForm({
   const [tipo, setTipo] = useState<TipoQuiosque>(
     modalidadeEvento === "MULTI_ESTABELECIMENTO" ? "INDEPENDENTE" : "DO_EVENTO"
   );
-  const [cnpj, setCnpj] = useState("");
-  const [chavePix, setChavePix] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -37,23 +35,13 @@ export function CriarQuiosqueForm({
       setErro("Informe o nome do quiosque.");
       return;
     }
-    if (tipo === "INDEPENDENTE" && (!cnpj.trim() || !chavePix.trim())) {
-      setErro("Quiosque independente precisa de CNPJ/CPF e chave PIX de recebimento.");
-      return;
-    }
 
     setEnviando(true);
     try {
       const resposta = await fetch(`/api/eventos/${eventoId}/quiosques`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: nome.trim(),
-          modalidade,
-          tipo,
-          cnpj: tipo === "INDEPENDENTE" ? cnpj.trim() : undefined,
-          chavePix: tipo === "INDEPENDENTE" ? chavePix.trim() : undefined,
-        }),
+        body: JSON.stringify({ nome: nome.trim(), modalidade, tipo }),
       });
 
       const dados = await resposta.json();
@@ -119,26 +107,11 @@ export function CriarQuiosqueForm({
       </div>
 
       {tipo === "INDEPENDENTE" && (
-        <>
-          <div className="campo">
-            <label>CNPJ / CPF do lojista</label>
-            <input type="text" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="000.000.000-00" />
-          </div>
-          <div className="campo">
-            <label>Chave PIX de recebimento</label>
-            <input
-              type="text"
-              value={chavePix}
-              onChange={(e) => setChavePix(e.target.value)}
-              placeholder="chave@pix.com"
-            />
-          </div>
-          <p className="texto-fraco" style={{ marginBottom: 14 }}>
-            Depois de criar, conecte a conta Mercado Pago deste quiosque na própria tela dele —
-            até lá, ele fica invisível pro cliente (não aparece pra pedir), já que ainda não tem
-            como receber o pagamento.
-          </p>
-        </>
+        <p className="texto-fraco" style={{ marginBottom: 14 }}>
+          Depois de criar, use a própria tela do quiosque pra cadastrar produtos, enviar a logo e
+          conectar a conta Mercado Pago do restaurante — até conectar, ele fica invisível pro
+          cliente (não aparece pra pedir), já que ainda não tem como receber o pagamento.
+        </p>
       )}
 
       <p className="texto-fraco" style={{ marginBottom: 14 }}>
