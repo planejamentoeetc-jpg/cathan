@@ -60,8 +60,7 @@ export default async function QuiosqueGestor({
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>Dados do quiosque</h5>
           <UploadLogoQuiosque
-            eventoId={params.eventoId}
-            quiosqueId={params.quiosqueId}
+            apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/logo`}
             logoUrlInicial={quiosque.logoUrl}
           />
           <div style={{ height: 16 }} />
@@ -92,6 +91,7 @@ export default async function QuiosqueGestor({
               nome: p.nome,
               preco: Number(p.preco),
               ativo: p.ativo,
+              fotoUrl: p.fotoUrl,
             }))}
             criarUrl={`/gestor/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos/novo`}
             editarUrlBase={`/gestor/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/produtos`}

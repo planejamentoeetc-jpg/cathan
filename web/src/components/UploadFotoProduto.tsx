@@ -3,18 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-export function UploadLogoQuiosque({
+export function UploadFotoProduto({
   apiUrl,
-  logoUrlInicial,
+  fotoUrlInicial,
 }: {
-  // ex.: /api/eventos/{eventoId}/quiosques/{quiosqueId}/logo (gestor) ou
-  // /api/quiosques/{quiosqueId}/logo (o próprio quiosque)
+  // ex.: /api/eventos/{eventoId}/quiosques/{quiosqueId}/produtos/{produtoId}/foto (gestor)
+  // ou /api/quiosques/{quiosqueId}/produtos/{produtoId}/foto (o próprio quiosque)
   apiUrl: string;
-  logoUrlInicial: string | null;
+  fotoUrlInicial: string | null;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [logoUrl, setLogoUrl] = useState(logoUrlInicial);
+  const [fotoUrl, setFotoUrl] = useState(fotoUrlInicial);
   const [preview, setPreview] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -26,22 +26,19 @@ export function UploadLogoQuiosque({
 
     try {
       const corpo = new FormData();
-      corpo.append("logo", arquivo);
+      corpo.append("foto", arquivo);
 
-      const resposta = await fetch(apiUrl, {
-        method: "POST",
-        body: corpo,
-      });
+      const resposta = await fetch(apiUrl, { method: "POST", body: corpo });
 
       const dados = await resposta.json();
       if (!resposta.ok) {
-        setErro(dados.erro ?? "Não foi possível enviar a logo.");
+        setErro(dados.erro ?? "Não foi possível enviar a foto.");
         setPreview(null);
         setEnviando(false);
         return;
       }
 
-      setLogoUrl(dados.logoUrl);
+      setFotoUrl(dados.fotoUrl);
       router.refresh();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro inesperado.");
@@ -51,19 +48,17 @@ export function UploadLogoQuiosque({
     }
   }
 
-  async function removerLogo() {
+  async function removerFoto() {
     setErro(null);
     setEnviando(true);
     try {
-      const resposta = await fetch(apiUrl, {
-        method: "DELETE",
-      });
+      const resposta = await fetch(apiUrl, { method: "DELETE" });
       if (!resposta.ok) {
         const dados = await resposta.json();
-        setErro(dados.erro ?? "Não foi possível remover a logo.");
+        setErro(dados.erro ?? "Não foi possível remover a foto.");
         return;
       }
-      setLogoUrl(null);
+      setFotoUrl(null);
       setPreview(null);
       router.refresh();
     } finally {
@@ -71,24 +66,17 @@ export function UploadLogoQuiosque({
     }
   }
 
-  const imagemAtual = preview ?? logoUrl;
+  const imagemAtual = preview ?? fotoUrl;
 
   return (
-    <div className="cartao">
-      <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 8 }}>
-        Logo do restaurante
-      </b>
-      <p className="texto-fraco" style={{ marginBottom: 14 }}>
-        Aparece como ícone na praça do evento (tipo tela inicial de celular) — sem logo, o
-        quiosque mostra um ícone genérico colorido no lugar.
-      </p>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+    <div className="campo">
+      <label>Foto do produto</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <div
           style={{
-            width: 72,
-            height: 72,
-            borderRadius: 18,
+            width: 64,
+            height: 64,
+            borderRadius: 12,
             overflow: "hidden",
             background: imagemAtual ? "transparent" : "var(--fundo-suave, #f0f0f0)",
             border: "1.5px solid var(--linha)",
@@ -100,10 +88,10 @@ export function UploadLogoQuiosque({
         >
           {imagemAtual ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={imagemAtual} alt="Logo do restaurante" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={imagemAtual} alt="Foto do produto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
-            <span className="texto-fraco" style={{ fontSize: 11, textAlign: "center" }}>
-              sem logo
+            <span className="texto-fraco" style={{ fontSize: 10, textAlign: "center" }}>
+              sem foto
             </span>
           )}
         </div>
@@ -120,29 +108,28 @@ export function UploadLogoQuiosque({
               e.target.value = "";
             }}
           />
-          <button
-            type="button"
-            className="btn btn-secundario"
-            disabled={enviando}
-            onClick={() => inputRef.current?.click()}
-          >
-            {enviando ? "Enviando…" : logoUrl ? "Trocar logo" : "Enviar logo"}
+          <button type="button" className="btn btn-secundario" disabled={enviando} onClick={() => inputRef.current?.click()}>
+            {enviando ? "Enviando…" : fotoUrl ? "Trocar foto" : "Enviar foto"}
           </button>
-          {logoUrl && (
+          {fotoUrl && (
             <button
               type="button"
               className="btn btn-secundario"
               disabled={enviando}
-              onClick={removerLogo}
+              onClick={removerFoto}
               style={{ color: "#B4441C" }}
             >
-              Remover logo
+              Remover foto
             </button>
           )}
         </div>
       </div>
 
-      {erro && <div className="aviso">{erro}</div>}
+      {erro && (
+        <div className="aviso" style={{ marginTop: 8 }}>
+          {erro}
+        </div>
+      )}
     </div>
   );
 }

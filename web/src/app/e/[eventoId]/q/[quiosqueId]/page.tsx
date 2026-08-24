@@ -84,6 +84,7 @@ export default async function LojaDoQuiosque({
               tempoProducaoMinutos: produto.tempoProducaoMinutos,
               estoque: produto.estoque,
               ativo: produto.ativo,
+              fotoUrl: produto.fotoUrl,
             }}
             quiosque={{
               id: quiosque.id,

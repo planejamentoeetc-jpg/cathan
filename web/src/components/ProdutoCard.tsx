@@ -12,6 +12,7 @@ type Produto = {
   tempoProducaoMinutos: number;
   estoque: number | null;
   ativo: boolean;
+  fotoUrl?: string | null;
 };
 
 type QuiosqueResumo = {
@@ -79,8 +80,17 @@ export function ProdutoCard({
 
   return (
     <div className="produto-card" style={{ opacity: disponivel ? 1 : 0.55 }}>
-      <div className="produto-icone" style={{ background: quiosque.cor }}>
-        <IconeModalidade modalidade={quiosque.modalidade} tamanho={30} />
+      <div className="produto-icone" style={{ background: produto.fotoUrl ? undefined : quiosque.cor }}>
+        {produto.fotoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={produto.fotoUrl}
+            alt={produto.nome}
+            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }}
+          />
+        ) : (
+          <IconeModalidade modalidade={quiosque.modalidade} tamanho={30} />
+        )}
       </div>
       <div className="produto-corpo">
         <div className="produto-nome">{produto.nome}</div>

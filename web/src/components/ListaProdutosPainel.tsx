@@ -8,6 +8,7 @@ type Produto = {
   nome: string;
   preco: number;
   ativo: boolean;
+  fotoUrl?: string | null;
 };
 
 function formatarReais(valor: number) {
@@ -81,6 +82,14 @@ export function ListaProdutosPainel({
       {produtos.map((produto) => (
         <div key={produto.id} className="cartao">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {produto.fotoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={produto.fotoUrl}
+                alt={produto.nome}
+                style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+              />
+            )}
             <div style={{ flex: 1 }}>
               <span style={{ fontWeight: 700 }}>{produto.nome}</span>
               <div className="texto-fraco">{formatarReais(produto.preco)}</div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FormularioProduto } from "@/components/FormularioProduto";
+import { UploadFotoProduto } from "@/components/UploadFotoProduto";
 
 export default async function EditarProduto({
   params,
@@ -43,6 +44,14 @@ export default async function EditarProduto({
           Cancelar
         </Link>
       </div>
+
+      <div className="cartao">
+        <UploadFotoProduto
+          apiUrl={`/api/quiosques/${params.quiosqueId}/produtos/${produto.id}/foto`}
+          fotoUrlInicial={produto.fotoUrl}
+        />
+      </div>
+      <div style={{ height: 16 }} />
 
       <FormularioProduto
         eventoId={params.eventoId}

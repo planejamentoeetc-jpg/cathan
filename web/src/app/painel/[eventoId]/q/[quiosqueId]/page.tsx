@@ -5,6 +5,7 @@ import { FilaQuiosque } from "@/components/FilaQuiosque";
 import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { BotaoSair } from "@/components/BotaoSair";
 import { MensagensQuiosqueForm } from "@/components/MensagensQuiosqueForm";
+import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
 
 export default async function PainelQuiosque({
   params,
@@ -59,6 +60,12 @@ export default async function PainelQuiosque({
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>Fila de pedidos</h5>
           <FilaQuiosque quiosqueId={params.quiosqueId} />
+
+          <h5 style={{ fontFamily: "var(--font-sora)", margin: "20px 0 12px" }}>Logo</h5>
+          <UploadLogoQuiosque
+            apiUrl={`/api/quiosques/${params.quiosqueId}/logo`}
+            logoUrlInicial={quiosque.logoUrl}
+          />
         </div>
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
@@ -72,6 +79,7 @@ export default async function PainelQuiosque({
               nome: p.nome,
               preco: Number(p.preco),
               ativo: p.ativo,
+              fotoUrl: p.fotoUrl,
             }))}
           />
         </div>
