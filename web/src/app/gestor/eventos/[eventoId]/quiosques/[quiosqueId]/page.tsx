@@ -6,6 +6,7 @@ import { EditarQuiosqueForm } from "@/components/EditarQuiosqueForm";
 import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { ExcluirQuiosqueButton } from "@/components/ExcluirQuiosqueButton";
 import { DesconectarMercadoPagoQuiosqueButton } from "@/components/DesconectarMercadoPagoQuiosqueButton";
+import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
 
 const MENSAGENS_ERRO_MP: Record<string, string> = {
   recusado: "O restaurante cancelou a autorização no Mercado Pago.",
@@ -58,6 +59,12 @@ export default async function QuiosqueGestor({
       <div className="painel-split">
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>Dados do quiosque</h5>
+          <UploadLogoQuiosque
+            eventoId={params.eventoId}
+            quiosqueId={params.quiosqueId}
+            logoUrlInicial={quiosque.logoUrl}
+          />
+          <div style={{ height: 16 }} />
           <EditarQuiosqueForm
             eventoId={params.eventoId}
             quiosqueId={params.quiosqueId}

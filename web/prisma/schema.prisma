@@ -170,6 +170,10 @@ model Quiosque {
   modalidade         ModalidadeQuiosque
   cor                String
   tipo               TipoQuiosque
+  // logo do restaurante/quiosque (Vercel Blob) -- usada nos ícones tipo
+  // "tela inicial de celular" da praça de eventos MULTI_ESTABELECIMENTO;
+  // null = cai no fallback do quadrado colorido + ícone genérico de sempre
+  logoUrl            String?            @map("logo_url")
   // obrigatórios somente quando tipo = INDEPENDENTE (ver CHECK na migration)
   cnpj               String?
   chavePix           String?            @map("chave_pix")

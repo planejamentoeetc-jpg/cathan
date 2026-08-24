@@ -72,7 +72,30 @@ export default async function PracaDoEvento({
         </div>
       )}
 
-      {evento.quiosques.length > 0 && (
+      {evento.quiosques.length > 0 && evento.modalidade === "MULTI_ESTABELECIMENTO" && (
+        <>
+          <p className="texto-fraco" style={{ marginBottom: 8 }}>
+            Toque num estabelecimento pra ver o cardápio:
+          </p>
+          <div className="praca-icones-grid">
+            {evento.quiosques.map((quiosque) => (
+              <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="praca-icone">
+                <div className="praca-icone-imagem" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
+                  {quiosque.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={quiosque.logoUrl} alt={quiosque.nome} />
+                  ) : (
+                    <IconeModalidade modalidade={quiosque.modalidade} />
+                  )}
+                </div>
+                <b>{quiosque.nome}</b>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {evento.quiosques.length > 0 && evento.modalidade !== "MULTI_ESTABELECIMENTO" && (
         <>
           <p className="texto-fraco" style={{ marginBottom: 8 }}>
             Toque num quiosque pra ver o cardápio:
