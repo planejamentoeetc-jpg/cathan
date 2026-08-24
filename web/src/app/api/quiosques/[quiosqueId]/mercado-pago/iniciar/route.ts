@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
-import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { assinarEstadoOauthQuiosque } from "@/lib/sessaoGestor";
 import { prisma } from "@/lib/prisma";
 
-// Ponto de partida do "Conectar Mercado Pago" de um QUIOSQUE específico (split
-// por restaurante) -- feito pelo gestor, junto com o restaurante, na tela de
-// gerenciar aquele quiosque. Mesma mecânica do fluxo de organizador
-// (api/mercado-pago/oauth/iniciar), só que o state carrega o quiosqueId.
+// Mesmo fluxo de api/mercado-pago/oauth/iniciar-quiosque, só que iniciado
+// pelo próprio quiosque (senha do painel) em vez do gestor -- por isso vive
+// sob /api/quiosques, que o middleware libera com a senha do quiosque, não
+// a do gestor.
 export async function GET(_req: Request, { params }: { params: { quiosqueId: string } }) {
-  const organizadorId = obterOrganizadorId();
-
-  const quiosque = await prisma.quiosque.findUnique({
-    where: { id: params.quiosqueId },
-    select: { evento: { select: { organizadorId: true } } },
-  });
-  if (!quiosque || quiosque.evento.organizadorId !== organizadorId) {
+  const quiosque = await prisma.quiosque.findUnique({ where: { id: params.quiosqueId } });
+  if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
   }
 
@@ -27,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: { quiosqueId: str
     );
   }
 
-  const state = await assinarEstadoOauthQuiosque(params.quiosqueId, "gestor");
+  const state = await assinarEstadoOauthQuiosque(params.quiosqueId, "quiosque");
   const redirectUri = `${appUrl.replace(/\/$/, "")}/api/mercado-pago/oauth/callback`;
 
   const url = new URL("https://auth.mercadopago.com.br/authorization");

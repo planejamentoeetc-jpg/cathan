@@ -17,20 +17,26 @@ export async function GET(req: NextRequest) {
   const appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");
 
   const organizadorId = await verificarEstadoOauth(state);
-  const quiosqueId = organizadorId ? null : await verificarEstadoOauthQuiosque(state);
+  const estadoQuiosque = organizadorId ? null : await verificarEstadoOauthQuiosque(state);
+  const quiosqueId = estadoQuiosque?.quiosqueId ?? null;
 
   // resolve o destino do redirect antes de qualquer coisa dar errado, já que
-  // até um erro precisa mandar a pessoa de volta pra tela certa
+  // até um erro precisa mandar a pessoa de volta pra tela certa -- volta pro
+  // painel de quem *iniciou* a conexão (gestor não tem a senha do quiosque, e
+  // vice-versa, então não dá pra sempre voltar pro mesmo lugar)
   let destino: URL;
   if (quiosqueId) {
     const quiosque = await prisma.quiosque.findUnique({
       where: { id: quiosqueId },
       select: { eventoId: true },
     });
-    destino = new URL(
-      quiosque ? `/gestor/eventos/${quiosque.eventoId}/quiosques/${quiosqueId}` : "/gestor",
-      appUrl || req.url
-    );
+    if (!quiosque) {
+      destino = new URL("/gestor", appUrl || req.url);
+    } else if (estadoQuiosque?.origem === "quiosque") {
+      destino = new URL(`/painel/${quiosque.eventoId}/q/${quiosqueId}`, appUrl || req.url);
+    } else {
+      destino = new URL(`/gestor/eventos/${quiosque.eventoId}/quiosques/${quiosqueId}`, appUrl || req.url);
+    }
   } else {
     destino = new URL("/gestor/conexoes", appUrl || req.url);
   }

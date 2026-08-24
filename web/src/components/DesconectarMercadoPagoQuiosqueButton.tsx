@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function DesconectarMercadoPagoQuiosqueButton({ quiosqueId }: { quiosqueId: string }) {
+export function DesconectarMercadoPagoQuiosqueButton({
+  apiUrl,
+}: {
+  // /api/mercado-pago/oauth/desconectar-quiosque/{quiosqueId} (gestor) ou
+  // /api/quiosques/{quiosqueId}/mercado-pago/desconectar (o próprio quiosque)
+  apiUrl: string;
+}) {
   const router = useRouter();
   const [confirmando, setConfirmando] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -11,7 +17,7 @@ export function DesconectarMercadoPagoQuiosqueButton({ quiosqueId }: { quiosqueI
   async function desconectar() {
     setEnviando(true);
     try {
-      await fetch(`/api/mercado-pago/oauth/desconectar-quiosque/${quiosqueId}`, { method: "POST" });
+      await fetch(apiUrl, { method: "POST" });
       router.refresh();
     } finally {
       setEnviando(false);

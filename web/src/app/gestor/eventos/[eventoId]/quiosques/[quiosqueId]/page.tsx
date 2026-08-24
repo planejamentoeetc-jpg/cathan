@@ -135,7 +135,9 @@ export default async function QuiosqueGestor({
                   ✓ conectado
                 </span>
               </div>
-              <DesconectarMercadoPagoQuiosqueButton quiosqueId={quiosque.id} />
+              <DesconectarMercadoPagoQuiosqueButton
+                apiUrl={`/api/mercado-pago/oauth/desconectar-quiosque/${quiosque.id}`}
+              />
               <p className="texto-fraco" style={{ marginTop: 10, fontSize: 12 }}>
                 Vai conectar outro restaurante depois de desconectar este? O Mercado Pago
                 reconecta automaticamente a mesma conta se o responsável ainda estiver logado nela

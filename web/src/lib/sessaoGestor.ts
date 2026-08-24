@@ -59,20 +59,33 @@ export async function verificarEstadoOauth(state: string | null): Promise<string
 // (split por restaurante) -- finalidade diferente de propósito, pra nunca ser
 // confundido com o state de organizador mesmo que alguém tente reaproveitar um
 // pelo outro
-export async function assinarEstadoOauthQuiosque(quiosqueId: string): Promise<string> {
-  return new SignJWT({ quiosqueId, finalidade: "mp-oauth-state-quiosque" })
+// "origem" decide pra onde o callback manda a pessoa de volta depois de
+// autorizar -- o gestor não tem a senha do painel do quiosque, e o quiosque
+// não tem a senha do gestor, então cada fluxo precisa voltar pro lugar de
+// onde saiu
+export type OrigemOauthQuiosque = "gestor" | "quiosque";
+
+export async function assinarEstadoOauthQuiosque(
+  quiosqueId: string,
+  origem: OrigemOauthQuiosque
+): Promise<string> {
+  return new SignJWT({ quiosqueId, origem, finalidade: "mp-oauth-state-quiosque" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(DURACAO_ESTADO_OAUTH)
     .sign(obterChaveSecreta());
 }
 
-export async function verificarEstadoOauthQuiosque(state: string | null): Promise<string | null> {
+export async function verificarEstadoOauthQuiosque(
+  state: string | null
+): Promise<{ quiosqueId: string; origem: OrigemOauthQuiosque } | null> {
   if (!state) return null;
   try {
     const { payload } = await jwtVerify(state, obterChaveSecreta());
     if (payload.finalidade !== "mp-oauth-state-quiosque") return null;
-    return typeof payload.quiosqueId === "string" ? payload.quiosqueId : null;
+    if (typeof payload.quiosqueId !== "string") return null;
+    const origem = payload.origem === "quiosque" ? "quiosque" : "gestor";
+    return { quiosqueId: payload.quiosqueId, origem };
   } catch {
     return null;
   }
