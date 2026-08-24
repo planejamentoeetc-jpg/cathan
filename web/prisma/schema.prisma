@@ -27,6 +27,11 @@ enum TipoQuiosque {
   INDEPENDENTE
 }
 
+enum ModalidadeEvento {
+  ORGANIZADOR_UNICO
+  MULTI_ESTABELECIMENTO
+}
+
 enum PerfilUsuario {
   GESTOR
   QUIOSQUE
@@ -102,6 +107,14 @@ model Evento {
   // obrigatório na migração seguinte
   organizadorId     String?     @map("organizador_id")
   organizador       Organizador? @relation(fields: [organizadorId], references: [id], onDelete: Restrict)
+  // Escolhido uma vez, na criação do evento -- não muda o comportamento técnico
+  // por si só (um evento MULTI_ESTABELECIMENTO ainda pode ter quiosque
+  // DO_EVENTO e vice-versa, ver Quiosque.tipo), só define o padrão/rótulo ao
+  // criar um quiosque novo dentro deste evento. ORGANIZADOR_UNICO = festas,
+  // quermesses, formaturas, eventos de empresa/bairro (um recebedor só, como
+  // sempre funcionou). MULTI_ESTABELECIMENTO = feiras, exposições, festivais
+  // gastronômicos (cada participante recebe na própria conta, split 1:1).
+  modalidade        ModalidadeEvento @default(ORGANIZADOR_UNICO)
   // % que a Cathan retém automaticamente via application_fee do Mercado Pago,
   // configurável por evento (não por organizador) — editável só pelo admin em
   // /admin/eventos/[eventoId]
@@ -160,6 +173,18 @@ model Quiosque {
   // obrigatórios somente quando tipo = INDEPENDENTE (ver CHECK na migration)
   cnpj               String?
   chavePix           String?            @map("chave_pix")
+  // Split 1:1 do Mercado Pago (marketplace) -- só faz sentido pra tipo=INDEPENDENTE.
+  // Preenchido só depois que o próprio restaurante autoriza via OAuth
+  // (/gestor/eventos/[eventoId]/quiosques/[quiosqueId], feito junto com o gestor
+  // no onboarding). Sem conexão, o quiosque nem aparece pro cliente pedir --
+  // ver filtro na praça do evento.
+  mpUserId              String?  @map("mp_user_id")
+  mpAccessTokenCifrado  String?  @map("mp_access_token_cifrado")
+  mpRefreshTokenCifrado String?  @map("mp_refresh_token_cifrado")
+  mpTokenExpiraEm       DateTime? @map("mp_token_expira_em")
+  // null = usa a % padrão do evento (evento.comissaoPercentual) -- só setado
+  // quando o admin negocia uma taxa diferente pra este restaurante específico
+  comissaoPercentual    Decimal? @map("comissao_percentual") @db.Decimal(5, 2)
   // conteúdo opcional que o próprio quiosque personaliza (cross-sell + mensagens de status)
   dica               String?            @map("dica")
   mensagemPreparando String?            @map("mensagem_preparando")

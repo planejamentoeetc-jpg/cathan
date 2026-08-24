@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "cathan-web",
-      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
+      "runtimeExecutable": "C:\\Users\\wellington.martins\\Downloads\\node-v24.19.0-win-x64\\node-v24.19.0-win-x64\\npm.cmd",
       "runtimeArgs": ["--prefix", "web", "run", "dev"],
       "port": 3000
     }

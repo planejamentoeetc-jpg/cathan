@@ -12,6 +12,10 @@ export type ItemCarrinho = {
   quiosqueNome: string;
   quiosqueCor: string;
   quiosqueModalidade: "ALIMENTACAO" | "BEBIDAS" | "BRINCADEIRAS";
+  // true quando este quiosque recebe direto na própria conta Mercado Pago
+  // (split 1:1) -- o Mercado Pago não permite dividir 1 cobrança entre contas
+  // diferentes, então um carrinho não pode misturar este quiosque com outro
+  quiosqueRecebeDireto: boolean;
 };
 
 const EVENTO_ATUALIZACAO = "cathan:carrinho-atualizado";
@@ -35,12 +39,24 @@ function salvarCarrinho(eventoId: string, itens: ItemCarrinho[]) {
   window.dispatchEvent(new CustomEvent(EVENTO_ATUALIZACAO, { detail: { eventoId } }));
 }
 
+export type ResultadoAdicionar = { ok: true } | { ok: false; motivo: string };
+
 export function adicionarAoCarrinho(
   eventoId: string,
   item: Omit<ItemCarrinho, "quantidade">,
   quantidade = 1
-) {
+): ResultadoAdicionar {
   const itens = lerCarrinho(eventoId);
+
+  const outroQuiosqueNoCarrinho = itens.find((i) => i.quiosqueId !== item.quiosqueId);
+  if (outroQuiosqueNoCarrinho && (item.quiosqueRecebeDireto || outroQuiosqueNoCarrinho.quiosqueRecebeDireto)) {
+    const quiosqueQueExige = item.quiosqueRecebeDireto ? item.quiosqueNome : outroQuiosqueNoCarrinho.quiosqueNome;
+    return {
+      ok: false,
+      motivo: `"${quiosqueQueExige}" recebe direto na própria conta e por isso precisa de um pedido separado. Finalize ou esvazie o carrinho de "${outroQuiosqueNoCarrinho.quiosqueNome}" primeiro.`,
+    };
+  }
+
   const existente = itens.find((i) => i.produtoId === item.produtoId);
   if (existente) {
     existente.quantidade += quantidade;
@@ -48,6 +64,7 @@ export function adicionarAoCarrinho(
     itens.push({ ...item, quantidade });
   }
   salvarCarrinho(eventoId, itens);
+  return { ok: true };
 }
 
 export function atualizarQuantidade(eventoId: string, produtoId: string, quantidade: number) {

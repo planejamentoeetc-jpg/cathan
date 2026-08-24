@@ -10,11 +10,21 @@ const MODALIDADES: { valor: ModalidadeQuiosque; rotulo: string }[] = [
   { valor: "BRINCADEIRAS", rotulo: "Brincadeiras" },
 ];
 
-export function CriarQuiosqueForm({ eventoId }: { eventoId: string }) {
+export function CriarQuiosqueForm({
+  eventoId,
+  modalidadeEvento = "ORGANIZADOR_UNICO",
+}: {
+  eventoId: string;
+  // define só o PADRÃO do seletor abaixo -- evento MULTI_ESTABELECIMENTO ainda
+  // pode ter quiosque DO_EVENTO e vice-versa, dá pra trocar livremente
+  modalidadeEvento?: "ORGANIZADOR_UNICO" | "MULTI_ESTABELECIMENTO";
+}) {
   const router = useRouter();
   const [nome, setNome] = useState("");
   const [modalidade, setModalidade] = useState<ModalidadeQuiosque>("ALIMENTACAO");
-  const [tipo, setTipo] = useState<TipoQuiosque>("DO_EVENTO");
+  const [tipo, setTipo] = useState<TipoQuiosque>(
+    modalidadeEvento === "MULTI_ESTABELECIMENTO" ? "INDEPENDENTE" : "DO_EVENTO"
+  );
   const [cnpj, setCnpj] = useState("");
   const [chavePix, setChavePix] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -124,8 +134,9 @@ export function CriarQuiosqueForm({ eventoId }: { eventoId: string }) {
             />
           </div>
           <p className="texto-fraco" style={{ marginBottom: 14 }}>
-            Isso já fica registrado, mas o repasse automático (split) ainda não está ativo — hoje
-            todo pagamento cai numa conta única, independente do modelo de recebimento.
+            Depois de criar, conecte a conta Mercado Pago deste quiosque na própria tela dele —
+            até lá, ele fica invisível pro cliente (não aparece pra pedir), já que ainda não tem
+            como receber o pagamento.
           </p>
         </>
       )}

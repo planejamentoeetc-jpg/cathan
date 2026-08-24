@@ -11,8 +11,13 @@ export default async function LojaDoQuiosque({
 }: {
   params: { eventoId: string; quiosqueId: string };
 }) {
+  // restaurante independente sem Mercado Pago conectado ainda não pode receber
+  // pagamento -- tratado como não existente pro cliente, mesma regra da praça
+  // do evento (ver e/[eventoId]/page.tsx)
+  const disponivelParaCliente = { OR: [{ tipo: "DO_EVENTO" as const }, { mpAccessTokenCifrado: { not: null } }] };
+
   const quiosque = await prisma.quiosque.findFirst({
-    where: { id: params.quiosqueId, eventoId: params.eventoId },
+    where: { id: params.quiosqueId, eventoId: params.eventoId, ...disponivelParaCliente },
     include: {
       produtos: { orderBy: { nome: "asc" } },
       combinaCom: { select: { id: true, nome: true, cor: true } },
@@ -22,7 +27,7 @@ export default async function LojaDoQuiosque({
   if (!quiosque) notFound();
 
   const irmaos = await prisma.quiosque.findMany({
-    where: { eventoId: params.eventoId },
+    where: { eventoId: params.eventoId, ...disponivelParaCliente },
     select: { id: true, nome: true, cor: true, modalidade: true },
     orderBy: { nome: "asc" },
   });
@@ -85,6 +90,7 @@ export default async function LojaDoQuiosque({
               nome: quiosque.nome,
               cor: quiosque.cor,
               modalidade: quiosque.modalidade,
+              recebeDireto: Boolean(quiosque.mpAccessTokenCifrado),
             }}
           />
         ))}

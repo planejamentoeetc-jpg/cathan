@@ -24,9 +24,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { eventoId: 
     return NextResponse.json({ erro: resultado.erro }, { status: 400 });
   }
 
+  // modalidade é escolhida uma vez só, na criação -- PATCH nunca deve mudá-la,
+  // mesmo que alguém mande o campo (a UI de edição não manda de propósito)
+  const { modalidade: _modalidadeIgnorada, ...dadosEdicao } = resultado.dados;
+
   const atualizado = await prisma.evento.update({
     where: { id: params.eventoId },
-    data: resultado.dados,
+    data: dadosEdicao,
   });
 
   return NextResponse.json({ id: atualizado.id });

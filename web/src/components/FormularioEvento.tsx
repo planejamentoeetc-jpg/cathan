@@ -13,8 +13,12 @@ type EventoInicial = {
   longitude: number | null;
 };
 
+type Modalidade = "ORGANIZADOR_UNICO" | "MULTI_ESTABELECIMENTO";
+
 export function FormularioEvento({ eventoInicial }: { eventoInicial?: EventoInicial }) {
   const router = useRouter();
+  // só existe na criação -- é uma escolha de uma vez só, ver lib/validarEvento.ts
+  const [modalidade, setModalidade] = useState<Modalidade>("ORGANIZADOR_UNICO");
   const [nome, setNome] = useState(eventoInicial?.nome ?? "");
   const [local, setLocal] = useState(eventoInicial?.local ?? "");
   const [data, setData] = useState(eventoInicial?.data ?? "");
@@ -75,6 +79,8 @@ export function FormularioEvento({ eventoInicial }: { eventoInicial?: EventoInic
         raioPedidosMetros: temGeofencing ? Number(raio) : null,
         latitude: temGeofencing ? Number(latitude) : null,
         longitude: temGeofencing ? Number(longitude) : null,
+        // só manda na criação -- edição nunca muda a modalidade (ver PATCH em api/eventos/[eventoId])
+        ...(eventoInicial ? {} : { modalidade }),
       };
 
       const resposta = eventoInicial
@@ -107,6 +113,59 @@ export function FormularioEvento({ eventoInicial }: { eventoInicial?: EventoInic
 
   return (
     <div className="cartao">
+      {!eventoInicial && (
+        <div className="campo">
+          <label>Que tipo de evento é esse?</label>
+          <div style={{ display: "grid", gap: 10, marginTop: 4 }}>
+            <button
+              type="button"
+              onClick={() => setModalidade("ORGANIZADOR_UNICO")}
+              style={{
+                textAlign: "left",
+                padding: "14px 16px",
+                borderRadius: 12,
+                border: `2px solid ${modalidade === "ORGANIZADOR_UNICO" ? "var(--verde)" : "var(--linha)"}`,
+                background: modalidade === "ORGANIZADOR_UNICO" ? "var(--verde-suave)" : "#fff",
+                cursor: "pointer",
+              }}
+            >
+              <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 3 }}>
+                🎪 Organizador único
+              </b>
+              <span className="texto-fraco" style={{ fontSize: 12.5 }}>
+                Festas, quermesses, formaturas, festivais e eventos de empresa/bairro — todos os
+                quiosques recebem na mesma conta.
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setModalidade("MULTI_ESTABELECIMENTO")}
+              style={{
+                textAlign: "left",
+                padding: "14px 16px",
+                borderRadius: 12,
+                border: `2px solid ${modalidade === "MULTI_ESTABELECIMENTO" ? "var(--verde)" : "var(--linha)"}`,
+                background: modalidade === "MULTI_ESTABELECIMENTO" ? "var(--verde-suave)" : "#fff",
+                cursor: "pointer",
+              }}
+            >
+              <b style={{ fontFamily: "var(--font-sora)", display: "block", marginBottom: 3 }}>
+                🍴 Estabelecimentos independentes
+              </b>
+              <span className="texto-fraco" style={{ fontSize: 12.5 }}>
+                Feiras, exposições e festivais gastronômicos — cada participante conecta a própria
+                conta Mercado Pago e recebe direto (split 1:1).
+              </span>
+            </button>
+          </div>
+          <p className="texto-fraco" style={{ fontSize: 11.5, marginTop: 8 }}>
+            Só define o padrão ao criar um quiosque neste evento — dá pra ajustar por quiosque
+            depois, se precisar misturar os dois modelos.
+          </p>
+        </div>
+      )}
+
       <div className="campo">
         <label>Nome do evento</label>
         <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />

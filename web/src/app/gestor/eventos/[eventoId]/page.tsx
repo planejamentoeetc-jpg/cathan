@@ -86,6 +86,12 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         </Link>
       </div>
 
+      <div className="texto-fraco" style={{ marginBottom: 16, fontSize: 12.5 }}>
+        {evento.modalidade === "MULTI_ESTABELECIMENTO"
+          ? "🍴 Estabelecimentos independentes — cada quiosque conecta a própria conta Mercado Pago"
+          : "🎪 Organizador único — todos os quiosques recebem na mesma conta"}
+      </div>
+
       <PausarEventoToggle eventoId={evento.id} pausadoInicial={evento.pedidosPausados} />
 
       <PainelComOlho

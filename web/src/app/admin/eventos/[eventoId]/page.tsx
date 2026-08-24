@@ -6,6 +6,7 @@ import { PainelComOlho } from "@/components/PainelComOlho";
 import { ChatSuporte } from "@/components/ChatSuporte";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { FormularioComissaoEvento } from "@/components/FormularioComissaoEvento";
+import { FormularioComissaoQuiosque } from "@/components/FormularioComissaoQuiosque";
 
 function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -17,6 +18,12 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
     include: { organizador: { select: { id: true, nome: true } } },
   });
   if (!evento) notFound();
+
+  const quiosquesIndependentes = await prisma.quiosque.findMany({
+    where: { eventoId: params.eventoId, tipo: "INDEPENDENTE" },
+    select: { id: true, nome: true, mpUserId: true, comissaoPercentual: true },
+    orderBy: { nome: "asc" },
+  });
 
   const dados = await calcularAnalyticsEvento(evento.id);
   const taxaCathan = Number(evento.comissaoPercentual) / 100;
@@ -73,6 +80,36 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
               eventoId={evento.id}
               comissaoInicial={Number(evento.comissaoPercentual)}
             />
+          </div>
+        </div>
+      )}
+
+      {quiosquesIndependentes.length > 0 && (
+        <div className="g-sec">
+          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
+            💳 Restaurantes independentes — split 1:1
+          </h5>
+          <p className="texto-fraco" style={{ marginBottom: 14 }}>
+            Cada um recebe direto na própria conta quando conectado (feito pelo gestor, na tela do
+            quiosque) — aqui é só pra ajustar a comissão individual quando negociar condição
+            diferente da padrão do evento.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {quiosquesIndependentes.map((q) => (
+              <div key={q.id} style={{ paddingBottom: 14, borderBottom: "1px solid var(--linha)" }}>
+                <div className="g-row" style={{ marginBottom: 10 }}>
+                  {q.nome}
+                  <span className="val" style={{ color: q.mpUserId ? "var(--verde)" : "var(--festa)" }}>
+                    {q.mpUserId ? "✓ conectado" : "não conectado"}
+                  </span>
+                </div>
+                <FormularioComissaoQuiosque
+                  quiosqueId={q.id}
+                  comissaoInicial={q.comissaoPercentual !== null ? Number(q.comissaoPercentual) : null}
+                  comissaoPadraoEvento={Number(evento.comissaoPercentual)}
+                />
+              </div>
+            ))}
           </div>
         </div>
       )}

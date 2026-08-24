@@ -19,6 +19,8 @@ type QuiosqueResumo = {
   nome: string;
   cor: string;
   modalidade: ModalidadeQuiosque;
+  // true quando este quiosque recebe direto na própria conta Mercado Pago
+  recebeDireto: boolean;
 };
 
 function formatarReais(valor: number) {
@@ -42,11 +44,12 @@ export function ProdutoCard({
   const [quantidade, setQuantidade] = useState(1);
   const [observacao, setObservacao] = useState("");
   const [adicionado, setAdicionado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   const disponivel = produto.ativo && (produto.estoque === null || produto.estoque > 0);
 
   function adicionar() {
-    adicionarAoCarrinho(
+    const resultado = adicionarAoCarrinho(
       eventoId,
       {
         produtoId: produto.id,
@@ -57,9 +60,17 @@ export function ProdutoCard({
         quiosqueNome: quiosque.nome,
         quiosqueCor: quiosque.cor,
         quiosqueModalidade: quiosque.modalidade,
+        quiosqueRecebeDireto: quiosque.recebeDireto,
       },
       quantidade
     );
+
+    if (!resultado.ok) {
+      setErro(resultado.motivo);
+      return;
+    }
+
+    setErro(null);
     setQuantidade(1);
     setObservacao("");
     setAdicionado(true);
@@ -123,6 +134,11 @@ export function ProdutoCard({
             >
               {adicionado ? "Adicionado ✓" : "Adicionar"}
             </button>
+            {erro && (
+              <div className="aviso" style={{ marginTop: 8, fontSize: 11.5 }}>
+                {erro}
+              </div>
+            )}
           </>
         )}
       </div>

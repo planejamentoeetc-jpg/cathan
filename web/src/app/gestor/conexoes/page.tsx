@@ -44,7 +44,7 @@ export default async function Conexoes({
         </Link>
       </div>
 
-      {searchParams.conectado && (
+      {searchParams.conectado && conectado && (
         <div
           className="aviso"
           style={{ marginBottom: 16, borderColor: "var(--verde)", background: "var(--verde-suave)", color: "var(--verde)" }}
@@ -77,6 +77,14 @@ export default async function Conexoes({
               </span>
             </div>
             <DesconectarMercadoPagoButton />
+            <p className="texto-fraco" style={{ marginTop: 10, fontSize: 12 }}>
+              Quer trocar pra outra conta depois de desconectar? O Mercado Pago reconecta
+              automaticamente a mesma conta se você ainda estiver logado nela — saia da conta em{" "}
+              <a href="https://www.mercadopago.com.br" target="_blank" rel="noopener noreferrer">
+                mercadopago.com.br
+              </a>{" "}
+              antes de conectar a nova.
+            </p>
           </>
         ) : (
           <>
@@ -89,6 +97,14 @@ export default async function Conexoes({
             <a href="/api/mercado-pago/oauth/iniciar" className="btn btn-primario btn-bloco">
               Conectar minha conta Mercado Pago
             </a>
+            <p className="texto-fraco" style={{ marginTop: 10, fontSize: 12 }}>
+              Vai usar uma conta diferente da última que você logou no Mercado Pago? Saia dela
+              primeiro em{" "}
+              <a href="https://www.mercadopago.com.br" target="_blank" rel="noopener noreferrer">
+                mercadopago.com.br
+              </a>
+              , senão ele conecta a mesma de novo sem perguntar.
+            </p>
           </>
         )}
       </div>

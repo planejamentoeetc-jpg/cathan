@@ -54,3 +54,26 @@ export async function verificarEstadoOauth(state: string | null): Promise<string
     return null;
   }
 }
+
+// mesma ideia do state acima, só que pra conexão MP de um QUIOSQUE específico
+// (split por restaurante) -- finalidade diferente de propósito, pra nunca ser
+// confundido com o state de organizador mesmo que alguém tente reaproveitar um
+// pelo outro
+export async function assinarEstadoOauthQuiosque(quiosqueId: string): Promise<string> {
+  return new SignJWT({ quiosqueId, finalidade: "mp-oauth-state-quiosque" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(DURACAO_ESTADO_OAUTH)
+    .sign(obterChaveSecreta());
+}
+
+export async function verificarEstadoOauthQuiosque(state: string | null): Promise<string | null> {
+  if (!state) return null;
+  try {
+    const { payload } = await jwtVerify(state, obterChaveSecreta());
+    if (payload.finalidade !== "mp-oauth-state-quiosque") return null;
+    return typeof payload.quiosqueId === "string" ? payload.quiosqueId : null;
+  } catch {
+    return null;
+  }
+}

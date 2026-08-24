@@ -14,7 +14,7 @@ export default async function NovoQuiosque({ params }: { params: { eventoId: str
       <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
         {evento.nome} — novo quiosque
       </div>
-      <CriarQuiosqueForm eventoId={evento.id} />
+      <CriarQuiosqueForm eventoId={evento.id} modalidadeEvento={evento.modalidade} />
     </main>
   );
 }

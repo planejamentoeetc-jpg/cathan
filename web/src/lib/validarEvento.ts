@@ -1,3 +1,6 @@
+const MODALIDADES_VALIDAS = ["ORGANIZADOR_UNICO", "MULTI_ESTABELECIMENTO"] as const;
+export type ModalidadeEventoValidada = (typeof MODALIDADES_VALIDAS)[number];
+
 export type CamposEvento = {
   nome: string;
   local: string;
@@ -5,6 +8,10 @@ export type CamposEvento = {
   raioPedidosMetros?: number | null;
   latitude?: number | null;
   longitude?: number | null;
+  // só relevante na CRIAÇÃO (POST) -- na edição (PATCH) o formulário não manda
+  // esse campo, então fica undefined e o update não toca nele (é uma escolha
+  // de uma vez só, feita ao criar o evento, não algo pra mudar depois)
+  modalidade?: string;
 };
 
 export type EventoValidado = {
@@ -14,6 +21,7 @@ export type EventoValidado = {
   raioPedidosMetros: number | null;
   latitude: number | null;
   longitude: number | null;
+  modalidade?: ModalidadeEventoValidada;
 };
 
 export function validarCamposEvento(
@@ -40,6 +48,13 @@ export function validarCamposEvento(
     return { erro: "Raio de geofencing deve ser um número inteiro maior que zero." };
   }
 
+  if (
+    corpo.modalidade !== undefined &&
+    !MODALIDADES_VALIDAS.includes(corpo.modalidade as ModalidadeEventoValidada)
+  ) {
+    return { erro: "Modalidade de evento inválida." };
+  }
+
   return {
     dados: {
       nome: corpo.nome.trim(),
@@ -48,6 +63,9 @@ export function validarCamposEvento(
       raioPedidosMetros: temRaio ? (corpo.raioPedidosMetros as number) : null,
       latitude: temCoordenadas ? (corpo.latitude as number) : null,
       longitude: temCoordenadas ? (corpo.longitude as number) : null,
+      ...(corpo.modalidade !== undefined
+        ? { modalidade: corpo.modalidade as ModalidadeEventoValidada }
+        : {}),
     },
   };
 }

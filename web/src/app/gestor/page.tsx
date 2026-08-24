@@ -50,6 +50,7 @@ export default async function PainelGestor() {
           <Link key={evento.id} href={`/gestor/eventos/${evento.id}`} className="cartao quiosque-card">
             <div style={{ flex: 1 }}>
               <b style={{ fontFamily: "var(--font-sora)", fontSize: 15.5, display: "block" }}>
+                {evento.modalidade === "MULTI_ESTABELECIMENTO" ? "🍴 " : "🎪 "}
                 {evento.nome}
               </b>
               <span className="texto-fraco">

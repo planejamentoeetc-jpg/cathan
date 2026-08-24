@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { distanciaMetros } from "@/lib/geo";
 import { mercadoPagoClient } from "@/lib/mercadoPago";
 import { obterClienteOrganizador } from "@/lib/mercadoPagoOrganizador";
+import { obterClienteQuiosque } from "@/lib/mercadoPagoQuiosque";
 import { prisma } from "@/lib/prisma";
 
 type ItemRequisicao = {
@@ -116,6 +117,25 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Restaurante com Mercado Pago próprio conectado (split 1:1) só pode receber
+  // sozinho — o Mercado Pago não permite dividir 1 cobrança entre contas
+  // diferentes no modelo self-service. Só bloqueia mistura quando pelo menos
+  // um dos quiosques do carrinho tem conexão própria; quiosques "do evento"
+  // (sem conexão) continuam podendo se misturar entre si normalmente, como
+  // sempre funcionou.
+  const quiosquesEnvolvidos = new Map(produtos.map((p) => [p.quiosque.id, p.quiosque]));
+  if (quiosquesEnvolvidos.size > 1) {
+    const comConexaoPropria = [...quiosquesEnvolvidos.values()].filter((q) => q.mpAccessTokenCifrado);
+    if (comConexaoPropria.length > 0) {
+      return NextResponse.json(
+        {
+          erro: `O carrinho tem itens de mais de um restaurante. "${comConexaoPropria[0].nome}" recebe direto na própria conta e por isso precisa de um pedido separado — finalize esse restaurante primeiro.`,
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const quantidadePorProduto = new Map<string, number>();
   for (const item of corpo.itens) {
     quantidadePorProduto.set(item.produtoId, (quantidadePorProduto.get(item.produtoId) ?? 0) + item.quantidade);
@@ -155,16 +175,27 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Se o organizador tiver conectado a própria conta Mercado Pago
-    // (/gestor/conexoes), o Pix cai direto na conta dele e a Cathan retém a
-    // comissão automaticamente via application_fee. Sem conexão, cai no client
-    // global de sempre, sem nenhuma mudança de comportamento.
-    const clienteOrganizador = evento.organizador
-      ? await obterClienteOrganizador(evento.organizador)
+    // Prioridade de quem recebe o Pix: 1) o próprio restaurante, se ele tiver
+    // conectado a própria conta Mercado Pago (só possível quando o carrinho
+    // inteiro é de um quiosque só, ver checagem acima) -- 2) o organizador do
+    // evento, se ele tiver conectado a dele -- 3) o client global de sempre,
+    // sem nenhuma mudança de comportamento. Em qualquer um dos dois primeiros
+    // casos, a Cathan retém a comissão automaticamente via application_fee.
+    const quiosqueUnico = quiosquesEnvolvidos.size === 1 ? [...quiosquesEnvolvidos.values()][0] : null;
+    const clienteQuiosque = quiosqueUnico ? await obterClienteQuiosque(quiosqueUnico) : null;
+    const clienteOrganizador =
+      !clienteQuiosque && evento.organizador ? await obterClienteOrganizador(evento.organizador) : null;
+    const clientePagamento = clienteQuiosque ?? clienteOrganizador ?? mercadoPagoClient;
+
+    const percentualComissao = clienteQuiosque
+      ? Number(quiosqueUnico!.comissaoPercentual ?? evento.comissaoPercentual)
+      : clienteOrganizador
+      ? Number(evento.comissaoPercentual)
       : null;
-    const applicationFee = clienteOrganizador
-      ? Math.round(valorTotal * (Number(evento.comissaoPercentual) / 100) * 100) / 100
-      : undefined;
+    const applicationFee =
+      percentualComissao !== null
+        ? Math.round(valorTotal * (percentualComissao / 100) * 100) / 100
+        : undefined;
 
     // Pix direto (Payments API) — o pagamento acontece dentro do próprio app,
     // sem redirecionar o cliente pro checkout hospedado do Mercado Pago.
@@ -186,7 +217,7 @@ export async function POST(req: NextRequest) {
 
     let payment;
     try {
-      payment = await new Payment(clienteOrganizador ?? mercadoPagoClient).create({
+      payment = await new Payment(clientePagamento).create({
         body: {
           ...corpoPagamentoBase,
           ...(applicationFee !== undefined ? { application_fee: applicationFee } : {}),
@@ -198,16 +229,17 @@ export async function POST(req: NextRequest) {
       if (applicationFee === undefined || !mensagem.includes("application_fee")) {
         throw erroPagamento;
       }
-      // Mercado Pago recusou o split pra essa conta (ex.: verificação de
-      // marketplace pendente do organizador) — tenta de novo sem comissão
-      // automática, pra não travar o checkout do evento. A comissão nesse
-      // caso precisa ser acertada à parte até a conta ficar habilitada.
+      // Mercado Pago recusou o split pra essa conta (ex.: restaurante ainda não
+      // completou a verificação exigida do lado dele, ou organizador com
+      // verificação de marketplace pendente) — tenta de novo sem comissão
+      // automática, pra não travar o checkout. A comissão nesse caso precisa
+      // ser acertada à parte até a conta ficar habilitada.
       console.error(
-        "MP recusou application_fee do organizador, tentando sem split",
-        evento.organizador?.id,
+        "MP recusou application_fee, tentando sem split",
+        clienteQuiosque ? `quiosque=${quiosqueUnico!.id}` : `organizador=${evento.organizador?.id}`,
         mensagem
       );
-      payment = await new Payment(clienteOrganizador ?? mercadoPagoClient).create({
+      payment = await new Payment(clientePagamento).create({
         body: corpoPagamentoBase,
         requestOptions: { idempotencyKey: pedidoPendente.id },
       });
