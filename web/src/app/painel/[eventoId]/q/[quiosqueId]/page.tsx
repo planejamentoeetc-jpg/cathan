@@ -69,6 +69,15 @@ export default async function PainelQuiosque({
         </div>
       </div>
 
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <Link href={`/painel/${params.eventoId}/q/${quiosque.id}/vendas`} className="btn btn-secundario">
+          📊 Minhas vendas
+        </Link>
+        <Link href={`/painel/${params.eventoId}/q/${quiosque.id}/pedidos`} className="btn btn-secundario">
+          📋 Registro de pedidos
+        </Link>
+      </div>
+
       <div className="painel-split">
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>Fila de pedidos</h5>
