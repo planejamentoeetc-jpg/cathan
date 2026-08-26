@@ -3,6 +3,39 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+// os ícones da praça são quadrados (object-fit: cover) -- uma logo retangular
+// enviada crua fica cortada nas bordas. Aqui a gente centraliza a logo inteira
+// num canvas quadrado com fundo branco antes do upload, então o que chega no
+// servidor já é o quadrado certo e o cover do ícone nunca corta nada.
+const TAMANHO_ICONE = 512;
+
+async function ajustarParaIcone(arquivo: File): Promise<File> {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(arquivo);
+  } catch {
+    return arquivo;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = TAMANHO_ICONE;
+  canvas.height = TAMANHO_ICONE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return arquivo;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, TAMANHO_ICONE, TAMANHO_ICONE);
+
+  const escala = Math.min(TAMANHO_ICONE / bitmap.width, TAMANHO_ICONE / bitmap.height);
+  const largura = bitmap.width * escala;
+  const altura = bitmap.height * escala;
+  ctx.drawImage(bitmap, (TAMANHO_ICONE - largura) / 2, (TAMANHO_ICONE - altura) / 2, largura, altura);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!blob) return arquivo;
+  return new File([blob], "logo.png", { type: "image/png" });
+}
+
 export function UploadLogoQuiosque({
   apiUrl,
   logoUrlInicial,
@@ -19,12 +52,14 @@ export function UploadLogoQuiosque({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  async function enviarArquivo(arquivo: File) {
+  async function enviarArquivo(arquivoOriginal: File) {
     setErro(null);
-    setPreview(URL.createObjectURL(arquivo));
     setEnviando(true);
 
     try {
+      const arquivo = await ajustarParaIcone(arquivoOriginal);
+      setPreview(URL.createObjectURL(arquivo));
+
       const corpo = new FormData();
       corpo.append("logo", arquivo);
 
