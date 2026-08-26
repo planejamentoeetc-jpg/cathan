@@ -843,15 +843,29 @@ input[type="password"]::-ms-clear {
 /* ===== Praça / loja com imagem de fundo customizada (upload do gestor/quiosque) =====
    fundo fixo cobrindo o viewport inteiro, atrás de todo o conteúdo; a classe
    .com-fundo no <main> ajusta só o texto que ficaria sem cartão/fundo sólido
-   por cima (o resto — .hero, .cartao, .produto-card, .dica-spot — já é opaco) */
+   por cima (o resto — .hero, .cartao, .produto-card, .dica-spot — já é opaco).
+   .conteudo-com-fundo empilha por z-index POSITIVO (não negativo) porque
+   z-index negativo em elemento position:fixed é instável em navegador mobile
+   -- alguns simplesmente não pintam o fixed acima do próprio fundo da página,
+   deixando a imagem invisível no celular mesmo funcionando liso no desktop. */
+
+.tela {
+  position: relative;
+  isolation: isolate;
+}
 
 .fundo-imagem-tela {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.conteudo-com-fundo {
+  position: relative;
+  z-index: 1;
 }
 
 .com-fundo .texto-fraco {

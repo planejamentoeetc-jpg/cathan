@@ -55,86 +55,88 @@ export default async function PracaDoEvento({
           }}
         />
       )}
-      <div className="hero">
-        <div className="nome">{evento.nome}</div>
-        <div className="sub">{evento.local}</div>
-      </div>
-
-      <MeusPedidosBanner eventoId={evento.id} />
-
-      {evento.pedidosPausados && (
-        <div className="aviso" style={{ marginBottom: 16 }}>
-          Os pedidos deste evento estão temporariamente pausados pelo organizador. Você ainda
-          pode navegar pelos quiosques, mas não será possível finalizar a compra agora.
+      <div className="conteudo-com-fundo">
+        <div className="hero">
+          <div className="nome">{evento.nome}</div>
+          <div className="sub">{evento.local}</div>
         </div>
-      )}
 
-      {dicaEmDestaque && (
-        <div className="dica-spot" style={{ borderColor: dicaEmDestaque.cor }}>
-          <span className="ic">💡</span>
-          <span>
-            <b>Fica a dica:</b> {dicaEmDestaque.dica}{" "}
-            <Link href={`/e/${evento.id}/q/${dicaEmDestaque.id}`} className="ir" style={{ color: dicaEmDestaque.cor }}>
-              Visitar {dicaEmDestaque.nome} ›
-            </Link>
-          </span>
-        </div>
-      )}
+        <MeusPedidosBanner eventoId={evento.id} />
 
-      {evento.quiosques.length > 0 && evento.modalidade === "MULTI_ESTABELECIMENTO" && (
-        <>
-          <p className="texto-fraco" style={{ marginBottom: 8 }}>
-            Toque num estabelecimento pra ver o cardápio:
-          </p>
-          <div className="praca-icones-grid">
-            {evento.quiosques.map((quiosque) => (
-              <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="praca-icone">
-                <div className="praca-icone-imagem" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
-                  {quiosque.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={quiosque.logoUrl} alt={quiosque.nome} />
-                  ) : (
-                    <IconeModalidade modalidade={quiosque.modalidade} />
-                  )}
-                </div>
-                <b>{quiosque.nome}</b>
-              </Link>
-            ))}
+        {evento.pedidosPausados && (
+          <div className="aviso" style={{ marginBottom: 16 }}>
+            Os pedidos deste evento estão temporariamente pausados pelo organizador. Você ainda
+            pode navegar pelos quiosques, mas não será possível finalizar a compra agora.
           </div>
-        </>
-      )}
+        )}
 
-      {evento.quiosques.length > 0 && evento.modalidade !== "MULTI_ESTABELECIMENTO" && (
-        <>
-          <p className="texto-fraco" style={{ marginBottom: 8 }}>
-            Toque num quiosque pra ver o cardápio:
-          </p>
-          <div className="quiosques-grid">
-            {evento.quiosques.map((quiosque) => {
-              const esperaMinutos = calcularEsperaEstimadaMinutos(
-                quiosque.produtos.map((p) => p.tempoProducaoMinutos),
-                quiosque.subPedidos.length
-              );
+        {dicaEmDestaque && (
+          <div className="dica-spot" style={{ borderColor: dicaEmDestaque.cor }}>
+            <span className="ic">💡</span>
+            <span>
+              <b>Fica a dica:</b> {dicaEmDestaque.dica}{" "}
+              <Link href={`/e/${evento.id}/q/${dicaEmDestaque.id}`} className="ir" style={{ color: dicaEmDestaque.cor }}>
+                Visitar {dicaEmDestaque.nome} ›
+              </Link>
+            </span>
+          </div>
+        )}
 
-              return (
-                <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="quiosque-aba">
-                  <div className="quiosque-logo" style={{ background: quiosque.cor }}>
-                    <IconeModalidade modalidade={quiosque.modalidade} />
+        {evento.quiosques.length > 0 && evento.modalidade === "MULTI_ESTABELECIMENTO" && (
+          <>
+            <p className="texto-fraco" style={{ marginBottom: 8 }}>
+              Toque num estabelecimento pra ver o cardápio:
+            </p>
+            <div className="praca-icones-grid">
+              {evento.quiosques.map((quiosque) => (
+                <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="praca-icone">
+                  <div className="praca-icone-imagem" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
+                    {quiosque.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={quiosque.logoUrl} alt={quiosque.nome} />
+                    ) : (
+                      <IconeModalidade modalidade={quiosque.modalidade} />
+                    )}
                   </div>
                   <b>{quiosque.nome}</b>
-                  <div className="espera">{formatarEspera(esperaMinutos)}</div>
                 </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
+              ))}
+            </div>
+          </>
+        )}
 
-      {evento.quiosques.length === 0 && (
-        <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
-      )}
+        {evento.quiosques.length > 0 && evento.modalidade !== "MULTI_ESTABELECIMENTO" && (
+          <>
+            <p className="texto-fraco" style={{ marginBottom: 8 }}>
+              Toque num quiosque pra ver o cardápio:
+            </p>
+            <div className="quiosques-grid">
+              {evento.quiosques.map((quiosque) => {
+                const esperaMinutos = calcularEsperaEstimadaMinutos(
+                  quiosque.produtos.map((p) => p.tempoProducaoMinutos),
+                  quiosque.subPedidos.length
+                );
 
-      <BarraCarrinho eventoId={evento.id} />
+                return (
+                  <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="quiosque-aba">
+                    <div className="quiosque-logo" style={{ background: quiosque.cor }}>
+                      <IconeModalidade modalidade={quiosque.modalidade} />
+                    </div>
+                    <b>{quiosque.nome}</b>
+                    <div className="espera">{formatarEspera(esperaMinutos)}</div>
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {evento.quiosques.length === 0 && (
+          <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
+        )}
+
+        <BarraCarrinho eventoId={evento.id} />
+      </div>
     </main>
   );
 }
