@@ -28,7 +28,7 @@ export default async function LojaDoQuiosque({
 
   const irmaos = await prisma.quiosque.findMany({
     where: { eventoId: params.eventoId, ...disponivelParaCliente },
-    select: { id: true, nome: true, cor: true, modalidade: true },
+    select: { id: true, nome: true, cor: true, modalidade: true, logoUrl: true },
     orderBy: { nome: "asc" },
   });
 
@@ -57,8 +57,13 @@ export default async function LojaDoQuiosque({
                 className="quiosque-aba"
                 style={irmao.id === quiosque.id ? { borderColor: irmao.cor, borderWidth: 2 } : undefined}
               >
-                <div className="quiosque-logo" style={{ background: irmao.cor }}>
-                  <IconeModalidade modalidade={irmao.modalidade} />
+                <div className="quiosque-logo" style={{ background: irmao.logoUrl ? undefined : irmao.cor }}>
+                  {irmao.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={irmao.logoUrl} alt={irmao.nome} />
+                  ) : (
+                    <IconeModalidade modalidade={irmao.modalidade} />
+                  )}
                 </div>
                 <b>{irmao.nome}</b>
               </Link>
