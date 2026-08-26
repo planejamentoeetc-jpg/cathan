@@ -33,7 +33,16 @@ export default async function LojaDoQuiosque({
   });
 
   return (
-    <main className="tela">
+    <main className={quiosque.imagemFundoUrl ? "tela com-fundo" : "tela"}>
+      {quiosque.imagemFundoUrl && (
+        <div
+          aria-hidden
+          className="fundo-imagem-tela"
+          style={{
+            backgroundImage: `linear-gradient(180deg, rgba(10,26,26,0.35), rgba(10,26,26,0.78)), url(${quiosque.imagemFundoUrl})`,
+          }}
+        />
+      )}
       <Link href={`/e/${params.eventoId}`} className="btn btn-secundario" style={{ marginBottom: 12 }}>
         ‹ Praça do evento
       </Link>
