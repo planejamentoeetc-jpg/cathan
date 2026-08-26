@@ -122,9 +122,6 @@ model Evento {
   nome              String
   local             String
   data              DateTime
-  // imagem de fundo da praça do evento (Vercel Blob) -- fica atrás da grade
-  // de ícones dos quiosques na tela do cliente; null cai no fundo padrão
-  imagemFundoUrl    String?  @map("imagem_fundo_url")
   // null = sem geofencing ("não aplicável")
   raioPedidosMetros Int?     @map("raio_pedidos_metros")
   // ponto central do raio de pedidos; obrigatório junto com raioPedidosMetros (ver CHECK na migration)
@@ -177,10 +174,6 @@ model Quiosque {
   // "tela inicial de celular" da praça de eventos MULTI_ESTABELECIMENTO;
   // null = cai no fallback do quadrado colorido + ícone genérico de sempre
   logoUrl            String?            @map("logo_url")
-  // imagem de fundo exclusiva da loja deste quiosque (Vercel Blob) -- dá a
-  // sensação de "ambiente próprio" quando o cliente entra na loja; null cai
-  // no fundo padrão da praça
-  imagemFundoUrl     String?            @map("imagem_fundo_url")
   // obrigatórios somente quando tipo = INDEPENDENTE (ver CHECK na migration)
   cnpj               String?
   chavePix           String?            @map("chave_pix")

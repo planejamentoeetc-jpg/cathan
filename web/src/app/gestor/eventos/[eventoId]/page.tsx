@@ -11,7 +11,6 @@ import { ChatSuporte } from "@/components/ChatSuporte";
 import { ExcluirEventoButton } from "@/components/ExcluirEventoButton";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { SenhaOculta } from "@/components/SenhaOculta";
-import { UploadImagemFundo } from "@/components/UploadImagemFundo";
 import { gerarQrCodeDataUrl } from "@/lib/qrcode";
 
 const NOME_MODALIDADE: Record<string, string> = {
@@ -94,14 +93,6 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
       </div>
 
       <PausarEventoToggle eventoId={evento.id} pausadoInicial={evento.pedidosPausados} />
-
-      <UploadImagemFundo
-        apiUrl={`/api/eventos/${evento.id}/imagem-fundo`}
-        imagemUrlInicial={evento.imagemFundoUrl}
-        titulo="Imagem de fundo da praça"
-        descricao="Aparece atrás dos ícones dos quiosques na tela do cliente. Sem imagem, fica o fundo padrão do Cathan."
-      />
-      <div style={{ height: 16 }} />
 
       <PainelComOlho
         dados={dados}

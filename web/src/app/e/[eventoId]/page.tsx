@@ -45,16 +45,7 @@ export default async function PracaDoEvento({
       : null;
 
   return (
-    <main className={evento.imagemFundoUrl ? "tela com-fundo" : "tela"}>
-      {evento.imagemFundoUrl && (
-        <div
-          aria-hidden
-          className="fundo-imagem-tela"
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(10,26,26,0.35), rgba(10,26,26,0.78)), url(${evento.imagemFundoUrl})`,
-          }}
-        />
-      )}
+    <main className="tela">
       <div className="hero">
         <div className="nome">{evento.nome}</div>
         <div className="sub">{evento.local}</div>

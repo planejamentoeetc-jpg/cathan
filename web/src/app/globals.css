@@ -840,29 +840,6 @@ input[type="password"]::-ms-clear {
   gap: 12px;
 }
 
-/* ===== Praça / loja com imagem de fundo customizada (upload do gestor/quiosque) =====
-   fundo fixo cobrindo o viewport inteiro, atrás de todo o conteúdo; a classe
-   .com-fundo no <main> ajusta só o texto que ficaria sem cartão/fundo sólido
-   por cima (o resto — .hero, .cartao, .produto-card, .dica-spot — já é opaco) */
-
-.fundo-imagem-tela {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.com-fundo .texto-fraco {
-  color: #e3ece9;
-}
-
-.com-fundo .praca-icone b {
-  color: #fff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-}
-
 /* ===== Praça de eventos MULTI_ESTABELECIMENTO: grade de ícones (tipo tela inicial de celular) ===== */
 
 .praca-icones-grid {
