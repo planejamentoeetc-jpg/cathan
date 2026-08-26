@@ -6,6 +6,7 @@ import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { BotaoSair } from "@/components/BotaoSair";
 import { MensagensQuiosqueForm } from "@/components/MensagensQuiosqueForm";
 import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
+import { UploadImagemFundo } from "@/components/UploadImagemFundo";
 import { DesconectarMercadoPagoQuiosqueButton } from "@/components/DesconectarMercadoPagoQuiosqueButton";
 
 const MENSAGENS_ERRO_MP: Record<string, string> = {
@@ -87,6 +88,14 @@ export default async function PainelQuiosque({
           <UploadLogoQuiosque
             apiUrl={`/api/quiosques/${params.quiosqueId}/logo`}
             logoUrlInicial={quiosque.logoUrl}
+          />
+
+          <h5 style={{ fontFamily: "var(--font-sora)", margin: "20px 0 12px" }}>Imagem de fundo da loja</h5>
+          <UploadImagemFundo
+            apiUrl={`/api/quiosques/${params.quiosqueId}/imagem-fundo`}
+            imagemUrlInicial={quiosque.imagemFundoUrl}
+            titulo="Imagem de fundo da loja"
+            descricao="Aparece atrás do cardápio quando o cliente entra na sua loja. Sem imagem, fica o fundo padrão do Cathan."
           />
         </div>
         <div>

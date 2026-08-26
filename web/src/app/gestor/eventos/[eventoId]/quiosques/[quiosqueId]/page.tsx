@@ -7,6 +7,7 @@ import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { ExcluirQuiosqueButton } from "@/components/ExcluirQuiosqueButton";
 import { DesconectarMercadoPagoQuiosqueButton } from "@/components/DesconectarMercadoPagoQuiosqueButton";
 import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
+import { UploadImagemFundo } from "@/components/UploadImagemFundo";
 
 const MENSAGENS_ERRO_MP: Record<string, string> = {
   recusado: "O restaurante cancelou a autorização no Mercado Pago.",
@@ -62,6 +63,13 @@ export default async function QuiosqueGestor({
           <UploadLogoQuiosque
             apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/logo`}
             logoUrlInicial={quiosque.logoUrl}
+          />
+          <div style={{ height: 16 }} />
+          <UploadImagemFundo
+            apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/imagem-fundo`}
+            imagemUrlInicial={quiosque.imagemFundoUrl}
+            titulo="Imagem de fundo da loja"
+            descricao="Aparece atrás do cardápio quando o cliente entra na loja deste restaurante. Sem imagem, fica o fundo padrão do Cathan."
           />
           <div style={{ height: 16 }} />
           <EditarQuiosqueForm
