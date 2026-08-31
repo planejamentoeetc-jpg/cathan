@@ -44,7 +44,8 @@ export default async function PainelCaixa({ params }: { params: { eventoId: stri
       )}
 
       <CaixaVenda
-        eventoId={evento.id}
+        apiUrlVender={`/api/caixa/${evento.id}/vender`}
+        apiUrlVendas={`/api/caixa/${evento.id}/vendas`}
         eventoNome={evento.nome}
         eventoLocal={evento.local}
         pausado={evento.pedidosPausados}

@@ -51,18 +51,23 @@ function formatarReais(valor: number) {
 }
 
 export function CaixaVenda({
-  eventoId,
+  apiUrlVender,
+  apiUrlVendas,
   eventoNome,
   eventoLocal,
   pausado,
   quiosques,
 }: {
-  eventoId: string;
+  // ex.: /api/caixa/{eventoId}/vender (caixa do evento, mistura quiosques) ou
+  // /api/quiosques/{quiosqueId}/vender (venda manual do próprio quiosque independente)
+  apiUrlVender: string;
+  apiUrlVendas: string;
   eventoNome: string;
   eventoLocal: string;
   pausado: boolean;
   quiosques: Quiosque[];
 }) {
+  const catalogoUnico = quiosques.length === 1;
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [nome, setNome] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -75,12 +80,12 @@ export function CaixaVenda({
 
   const carregarVendas = useCallback(async () => {
     try {
-      const resposta = await fetch(`/api/caixa/${eventoId}/vendas`, { cache: "no-store" });
+      const resposta = await fetch(apiUrlVendas, { cache: "no-store" });
       if (resposta.ok) setVendas(await resposta.json());
     } catch {
       // silencioso — a lista atualiza de novo no próximo ciclo de polling
     }
-  }, [eventoId]);
+  }, [apiUrlVendas]);
 
   useEffect(() => {
     carregarVendas();
@@ -164,7 +169,7 @@ export function CaixaVenda({
 
     setEnviando(true);
     try {
-      const resposta = await fetch(`/api/caixa/${eventoId}/vender`, {
+      const resposta = await fetch(apiUrlVender, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -269,7 +274,7 @@ export function CaixaVenda({
       <div className="painel-split">
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
-            Catálogo do evento — toque para adicionar (pode misturar quiosques)
+            {catalogoUnico ? "Catálogo — toque para adicionar" : "Catálogo do evento — toque para adicionar (pode misturar quiosques)"}
           </h5>
           {quiosques.map((quiosque) => (
             <div key={quiosque.id} style={{ marginBottom: 16 }}>

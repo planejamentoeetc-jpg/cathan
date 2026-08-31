@@ -77,6 +77,11 @@ export default async function PainelQuiosque({
         <Link href={`/painel/${params.eventoId}/q/${quiosque.id}/pedidos`} className="btn btn-secundario">
           📋 Registro de pedidos
         </Link>
+        {quiosque.tipo === "INDEPENDENTE" && (
+          <Link href={`/painel/${params.eventoId}/q/${quiosque.id}/caixa`} className="btn btn-secundario">
+            💵 Venda manual
+          </Link>
+        )}
       </div>
 
       <div className="painel-split">
