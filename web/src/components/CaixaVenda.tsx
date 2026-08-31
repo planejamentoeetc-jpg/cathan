@@ -202,6 +202,12 @@ export function CaixaVenda({
     }
   }
 
+  function desconectarBt() {
+    conexaoImpressora?.device.gatt?.disconnect();
+    setConexaoImpressora(null);
+    setStatusImpressora("não conectada");
+  }
+
   async function conectarBt() {
     try {
       const conexao = await conectarImpressora(() => {
@@ -259,9 +265,15 @@ export function CaixaVenda({
           🖨 Impressora:{" "}
           <b style={{ color: conexaoImpressora ? "var(--verde)" : "var(--festa)" }}>{statusImpressora}</b>
         </span>
-        <button type="button" className="btn btn-secundario" style={{ padding: "6px 14px" }} onClick={conectarBt}>
-          Conectar Bluetooth
-        </button>
+        {conexaoImpressora ? (
+          <button type="button" className="btn btn-secundario" style={{ padding: "6px 14px" }} onClick={desconectarBt}>
+            ✓ Conectada — desconectar
+          </button>
+        ) : (
+          <button type="button" className="btn btn-secundario" style={{ padding: "6px 14px" }} onClick={conectarBt}>
+            Conectar Bluetooth
+          </button>
+        )}
       </div>
 
       {ultimaVenda && (
