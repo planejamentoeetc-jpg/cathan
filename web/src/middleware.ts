@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verificarSessaoGestor } from "@/lib/sessaoGestor";
+import { verificarSessaoQuiosque } from "@/lib/sessaoQuiosque";
 
 const COOKIE_QUIOSQUE = "cathan_painel_auth";
+// sessão própria de um quiosque INDEPENDENTE (senha dele, não a senha geral do
+// evento) -- ver lib/sessaoQuiosque.ts
+const COOKIE_QUIOSQUE_PROPRIO = "cathan_quiosque_auth";
 const COOKIE_GESTOR = "cathan_gestor_auth";
 const COOKIE_ADMIN = "cathan_admin_auth";
 const COOKIE_CAIXA = "cathan_caixa_auth";
@@ -111,8 +115,18 @@ export async function middleware(req: NextRequest) {
   // modelo de segurança de GET /api/pedidos/[pedidoId] e .../liberar) — não é
   // uma ação de operador de quiosque, não pode exigir a senha do quiosque
   const ehClienteACaminhoPublico = /^\/api\/sub-pedidos\/[^/]+\/cliente-a-caminho$/.test(pathname);
+  // login/logout do quiosque INDEPENDENTE com senha própria (ver .../entrar
+  // e lib/sessaoQuiosque.ts) — precisam ficar públicos como os equivalentes acima
+  const ehPaginaLoginQuiosqueProprio = /^\/painel\/[^/]+\/q\/[^/]+\/entrar$/.test(pathname);
+  const ehApiLoginOuSairQuiosqueProprio = /^\/api\/quiosques\/[^/]+\/(entrar|sair)$/.test(pathname);
 
-  if (ehPaginaLogin || ehApiLogin || ehClienteACaminhoPublico) {
+  if (
+    ehPaginaLogin ||
+    ehApiLogin ||
+    ehClienteACaminhoPublico ||
+    ehPaginaLoginQuiosqueProprio ||
+    ehApiLoginOuSairQuiosqueProprio
+  ) {
     return NextResponse.next();
   }
 
@@ -120,8 +134,43 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // sessão própria de um quiosque INDEPENDENTE — extrai o quiosqueId tanto de
+  // /painel/{eventoId}/q/{quiosqueId}/... quanto de /api/quiosques/{quiosqueId}/...
+  // e só deixa passar se bater com o quiosqueId assinado na sessão. Isso
+  // impede que a sessão de um restaurante abra o painel de outro. A checagem
+  // de SE este quiosque específico realmente exige senha própria (tipo
+  // INDEPENDENTE com senha definida) mora na própria página/rota — aqui no
+  // middleware (Edge runtime) só dá pra validar a assinatura do token, não
+  // consultar o Prisma.
+  const quiosqueIdDaUrl =
+    pathname.match(/^\/painel\/[^/]+\/q\/([^/]+)/)?.[1] ?? pathname.match(/^\/api\/quiosques\/([^/]+)/)?.[1];
+
+  const quiosqueIdSessao = await verificarSessaoQuiosque(req.cookies.get(COOKIE_QUIOSQUE_PROPRIO)?.value);
+  if (quiosqueIdSessao) {
+    // URLs sem quiosqueId explícito (ex.: /api/produtos/{produtoId}, que só
+    // referencia o produto) deixam passar com qualquer sessão de quiosque
+    // válida — a posse real (esse produto é mesmo deste quiosque?) é
+    // conferida na própria rota via verificarAcessoQuiosqueApi, que tem
+    // acesso ao Prisma pra buscar o quiosque dono do produto.
+    if (!quiosqueIdDaUrl || quiosqueIdSessao === quiosqueIdDaUrl) {
+      return NextResponse.next();
+    }
+  }
+
   if (pathname.startsWith("/api/")) {
     return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+  }
+
+  // URL já era de um quiosque específico — manda pro login DELE, não pro
+  // login geral do evento
+  const eventoIdDoQuiosque = pathname.match(/^\/painel\/([^/]+)\/q\//)?.[1];
+  if (quiosqueIdDaUrl && eventoIdDoQuiosque) {
+    const destinoQuiosque = new URL(
+      `/painel/${eventoIdDoQuiosque}/q/${quiosqueIdDaUrl}/entrar`,
+      req.url
+    );
+    destinoQuiosque.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(destinoQuiosque);
   }
 
   const eventoId = pathname.split("/")[2] ?? "";

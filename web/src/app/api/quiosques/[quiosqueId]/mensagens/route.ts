@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
 type CorpoRequisicao = {
   dica?: string | null;
@@ -18,6 +19,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { quiosqueId
   if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, quiosque);
+  if (bloqueado) return bloqueado;
 
   let corpo: CorpoRequisicao;
   try {

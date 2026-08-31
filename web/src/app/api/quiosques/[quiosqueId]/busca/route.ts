@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
 // Busca ampla, pro quiosque diagnosticar sozinho um pedido que o cliente diz ter
 // feito mas não aparece na fila normal (ex.: comprou em quantidade e ainda não
@@ -8,6 +9,16 @@ import { prisma } from "@/lib/prisma";
 // Por isso NÃO filtra por status ativo nem por quantidadeLiberada > 0, ao
 // contrário da rota /fila.
 export async function GET(req: NextRequest, { params }: { params: { quiosqueId: string } }) {
+  const quiosque = await prisma.quiosque.findUnique({
+    where: { id: params.quiosqueId },
+    select: { id: true, tipo: true, senhaHash: true },
+  });
+  if (!quiosque) {
+    return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
+  }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, quiosque);
+  if (bloqueado) return bloqueado;
+
   const termo = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (termo.length < 2) {
     return NextResponse.json({ pedidos: [] });

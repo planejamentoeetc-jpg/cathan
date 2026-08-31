@@ -8,6 +8,7 @@ import { ExcluirQuiosqueButton } from "@/components/ExcluirQuiosqueButton";
 import { DesconectarMercadoPagoQuiosqueButton } from "@/components/DesconectarMercadoPagoQuiosqueButton";
 import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
 import { UploadImagemFundo } from "@/components/UploadImagemFundo";
+import { DefinirSenhaQuiosque } from "@/components/DefinirSenhaQuiosque";
 
 const MENSAGENS_ERRO_MP: Record<string, string> = {
   recusado: "O restaurante cancelou a autorização no Mercado Pago.",
@@ -86,6 +87,15 @@ export default async function QuiosqueGestor({
             combinaComIdInicial={quiosque.combinaComId ?? ""}
             outrosQuiosques={irmaos.filter((irmao) => irmao.id !== quiosque.id)}
           />
+          {quiosque.tipo === "INDEPENDENTE" && (
+            <>
+              <div style={{ height: 16 }} />
+              <DefinirSenhaQuiosque
+                apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/senha`}
+                temSenhaInicial={Boolean(quiosque.senhaHash)}
+              />
+            </>
+          )}
         </div>
         <div>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>

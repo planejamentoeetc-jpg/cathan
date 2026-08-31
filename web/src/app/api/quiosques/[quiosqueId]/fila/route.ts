@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { STATUS_ATIVOS } from "@/lib/statusSubPedido";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
-export async function GET(_req: NextRequest, { params }: { params: { quiosqueId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { quiosqueId: string } }) {
   const quiosque = await prisma.quiosque.findUnique({
     where: { id: params.quiosqueId },
-    select: { id: true, nome: true, modalidade: true },
+    select: { id: true, nome: true, modalidade: true, tipo: true, senhaHash: true },
   });
 
   if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, quiosque);
+  if (bloqueado) return bloqueado;
 
   const subPedidos = await prisma.subPedido.findMany({
     where: { quiosqueId: params.quiosqueId, status: { in: STATUS_ATIVOS } },
@@ -22,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: { params: { quiosqueId:
   });
 
   return NextResponse.json({
-    quiosque,
+    quiosque: { id: quiosque.id, nome: quiosque.nome, modalidade: quiosque.modalidade },
     // itens ainda não liberados pelo cliente ("compra em massa" segurada) nem entram
     // aqui — o quiosque não vê nada até o cliente mandar pra produção. Um sub-pedido
     // sem nenhuma unidade liberada some da fila inteiro.

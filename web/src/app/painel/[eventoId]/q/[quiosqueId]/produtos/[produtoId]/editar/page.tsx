@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FormularioProduto } from "@/components/FormularioProduto";
 import { UploadFotoProduto } from "@/components/UploadFotoProduto";
+import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 
 export default async function EditarProduto({
   params,
@@ -13,6 +14,10 @@ export default async function EditarProduto({
     where: { id: params.quiosqueId, eventoId: params.eventoId },
   });
   if (!quiosque) notFound();
+  await exigirSessaoQuiosque(
+    quiosque,
+    `/painel/${params.eventoId}/q/${params.quiosqueId}/produtos/${params.produtoId}/editar`
+  );
 
   const produto = await prisma.produto.findFirst({
     where: { id: params.produtoId, quiosqueId: params.quiosqueId },

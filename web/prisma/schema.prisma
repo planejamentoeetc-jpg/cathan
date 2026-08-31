@@ -184,6 +184,12 @@ model Quiosque {
   // obrigatórios somente quando tipo = INDEPENDENTE (ver CHECK na migration)
   cnpj               String?
   chavePix           String?            @map("chave_pix")
+  // senha própria do quiosque INDEPENDENTE (bcrypt) -- sem ela, o painel desse
+  // quiosque usaria a mesma senha global de PAINEL_QUIOSQUE_SENHA de qualquer
+  // outro quiosque do evento, o que vazaria dados entre empresas diferentes.
+  // null para quiosque DO_EVENTO (continua usando a senha do evento) e também
+  // para INDEPENDENTE que ainda não teve a senha definida pelo gestor.
+  senhaHash          String?            @map("senha_hash")
   // Split 1:1 do Mercado Pago (marketplace) -- só faz sentido pra tipo=INDEPENDENTE.
   // Preenchido só depois que o próprio restaurante autoriza via OAuth
   // (/gestor/eventos/[eventoId]/quiosques/[quiosqueId], feito junto com o gestor

@@ -1,16 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { assinarEstadoOauthQuiosque } from "@/lib/sessaoGestor";
 import { prisma } from "@/lib/prisma";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
 // Mesmo fluxo de api/mercado-pago/oauth/iniciar-quiosque, só que iniciado
 // pelo próprio quiosque (senha do painel) em vez do gestor -- por isso vive
 // sob /api/quiosques, que o middleware libera com a senha do quiosque, não
 // a do gestor.
-export async function GET(_req: Request, { params }: { params: { quiosqueId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { quiosqueId: string } }) {
   const quiosque = await prisma.quiosque.findUnique({ where: { id: params.quiosqueId } });
   if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, quiosque);
+  if (bloqueado) return bloqueado;
 
   const appUrl = process.env.APP_URL;
   const clientId = process.env.MP_CLIENT_ID;

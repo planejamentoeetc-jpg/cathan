@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { RegistroPedidos, type PedidoRegistro } from "@/components/RegistroPedidos";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function RegistroPedidosQuiosque({
     where: { id: params.quiosqueId, eventoId: params.eventoId },
   });
   if (!quiosque) notFound();
+  await exigirSessaoQuiosque(quiosque, `/painel/${params.eventoId}/q/${params.quiosqueId}/pedidos`);
 
   const subPedidos = await prisma.subPedido.findMany({
     where: { quiosqueId: params.quiosqueId },

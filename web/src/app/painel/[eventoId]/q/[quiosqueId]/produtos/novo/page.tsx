@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FormularioProduto } from "@/components/FormularioProduto";
+import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 
 export default async function NovoProduto({
   params,
@@ -13,6 +14,7 @@ export default async function NovoProduto({
   });
 
   if (!quiosque) notFound();
+  await exigirSessaoQuiosque(quiosque, `/painel/${params.eventoId}/q/${params.quiosqueId}/produtos/novo`);
 
   const rotuloTempo =
     quiosque.modalidade === "BRINCADEIRAS"

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calcularAnalyticsQuiosque } from "@/lib/analyticsQuiosque";
 import { PainelAnalisesQuiosque } from "@/components/PainelAnalisesQuiosque";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function VendasQuiosque({
     where: { id: params.quiosqueId, eventoId: params.eventoId },
   });
   if (!quiosque) notFound();
+  await exigirSessaoQuiosque(quiosque, `/painel/${params.eventoId}/q/${params.quiosqueId}/vendas`);
 
   const dados = await calcularAnalyticsQuiosque(quiosque.id);
 

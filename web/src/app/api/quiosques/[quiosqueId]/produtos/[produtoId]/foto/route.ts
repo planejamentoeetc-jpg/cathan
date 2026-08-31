@@ -1,6 +1,7 @@
 import { put, del } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
 const TIPOS_ACEITOS = ["image/png", "image/jpeg", "image/webp"];
 const TAMANHO_MAXIMO_BYTES = 3 * 1024 * 1024;
@@ -11,10 +12,13 @@ export async function POST(
 ) {
   const produto = await prisma.produto.findFirst({
     where: { id: params.produtoId, quiosqueId: params.quiosqueId },
+    include: { quiosque: { select: { id: true, tipo: true, senhaHash: true } } },
   });
   if (!produto) {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, produto.quiosque);
+  if (bloqueado) return bloqueado;
 
   const corpo = await req.formData();
   const arquivo = corpo.get("foto");
@@ -43,15 +47,18 @@ export async function POST(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { quiosqueId: string; produtoId: string } }
 ) {
   const produto = await prisma.produto.findFirst({
     where: { id: params.produtoId, quiosqueId: params.quiosqueId },
+    include: { quiosque: { select: { id: true, tipo: true, senhaHash: true } } },
   });
   if (!produto) {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, produto.quiosque);
+  if (bloqueado) return bloqueado;
 
   if (produto.fotoUrl) {
     await del(produto.fotoUrl).catch(() => {});

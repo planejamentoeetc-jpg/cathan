@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { criarPedidoAPartirDeItensValidados, PedidoInvalidoError } from "@/lib/criarPedido";
 import { prisma } from "@/lib/prisma";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
 // margem acima do timeout de 15s da transação em criarPedido.ts
 export const maxDuration = 30;
@@ -29,6 +30,8 @@ export async function POST(req: NextRequest, { params }: { params: { quiosqueId:
   if (!quiosque) {
     return NextResponse.json({ erro: "Quiosque não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, quiosque);
+  if (bloqueado) return bloqueado;
 
   if (quiosque.evento.pedidosPausados) {
     return NextResponse.json(

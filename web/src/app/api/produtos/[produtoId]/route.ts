@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CamposProduto, validarCamposProduto } from "@/lib/validarProduto";
 import { ehViolacaoRestrict } from "@/lib/erroRestrict";
+import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 
 export async function PATCH(req: NextRequest, { params }: { params: { produtoId: string } }) {
-  const produto = await prisma.produto.findUnique({ where: { id: params.produtoId } });
+  const produto = await prisma.produto.findUnique({
+    where: { id: params.produtoId },
+    include: { quiosque: { select: { id: true, tipo: true, senhaHash: true } } },
+  });
   if (!produto) {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, produto.quiosque);
+  if (bloqueado) return bloqueado;
 
   let corpo: CamposProduto;
   try {
@@ -34,11 +40,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { produtoId:
   return NextResponse.json({ id: atualizado.id });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { produtoId: string } }) {
-  const produto = await prisma.produto.findUnique({ where: { id: params.produtoId } });
+export async function DELETE(req: NextRequest, { params }: { params: { produtoId: string } }) {
+  const produto = await prisma.produto.findUnique({
+    where: { id: params.produtoId },
+    include: { quiosque: { select: { id: true, tipo: true, senhaHash: true } } },
+  });
   if (!produto) {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
   }
+  const bloqueado = await verificarAcessoQuiosqueApi(req, produto.quiosque);
+  if (bloqueado) return bloqueado;
 
   try {
     await prisma.produto.delete({ where: { id: params.produtoId } });

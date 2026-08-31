@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { FilaQuiosque } from "@/components/FilaQuiosque";
 import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { BotaoSair } from "@/components/BotaoSair";
+import { BotaoSairQuiosque } from "@/components/BotaoSairQuiosque";
 import { MensagensQuiosqueForm } from "@/components/MensagensQuiosqueForm";
 import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
 import { UploadImagemFundo } from "@/components/UploadImagemFundo";
 import { DesconectarMercadoPagoQuiosqueButton } from "@/components/DesconectarMercadoPagoQuiosqueButton";
+import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 
 const MENSAGENS_ERRO_MP: Record<string, string> = {
   recusado: "Você cancelou a autorização no Mercado Pago.",
@@ -30,6 +32,7 @@ export default async function PainelQuiosque({
   });
 
   if (!quiosque) notFound();
+  await exigirSessaoQuiosque(quiosque, `/painel/${params.eventoId}/q/${params.quiosqueId}`);
 
   const conectadoMp = Boolean(quiosque.mpUserId);
 
@@ -66,7 +69,11 @@ export default async function PainelQuiosque({
               </Link>
             ))}
           </div>
-          <BotaoSair eventoId={params.eventoId} />
+          {quiosque.tipo === "INDEPENDENTE" && quiosque.senhaHash ? (
+            <BotaoSairQuiosque eventoId={params.eventoId} quiosqueId={quiosque.id} />
+          ) : (
+            <BotaoSair eventoId={params.eventoId} />
+          )}
         </div>
       </div>
 

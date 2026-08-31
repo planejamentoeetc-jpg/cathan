@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CaixaVenda } from "@/components/CaixaVenda";
+import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 
 export default async function VendaManualQuiosque({
   params,
@@ -16,6 +17,7 @@ export default async function VendaManualQuiosque({
     },
   });
   if (!quiosque) notFound();
+  await exigirSessaoQuiosque(quiosque, `/painel/${params.eventoId}/q/${params.quiosqueId}/caixa`);
 
   return (
     <main className="tela" style={{ maxWidth: 960 }}>
