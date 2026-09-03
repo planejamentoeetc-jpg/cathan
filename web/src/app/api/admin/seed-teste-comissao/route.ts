@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// sem isso o Next tenta pré-renderizar essa rota (que muda o banco!) durante
+// o próprio build, em vez de só executar quando alguém de fato visita.
+export const dynamic = "force-dynamic";
+
 // Rota temporária, só pra criar os dados do teste real de retenção de
 // application_fee na modalidade organizador único (ver memória
 // cathan-split-payment-status). Protegida pelo mesmo middleware admin de
