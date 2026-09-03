@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // application_fee na modalidade organizador único (ver memória
 // cathan-split-payment-status). Protegida pelo mesmo middleware admin de
 // sempre (/api/admin/:path*). Apaga esse arquivo depois de usar.
-export async function POST() {
+export async function GET() {
   const senhaHash = await bcrypt.hash("teste123", 10);
   const organizador = await prisma.organizador.create({
     data: {
