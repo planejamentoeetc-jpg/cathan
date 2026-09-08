@@ -151,14 +151,15 @@ a {
 .produto-card {
   background: #fff;
   border: 1px solid var(--linha);
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 10px rgba(20, 34, 40, 0.05);
 }
 
 .produto-icone {
-  height: 84px;
+  height: 132px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,13 +176,13 @@ a {
 .produto-nome {
   font-family: var(--font-sora);
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .produto-preco {
   font-weight: 800;
   color: var(--verde);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .produto-tempo {
@@ -978,4 +979,112 @@ input[type="password"]::-ms-clear {
 .quiosque-aba .espera {
   font-size: 11.5px;
   color: var(--cinza);
+}
+
+/* ===== Loja do quiosque: hero fotográfico + selo circular ===== */
+
+.loja-hero {
+  position: relative;
+  height: 200px;
+  /* sangra até a borda da tela, cancelando o padding de .tela */
+  margin: -18px -16px 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--petroleo), var(--petroleo-2));
+}
+
+.loja-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.loja-hero-gradiente {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 26, 26, 0.1) 0%, rgba(10, 26, 26, 0.55) 100%);
+}
+
+.loja-hero-voltar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 1;
+  background: rgba(10, 26, 26, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+
+.loja-selo-wrap {
+  display: flex;
+  justify-content: center;
+  /* metade do tamanho do selo -- faz ele "sentar" na costura entre a foto e o
+     conteúdo, igual ao selo circular do Jotajá que inspirou esse layout */
+  margin-top: -44px;
+  position: relative;
+  z-index: 2;
+}
+
+.loja-selo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 14px rgba(10, 26, 26, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.loja-selo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.loja-cabecalho {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 16px;
+}
+
+.loja-nome {
+  font-family: var(--font-sora);
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+
+.loja-busca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid var(--linha);
+  border-radius: 999px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+
+.loja-busca .ic {
+  color: var(--cinza);
+  flex: 0 0 auto;
+}
+
+.loja-busca input {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-family: inherit;
+  background: transparent;
+  color: var(--grafite);
 }

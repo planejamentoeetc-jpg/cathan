@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
-import { ProdutoCard } from "@/components/ProdutoCard";
+import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
 import { DicaLoja } from "@/components/DicaLoja";
 
 export default async function LojaDoQuiosque({
@@ -33,20 +33,38 @@ export default async function LojaDoQuiosque({
   });
 
   return (
-    <main className={quiosque.imagemFundoUrl ? "tela com-fundo" : "tela"}>
-      {quiosque.imagemFundoUrl && (
-        <div
-          aria-hidden
-          className="fundo-imagem-tela"
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(10,26,26,0.35), rgba(10,26,26,0.78)), url(${quiosque.imagemFundoUrl})`,
-          }}
-        />
-      )}
+    // o hero fotográfico abaixo agora cumpre o papel que a imagem de fundo de
+    // página inteira cumpria antes (ver .com-fundo/.fundo-imagem-tela em
+    // globals.css, ainda usado na praça do evento) -- as duas juntas brigavam
+    // pela atenção e deixavam o resto da tela ilegível, então aqui é sempre
+    // fundo sólido (.tela puro), sem a imagem de fundo por trás do conteúdo.
+    <main className="tela">
       <div className="conteudo-com-fundo">
-        <Link href={`/e/${params.eventoId}`} className="btn btn-secundario" style={{ marginBottom: 12 }}>
-          ‹ Praça do evento
-        </Link>
+        <div className="loja-hero" style={!quiosque.imagemFundoUrl ? { background: quiosque.cor } : undefined}>
+          {quiosque.imagemFundoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={quiosque.imagemFundoUrl} alt="" className="loja-hero-img" />
+          )}
+          <div className="loja-hero-gradiente" />
+          <Link href={`/e/${params.eventoId}`} className="loja-hero-voltar">
+            ‹ Praça do evento
+          </Link>
+        </div>
+
+        <div className="loja-selo-wrap">
+          <div className="loja-selo" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
+            {quiosque.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={quiosque.logoUrl} alt={quiosque.nome} />
+            ) : (
+              <IconeModalidade modalidade={quiosque.modalidade} tamanho={34} />
+            )}
+          </div>
+        </div>
+
+        <div className="loja-cabecalho">
+          <h1 className="loja-nome">{quiosque.nome}</h1>
+        </div>
 
         {irmaos.length > 1 && (
           <div className="quiosques-abas" style={{ marginBottom: 4 }}>
@@ -71,13 +89,6 @@ export default async function LojaDoQuiosque({
           </div>
         )}
 
-        <div className="hero" style={{ background: quiosque.cor, marginTop: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <IconeModalidade modalidade={quiosque.modalidade} />
-            <div className="nome">{quiosque.nome}</div>
-          </div>
-        </div>
-
         <div style={{ marginTop: 14 }}>
           <DicaLoja
             eventoId={params.eventoId}
@@ -87,34 +98,25 @@ export default async function LojaDoQuiosque({
           />
         </div>
 
-        <div className="produtos-grid">
-          {quiosque.produtos.map((produto) => (
-            <ProdutoCard
-              key={produto.id}
-              eventoId={params.eventoId}
-              produto={{
-                id: produto.id,
-                nome: produto.nome,
-                preco: Number(produto.preco),
-                tempoProducaoMinutos: produto.tempoProducaoMinutos,
-                estoque: produto.estoque,
-                ativo: produto.ativo,
-                fotoUrl: produto.fotoUrl,
-              }}
-              quiosque={{
-                id: quiosque.id,
-                nome: quiosque.nome,
-                cor: quiosque.cor,
-                modalidade: quiosque.modalidade,
-                recebeDireto: Boolean(quiosque.mpAccessTokenCifrado),
-              }}
-            />
-          ))}
-
-          {quiosque.produtos.length === 0 && (
-            <p className="texto-fraco">Nenhum produto cadastrado neste quiosque ainda.</p>
-          )}
-        </div>
+        <GradeProdutosComBusca
+          eventoId={params.eventoId}
+          produtos={quiosque.produtos.map((produto) => ({
+            id: produto.id,
+            nome: produto.nome,
+            preco: Number(produto.preco),
+            tempoProducaoMinutos: produto.tempoProducaoMinutos,
+            estoque: produto.estoque,
+            ativo: produto.ativo,
+            fotoUrl: produto.fotoUrl,
+          }))}
+          quiosque={{
+            id: quiosque.id,
+            nome: quiosque.nome,
+            cor: quiosque.cor,
+            modalidade: quiosque.modalidade,
+            recebeDireto: Boolean(quiosque.mpAccessTokenCifrado),
+          }}
+        />
 
         <BarraCarrinho eventoId={params.eventoId} />
       </div>
