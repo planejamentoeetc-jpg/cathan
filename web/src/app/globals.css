@@ -932,55 +932,49 @@ input[type="password"]::-ms-clear {
 /* ===== Loja do quiosque: troca rápida entre os quiosques-irmãos, em abas horizontais ===== */
 
 .quiosques-abas-wrap {
-  position: relative;
-  /* sangra até a borda da tela, cancelando o padding de .tela -- fica aqui em
-     vez de em .quiosques-abas pra o fade abaixo poder ficar grudado na borda
-     real da tela, não na borda (com padding) do wrapper */
+  /* sangra até a borda da tela, cancelando o padding de .tela */
   margin: 0 -16px 4px;
+}
+
+/* As setas ficam nessa faixa, como irmãs do scroll -- não mais sobrepostas
+   por cima dos cartões via position:absolute. Cada seta ocupa seu próprio
+   espaço no flex (flex: 0 0 auto), então geometricamente nunca compartilha
+   pixel nenhum com um cartão -- não tem como "atrapalhar o clique" de novo. */
+.quiosques-abas-linha {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
 }
 
 .quiosques-abas {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding: 2px 16px 12px;
+  padding: 2px 6px 6px;
+  min-width: 0;
+  flex: 1 1 auto;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
-  /* barra de rolagem fina e visível (não some mais) -- é ela quem sinaliza
-     "tem mais conteúdo pro lado", junto com as setas abaixo. Firefox usa
-     scrollbar-width/color; Chrome/Edge/Safari usam os ::-webkit-scrollbar-*. */
-  scrollbar-width: thin;
-  scrollbar-color: var(--linha) transparent;
+  /* esconde a barra nativa -- no celular (iOS/Android) ela não dá pra
+     estilizar nem manter visível fora do gesto de arrastar mesmo, então
+     contamos com a barra de progresso desenhada abaixo (.quiosques-abas-progresso),
+     que funciona igual em qualquer navegador. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .quiosques-abas::-webkit-scrollbar {
-  height: 6px;
+  display: none;
 }
 
-.quiosques-abas::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.quiosques-abas::-webkit-scrollbar-thumb {
-  background: var(--linha);
-  border-radius: 999px;
-}
-
-/* Botões de verdade (rolam a fileira ao clicar), não decoração -- por isso
-   maiores e com sombra, pra ficar claro que são clicáveis e diferentes dos
-   cartões por baixo. Ficam ligeiramente sobrepostos ao primeiro/último
-   cartão visível (não há espaço sobrando na largura do celular pra colocar
-   fora da fileira), mas por serem elementos <button> reais o clique não
-   vaza mais pro card de baixo como no fade antigo. */
 .quiosques-abas-seta {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  flex: 0 0 auto;
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(10, 26, 26, 0.72);
-  box-shadow: 0 2px 8px rgba(10, 26, 26, 0.3);
+  background: var(--petroleo);
+  box-shadow: 0 2px 6px rgba(20, 34, 40, 0.2);
   color: #fff;
   display: flex;
   align-items: center;
@@ -988,15 +982,23 @@ input[type="password"]::-ms-clear {
   font-size: 20px;
   font-weight: 800;
   line-height: 1;
-  z-index: 3;
 }
 
-.quiosques-abas-seta-esq {
-  left: 4px;
+/* barra de progresso própria (não a nativa do navegador) -- só ela garante
+   aparecer igual em qualquer celular. Só renderiza quando há mais conteúdo
+   do que cabe na tela (ver AbasQuiosques.tsx). */
+.quiosques-abas-progresso {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--linha);
+  overflow: hidden;
+  margin: 0 16px;
 }
 
-.quiosques-abas-seta-dir {
-  right: 4px;
+.quiosques-abas-progresso-polegar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cinza);
 }
 
 .quiosque-aba {
