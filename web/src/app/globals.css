@@ -931,24 +931,67 @@ input[type="password"]::-ms-clear {
 
 /* ===== Loja do quiosque: troca rápida entre os quiosques-irmãos, em abas horizontais ===== */
 
+.quiosques-abas-wrap {
+  position: relative;
+  /* sangra até a borda da tela, cancelando o padding de .tela -- fica aqui em
+     vez de em .quiosques-abas pra o fade abaixo poder ficar grudado na borda
+     real da tela, não na borda (com padding) do wrapper */
+  margin: 0 -16px 4px;
+}
+
 .quiosques-abas {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  margin: 0 -16px 4px;
   padding: 2px 16px 6px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
   /* esconde a barra de rolagem nativa (feia em Windows/Chrome) — o gesto de
-     arrastar continua funcionando normalmente, só a barra visual some. Sem
-     esmaecer as bordas: isso deixava o nome do último quiosque visível
-     ilegível — o próprio card cortado na borda já sinaliza "tem mais". */
+     arrastar continua funcionando normalmente, só a barra visual some. O
+     aviso de "tem mais" fica por conta do fade em .quiosques-abas-fade, que
+     só aparece enquanto ainda há conteúdo pra rolar (ver AbasQuiosques.tsx) —
+     por isso pode ficar seguro sem nunca prejudicar a legibilidade do
+     último item, ao contrário de um fade sempre visível. */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .quiosques-abas::-webkit-scrollbar {
   display: none;
+}
+
+.quiosques-abas-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 6px;
+  width: 40px;
+  background: linear-gradient(90deg, rgba(245, 248, 246, 0), var(--neve) 75%);
+  pointer-events: none;
+}
+
+/* o fade sozinho quase some quando o cartão embaixo dele é branco (baixo
+   contraste com --neve) -- essa setinha resolve isso com contraste garantido
+   contra qualquer fundo, igual ao botão "‹ Praça do evento" do hero. */
+.quiosques-abas-seta {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(10, 26, 26, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .quiosque-aba {

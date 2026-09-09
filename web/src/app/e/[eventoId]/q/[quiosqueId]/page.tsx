@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
+import { AbasQuiosques } from "@/components/AbasQuiosques";
 import { DicaLoja } from "@/components/DicaLoja";
 
 export default async function LojaDoQuiosque({
@@ -67,26 +68,7 @@ export default async function LojaDoQuiosque({
         </div>
 
         {irmaos.length > 1 && (
-          <div className="quiosques-abas" style={{ marginBottom: 4 }}>
-            {irmaos.map((irmao) => (
-              <Link
-                key={irmao.id}
-                href={`/e/${params.eventoId}/q/${irmao.id}`}
-                className="quiosque-aba"
-                style={irmao.id === quiosque.id ? { borderColor: irmao.cor, borderWidth: 2 } : undefined}
-              >
-                <div className="quiosque-logo" style={{ background: irmao.logoUrl ? undefined : irmao.cor }}>
-                  {irmao.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={irmao.logoUrl} alt={irmao.nome} />
-                  ) : (
-                    <IconeModalidade modalidade={irmao.modalidade} />
-                  )}
-                </div>
-                <b>{irmao.nome}</b>
-              </Link>
-            ))}
-          </div>
+          <AbasQuiosques eventoId={params.eventoId} irmaos={irmaos} atualId={quiosque.id} />
         )}
 
         <div style={{ marginTop: 14 }}>
