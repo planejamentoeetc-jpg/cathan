@@ -943,55 +943,60 @@ input[type="password"]::-ms-clear {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding: 2px 16px 6px;
+  padding: 2px 16px 12px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
-  /* esconde a barra de rolagem nativa (feia em Windows/Chrome) — o gesto de
-     arrastar continua funcionando normalmente, só a barra visual some. O
-     aviso de "tem mais" fica por conta do fade em .quiosques-abas-fade, que
-     só aparece enquanto ainda há conteúdo pra rolar (ver AbasQuiosques.tsx) —
-     por isso pode ficar seguro sem nunca prejudicar a legibilidade do
-     último item, ao contrário de um fade sempre visível. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  /* barra de rolagem fina e visível (não some mais) -- é ela quem sinaliza
+     "tem mais conteúdo pro lado", junto com as setas abaixo. Firefox usa
+     scrollbar-width/color; Chrome/Edge/Safari usam os ::-webkit-scrollbar-*. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--linha) transparent;
 }
 
 .quiosques-abas::-webkit-scrollbar {
-  display: none;
+  height: 6px;
 }
 
-.quiosques-abas-fade {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 6px;
-  width: 40px;
-  background: linear-gradient(90deg, rgba(245, 248, 246, 0), var(--neve) 75%);
-  pointer-events: none;
+.quiosques-abas::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* o fade sozinho quase some quando o cartão embaixo dele é branco (baixo
-   contraste com --neve) -- essa setinha resolve isso com contraste garantido
-   contra qualquer fundo, igual ao botão "‹ Praça do evento" do hero. */
+.quiosques-abas::-webkit-scrollbar-thumb {
+  background: var(--linha);
+  border-radius: 999px;
+}
+
+/* Botões de verdade (rolam a fileira ao clicar), não decoração -- por isso
+   maiores e com sombra, pra ficar claro que são clicáveis e diferentes dos
+   cartões por baixo. Ficam ligeiramente sobrepostos ao primeiro/último
+   cartão visível (não há espaço sobrando na largura do celular pra colocar
+   fora da fileira), mas por serem elementos <button> reais o clique não
+   vaza mais pro card de baixo como no fade antigo. */
 .quiosques-abas-seta {
   position: absolute;
   top: 50%;
-  right: 6px;
   transform: translateY(-50%);
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(10, 26, 26, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(10, 26, 26, 0.72);
+  box-shadow: 0 2px 8px rgba(10, 26, 26, 0.3);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1;
-  pointer-events: none;
+  z-index: 3;
+}
+
+.quiosques-abas-seta-esq {
+  left: 4px;
+}
+
+.quiosques-abas-seta-dir {
+  right: 4px;
 }
 
 .quiosque-aba {

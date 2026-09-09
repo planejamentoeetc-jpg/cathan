@@ -14,9 +14,9 @@ type Irmao = {
 };
 
 // Fileira de troca rápida entre os quiosques-irmãos do mesmo evento, na tela
-// da loja. Vira componente próprio (client) só por causa do indicador de
-// "tem mais pra rolar" -- precisa saber a posição real do scroll, algo que
-// um componente de servidor não tem como calcular.
+// da loja. Vira componente próprio (client) só por causa dos botões de
+// rolar/indicador de posição -- precisam saber a posição real do scroll,
+// algo que um componente de servidor não tem como calcular.
 export function AbasQuiosques({
   eventoId,
   irmaos,
@@ -27,6 +27,7 @@ export function AbasQuiosques({
   atualId: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [temMaisEsquerda, setTemMaisEsquerda] = useState(false);
   const [temMaisDireita, setTemMaisDireita] = useState(false);
 
   useEffect(() => {
@@ -35,8 +36,12 @@ export function AbasQuiosques({
 
     function atualizar() {
       if (!el) return;
-      // margem de 4px pra não piscar por causa de arredondamento de subpixel
-      setTemMaisDireita(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+      // margem folgada (não só pra arredondamento de subpixel): o scroll-snap
+      // do container costuma "descansar" uns ~16px à frente do zero real
+      // (alinhando com o padding), então uma margem pequena piscava a seta
+      // esquerda logo na carga inicial, sem o usuário ter rolado nada ainda
+      setTemMaisEsquerda(el.scrollLeft > 20);
+      setTemMaisDireita(el.scrollLeft + el.clientWidth < el.scrollWidth - 20);
     }
 
     atualizar();
@@ -48,8 +53,28 @@ export function AbasQuiosques({
     };
   }, [irmaos]);
 
+  // rola pouco mais que a largura de um cartão -- avança uma "página" visível
+  // por clique, sem pular direto pro fim. "instant", não "smooth": o
+  // scroll-snap do container briga com a animação do "smooth" e cancela o
+  // scroll de volta pro ponto de partida em vez de animar (reproduzível,
+  // não é só flakiness do ambiente de teste).
+  function rolar(direcao: 1 | -1) {
+    scrollRef.current?.scrollBy({ left: direcao * 220, behavior: "instant" });
+  }
+
   return (
     <div className="quiosques-abas-wrap">
+      {temMaisEsquerda && (
+        <button
+          type="button"
+          className="quiosques-abas-seta quiosques-abas-seta-esq"
+          onClick={() => rolar(-1)}
+          aria-label="Ver quiosques anteriores"
+        >
+          ‹
+        </button>
+      )}
+
       <div className="quiosques-abas" ref={scrollRef}>
         {irmaos.map((irmao) => (
           <Link
@@ -70,13 +95,16 @@ export function AbasQuiosques({
           </Link>
         ))}
       </div>
+
       {temMaisDireita && (
-        <>
-          <div className="quiosques-abas-fade" aria-hidden />
-          <div className="quiosques-abas-seta" aria-hidden>
-            ›
-          </div>
-        </>
+        <button
+          type="button"
+          className="quiosques-abas-seta quiosques-abas-seta-dir"
+          onClick={() => rolar(1)}
+          aria-label="Ver mais quiosques"
+        >
+          ›
+        </button>
       )}
     </div>
   );
