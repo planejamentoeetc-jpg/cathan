@@ -6,7 +6,6 @@ import { EditarQuiosqueForm } from "@/components/EditarQuiosqueForm";
 import { ListaProdutosPainel } from "@/components/ListaProdutosPainel";
 import { ExcluirQuiosqueButton } from "@/components/ExcluirQuiosqueButton";
 import { DesconectarMercadoPagoQuiosqueButton } from "@/components/DesconectarMercadoPagoQuiosqueButton";
-import { ConectarPagarMeQuiosque } from "@/components/ConectarPagarMeQuiosque";
 import { UploadLogoQuiosque } from "@/components/UploadLogoQuiosque";
 import { UploadImagemFundo } from "@/components/UploadImagemFundo";
 import { DefinirSenhaQuiosque } from "@/components/DefinirSenhaQuiosque";
@@ -191,27 +190,6 @@ export default async function QuiosqueGestor({
               </p>
             </>
           )}
-        </div>
-      )}
-
-      {quiosque.tipo === "INDEPENDENTE" && (
-        <div className="g-sec" style={{ marginTop: 16 }}>
-          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
-            💠 Recebimento — Pagar.me (split entre restaurantes)
-          </h5>
-          <p className="texto-fraco" style={{ marginBottom: 14 }}>
-            Use quando o evento junta vários restaurantes independentes e o cliente pode montar um
-            pedido só com itens de mais de um — o Pagar.me divide o Pix entre os recebedores
-            automaticamente, o que o Mercado Pago não faz. Cada restaurante recebe a parte dele e a
-            comissão da Cathan sai do valor restante.
-          </p>
-          <ConectarPagarMeQuiosque
-            apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/pagarme-recebedor`}
-            jaConectado={Boolean(quiosque.pagarmeRecipientId)}
-            statusInicial={quiosque.pagarmeRecipientStatus}
-            cnpjInicial={quiosque.cnpj ?? ""}
-            nomeInicial={quiosque.nome}
-          />
         </div>
       )}
 

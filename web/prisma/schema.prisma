@@ -199,14 +199,6 @@ model Quiosque {
   mpAccessTokenCifrado  String?  @map("mp_access_token_cifrado")
   mpRefreshTokenCifrado String?  @map("mp_refresh_token_cifrado")
   mpTokenExpiraEm       DateTime? @map("mp_token_expira_em")
-  // Split N:1 do Pagar.me -- o restaurante vira um "recebedor" (recipient) da
-  // conta marketplace da Cathan, com KYC preenchido pelo gestor no onboarding
-  // (não é OAuth como o Mercado Pago). Usado quando o carrinho junta vários
-  // restaurantes independentes num pedido só -- o que o MP não divide.
-  // pagarmeRecipientStatus espelha o status do recebedor no Pagar.me
-  // ("active", "registration", "refused"...) pra saber se já pode receber.
-  pagarmeRecipientId     String?  @map("pagarme_recipient_id")
-  pagarmeRecipientStatus String?  @map("pagarme_recipient_status")
   // null = usa a % padrão do evento (evento.comissaoPercentual) -- só setado
   // quando o admin negocia uma taxa diferente pra este restaurante específico
   comissaoPercentual    Decimal? @map("comissao_percentual") @db.Decimal(5, 2)

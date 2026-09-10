@@ -1,23 +1,15 @@
-// Cliente da API do Pagar.me. Usado no split N:1 (vários restaurantes recebendo
-// de uma única cobrança Pix) -- o que o Mercado Pago não divide. Provedor BaaS
-// escolhido no lugar do Asaas (lib/asaas.ts, só referência histórica) pelo
-// reconhecimento do selo Stone junto ao cliente final.
-//
-// PAGARME_SECRET_KEY = chave secreta da conta marketplace da Cathan. Em dev é a
-// chave sk_test_... do sandbox; em produção (Vercel) é a sk_... real da conta
-// com PSP/Split habilitado.
+// Cliente da API do Pagar.me -- EXPLORATÓRIO, ainda não ligado ao checkout real
+// do Cathan. Objetivo: validar se o split N:1 (vários recebedores numa única
+// cobrança Pix) funciona no ambiente de Teste. Provedor BaaS escolhido no lugar
+// do Asaas (ver lib/asaas.ts, mantido só como referência histórica) por causa
+// do reconhecimento de marca do selo Stone junto ao cliente final.
 
 const BASE_URL = "https://api.pagar.me/core/v5";
 
 function chaveApi(): string {
-  const chave = process.env.PAGARME_SECRET_KEY;
-  if (!chave) throw new Error("PAGARME_SECRET_KEY não configurada no servidor.");
+  const chave = process.env.PAGARME_SECRET_KEY_TESTE;
+  if (!chave) throw new Error("PAGARME_SECRET_KEY_TESTE não configurada no servidor.");
   return chave;
-}
-
-function separarDdd(celular: string): { ddd: string; number: string } {
-  const digitos = celular.replace(/\D/g, "");
-  return { ddd: digitos.slice(0, 2), number: digitos.slice(2) };
 }
 
 async function chamarPagarMe<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> {
@@ -65,60 +57,17 @@ export type RecebedorPagarMe = {
   default_bank_account?: { id: string };
 };
 
-export type EnderecoRecebedor = {
-  rua: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  cep: string;
-  pontoReferencia: string;
-};
-
-function enderecoParaApi(e: EnderecoRecebedor) {
-  return {
-    street: e.rua,
-    street_number: e.numero,
-    complementary: e.complemento,
-    neighborhood: e.bairro,
-    city: e.cidade,
-    state: e.uf,
-    zip_code: e.cep.replace(/\D/g, ""),
-    reference_point: e.pontoReferencia,
-  };
-}
-
 // Só pessoa jurídica -- restaurante independente sempre tem CNPJ (ver
-// Quiosque.cnpj, obrigatório pra tipo=INDEPENDENTE). Todos os campos abaixo são
-// exigidos pelo Pagar.me pra recebedor "corporation" (vários deles não aparecem
-// como obrigatórios na doc, mas a API recusa sem eles -- validado campo a campo).
+// Quiosque.cnpj, obrigatório pra tipo=INDEPENDENTE).
 export async function criarRecebedorRestaurante(dados: {
-  // empresa
   email: string;
   cnpj: string;
   nomeFantasia: string;
   razaoSocial: string;
   faturamentoAnual: number;
-  celularEmpresa: string;
-  enderecoEmpresa: EnderecoRecebedor;
-  // representante legal
-  representante: {
-    nome: string;
-    email: string;
-    cpf: string;
-    dataNascimento: string; // AAAA-MM-DD
-    rendaMensal: number;
-    ocupacao: string;
-    celular: string;
-    endereco: EnderecoRecebedor;
-  };
   contaBancaria: ContaBancariaRecebedor;
   code?: string;
 }): Promise<RecebedorPagarMe> {
-  const telEmpresa = separarDdd(dados.celularEmpresa);
-  const telRep = separarDdd(dados.representante.celular);
-
   return chamarPagarMe<RecebedorPagarMe>("/recipients", {
     method: "POST",
     body: JSON.stringify({
@@ -130,21 +79,6 @@ export async function criarRecebedorRestaurante(dados: {
         company_name: dados.nomeFantasia,
         trading_name: dados.razaoSocial,
         annual_revenue: dados.faturamentoAnual,
-        phone_numbers: [{ ddd: telEmpresa.ddd, number: telEmpresa.number, type: "mobile" }],
-        main_address: enderecoParaApi(dados.enderecoEmpresa),
-        managing_partners: [
-          {
-            name: dados.representante.nome,
-            email: dados.representante.email,
-            document: dados.representante.cpf.replace(/\D/g, ""),
-            birthdate: dados.representante.dataNascimento,
-            monthly_income: dados.representante.rendaMensal,
-            professional_occupation: dados.representante.ocupacao,
-            self_declared_legal_representative: true,
-            phone_numbers: [{ ddd: telRep.ddd, number: telRep.number, type: "mobile" }],
-            address: enderecoParaApi(dados.representante.endereco),
-          },
-        ],
       },
       default_bank_account: dados.contaBancaria,
     }),
@@ -153,14 +87,6 @@ export async function criarRecebedorRestaurante(dados: {
 
 export async function obterRecebedor(recebedorId: string): Promise<RecebedorPagarMe> {
   return chamarPagarMe(`/recipients/${recebedorId}`);
-}
-
-// Recebedor "de si mesma" da conta marketplace -- é ele que recebe a comissão
-// da Cathan (o resto do split). Split do Pagar.me tem que somar 100%, então a
-// comissão nunca é "resto implícito": é sempre uma regra explícita apontando
-// pra este recebedor.
-export async function obterRecebedorPadrao(): Promise<RecebedorPagarMe> {
-  return chamarPagarMe("/recipients/default");
 }
 
 export type DivisaoSplitPagarMe = {
@@ -195,8 +121,10 @@ export async function criarPedidoPixComSplit(dados: {
 }): Promise<PedidoPagarMe> {
   // Pagar.me exige pelo menos um telefone do cliente no pedido -- sem isso a
   // cobrança nasce direto como "failed" (erro só aparece no last_transaction,
-  // não na resposta da criação).
-  const { ddd, number } = separarDdd(dados.clienteCelular);
+  // não na resposta da criação). DDD = 2 primeiros dígitos, resto é o número.
+  const celularDigitos = dados.clienteCelular.replace(/\D/g, "");
+  const areaCode = celularDigitos.slice(0, 2);
+  const number = celularDigitos.slice(2);
 
   return chamarPagarMe<PedidoPagarMe>("/orders", {
     method: "POST",
@@ -212,7 +140,7 @@ export async function criarPedidoPixComSplit(dados: {
         email: dados.clienteEmail,
         document: dados.clienteDocumento.replace(/\D/g, ""),
         type: dados.clienteDocumento.replace(/\D/g, "").length > 11 ? "company" : "individual",
-        phones: { mobile_phone: { country_code: "55", area_code: ddd, number } },
+        phones: { mobile_phone: { country_code: "55", area_code: areaCode, number } },
       },
       payments: [
         {

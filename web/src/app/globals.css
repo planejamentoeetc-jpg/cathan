@@ -366,8 +366,7 @@ a {
   margin-bottom: 14px;
 }
 
-.campo label,
-.campo > span {
+.campo label {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--cinza);
@@ -383,14 +382,12 @@ input[type="password"]::-ms-clear {
 }
 
 .campo input,
-.campo textarea,
-.campo select {
+.campo textarea {
   border: 1.5px solid var(--linha);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
-  background: #fff;
 }
 
 .aviso {
