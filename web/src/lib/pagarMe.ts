@@ -115,9 +115,17 @@ export async function criarPedidoPixComSplit(dados: {
   clienteNome: string;
   clienteDocumento: string;
   clienteEmail: string;
+  clienteCelular: string;
   referenciaExterna: string;
   divisoes: DivisaoSplitPagarMe[];
 }): Promise<PedidoPagarMe> {
+  // Pagar.me exige pelo menos um telefone do cliente no pedido -- sem isso a
+  // cobrança nasce direto como "failed" (erro só aparece no last_transaction,
+  // não na resposta da criação). DDD = 2 primeiros dígitos, resto é o número.
+  const celularDigitos = dados.clienteCelular.replace(/\D/g, "");
+  const areaCode = celularDigitos.slice(0, 2);
+  const number = celularDigitos.slice(2);
+
   return chamarPagarMe<PedidoPagarMe>("/orders", {
     method: "POST",
     body: JSON.stringify({
@@ -132,6 +140,7 @@ export async function criarPedidoPixComSplit(dados: {
         email: dados.clienteEmail,
         document: dados.clienteDocumento.replace(/\D/g, ""),
         type: dados.clienteDocumento.replace(/\D/g, "").length > 11 ? "company" : "individual",
+        phones: { mobile_phone: { country_code: "55", area_code: areaCode, number } },
       },
       payments: [
         {
