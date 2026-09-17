@@ -201,9 +201,12 @@ export async function POST(req: NextRequest) {
   // 3) carrinho com 2+ restaurantes independentes — só chega aqui se todos os
   //    que têm conexão própria já migraram pro Pagar.me (bloqueio acima cobre
   //    o resto); é o split N:1 que o Mercado Pago nunca fez.
-  // 4) sem restaurante independente envolvido, organizador com Mercado Pago
-  //    próprio conectado — não muda onde o dinheiro dele cai sem ele pedir.
-  // 5) padrão: Pagar.me é o recebedor oficial da Cathan hoje, sem split (100%
+  // 4) sem restaurante independente envolvido, organizador já migrado pro
+  //    Pagar.me — mesmo split de dois recebedores do caso 1, só que o
+  //    recebedor é do organizador em vez de um restaurante.
+  // 5) sem restaurante independente envolvido, organizador com Mercado Pago
+  //    próprio conectado (legado) — não muda onde o dinheiro dele cai sem ele pedir.
+  // 6) padrão: Pagar.me é o recebedor oficial da Cathan hoje, sem split (100%
   //    cai direto na conta principal — substitui o antigo client global do MP).
   // TS não propaga o "if (!evento) return" pra dentro de uma função aninhada —
   // essa cópia carrega o tipo já não-nulo pro closure abaixo.
@@ -263,6 +266,24 @@ export async function POST(req: NextRequest) {
         responsavelPelaTaxa: true,
       });
       return { provedor: "pagarme", divisoes: divisoesRestaurantes };
+    }
+
+    if (eventoValidado.organizador?.pagarmeRecipientId) {
+      const recebedorPadrao = await obterRecebedorPadrao();
+      const percentual = Number(eventoValidado.comissaoPercentual);
+      const comissaoCentavos = Math.round(valorTotalCentavos * (percentual / 100));
+      return {
+        provedor: "pagarme",
+        divisoes: [
+          {
+            recipientId: eventoValidado.organizador.pagarmeRecipientId,
+            tipo: "flat",
+            valor: valorTotalCentavos - comissaoCentavos,
+            responsavelPelaTaxa: false,
+          },
+          { recipientId: recebedorPadrao.id, tipo: "flat", valor: comissaoCentavos, responsavelPelaTaxa: true },
+        ],
+      };
     }
 
     const clienteOrganizador = eventoValidado.organizador
