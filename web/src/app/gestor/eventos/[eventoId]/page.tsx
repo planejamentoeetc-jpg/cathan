@@ -89,7 +89,7 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
       <div className="texto-fraco" style={{ marginBottom: 16, fontSize: 12.5 }}>
         {evento.modalidade === "MULTI_ESTABELECIMENTO"
-          ? "🍴 Estabelecimentos independentes — cada quiosque conecta a própria conta Mercado Pago"
+          ? "🍴 Estabelecimentos independentes — cada quiosque conecta o próprio recebedor (Pagar.me)"
           : "🎪 Organizador único — todos os quiosques recebem na mesma conta"}
       </div>
 
@@ -141,13 +141,14 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         </div>
 
         <div className="g-sec" style={{ margin: 0 }}>
-          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 4 }}>💳 Configurações de pagamento</h5>
-          <div className="g-row">
-            Gateway
-            <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
-              Mercado Pago
-            </span>
-          </div>
+          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 4 }}>
+            💳 Mercado Pago <span className="texto-fraco" style={{ fontWeight: 400 }}>(conta global, legado)</span>
+          </h5>
+          <p className="texto-fraco" style={{ marginBottom: 10 }}>
+            O Pagar.me é o recebedor oficial e já cuida do split automático por restaurante — veja
+            o status de cada quiosque na lista mais abaixo. Esta conta Mercado Pago só recebe
+            pedidos de quiosques ainda não migrados, ou como conta global de reserva.
+          </p>
           <div className="g-row">
             Ambiente
             <span className="val" style={{ fontFamily: "var(--font-manrope)" }}>
@@ -163,10 +164,6 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
           <div style={{ marginTop: 10 }}>
             <LinkCopiavel rotulo="URL de webhook (configurada no painel do Mercado Pago)" url={linkWebhook} />
           </div>
-          <p className="texto-fraco" style={{ marginTop: 10 }}>
-            Hoje é uma conta única (a do evento/Cathan) — sem split automático por quiosque ainda,
-            essa é a próxima etapa no roadmap de pagamentos.
-          </p>
           <div className="aviso" style={{ marginTop: 10 }}>
             <b>Regra de ouro:</b> a chave secreta (Access Token) nunca fica no navegador — ela vive
             só nas variáveis de ambiente do servidor. O que aparece aqui é só informação pública de
