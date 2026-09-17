@@ -42,6 +42,7 @@ enum PerfilUsuario {
 
 enum FormaPagamento {
   MERCADO_PAGO
+  PAGARME
   DINHEIRO
 }
 
@@ -287,6 +288,10 @@ model PedidoPendente {
   status         StatusPedidoPendente @default(PENDENTE)
   mpPreferenceId String?              @map("mp_preference_id")
   mpPaymentId    String?              @map("mp_payment_id")
+  // id do pedido no Pagar.me (or_...) -- preenchido quando o checkout roda pelo
+  // Pagar.me em vez do Mercado Pago (ver POST /api/pedidos e o webhook
+  // /api/webhooks/pagar-me)
+  pagarmeOrderId String?              @map("pagarme_order_id")
   // preenchido quando 1+ item precisou ser removido automaticamente (esgotado/
   // estoque insuficiente) pra ainda assim honrar o resto do pedido já pago, ou
   // quando nada pôde ser honrado (status=FALHOU) -- fica visível pro gestor/

@@ -12,10 +12,16 @@ export default async function LojaDoQuiosque({
 }: {
   params: { eventoId: string; quiosqueId: string };
 }) {
-  // restaurante independente sem Mercado Pago conectado ainda não pode receber
-  // pagamento -- tratado como não existente pro cliente, mesma regra da praça
-  // do evento (ver e/[eventoId]/page.tsx)
-  const disponivelParaCliente = { OR: [{ tipo: "DO_EVENTO" as const }, { mpAccessTokenCifrado: { not: null } }] };
+  // restaurante independente sem recebedor conectado (Pagar.me ou Mercado
+  // Pago) ainda não pode receber pagamento -- tratado como não existente pro
+  // cliente, mesma regra da praça do evento (ver e/[eventoId]/page.tsx)
+  const disponivelParaCliente = {
+    OR: [
+      { tipo: "DO_EVENTO" as const },
+      { pagarmeRecipientId: { not: null } },
+      { mpAccessTokenCifrado: { not: null } },
+    ],
+  };
 
   const quiosque = await prisma.quiosque.findFirst({
     where: { id: params.quiosqueId, eventoId: params.eventoId, ...disponivelParaCliente },
@@ -96,7 +102,10 @@ export default async function LojaDoQuiosque({
             nome: quiosque.nome,
             cor: quiosque.cor,
             modalidade: quiosque.modalidade,
-            recebeDireto: Boolean(quiosque.mpAccessTokenCifrado),
+            // só quem ainda está só no Mercado Pago (não migrou pro Pagar.me)
+            // não pode se misturar com outro restaurante no mesmo carrinho —
+            // quem já tem recebedor Pagar.me entra no split N:1 normalmente
+            recebeDireto: Boolean(quiosque.mpAccessTokenCifrado) && !quiosque.pagarmeRecipientId,
           }}
         />
 

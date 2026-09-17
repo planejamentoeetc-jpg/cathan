@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { agruparPorQuiosque, calcularTotal, limparCarrinho, useCarrinho } from "@/lib/cart";
 import { lerClienteLocal, salvarClienteLocal } from "@/lib/clienteLocal";
+import { formatarCpf, validarCpf } from "@/lib/cpf";
 import { lerPixPendente, limparPixPendente, salvarPixPendente, type PixPendenteLocal } from "@/lib/pixPendente";
 import { adicionarPedidoLocal } from "@/lib/meusPedidos";
 import { MapaForaDoRaio } from "@/components/MapaForaDoRaio";
@@ -49,6 +50,7 @@ export function CheckoutForm({
   const clienteSalvo = lerClienteLocal();
   const [nome, setNome] = useState(clienteSalvo?.nome ?? "");
   const [celular, setCelular] = useState(clienteSalvo?.celular ?? "");
+  const [cpf, setCpf] = useState(clienteSalvo?.cpf ?? "");
   // um nome por unidade, por produto (índice 0..quantidade-1)
   const [nomesCriancasPorProduto, setNomesCriancasPorProduto] = useState<Record<string, string[]>>({});
   const [enviando, setEnviando] = useState(false);
@@ -167,8 +169,12 @@ export function CheckoutForm({
     setErro(null);
     setForaDoRaio(null);
 
-    if (!nome.trim() || !celular.trim()) {
-      setErro("Informe nome e celular para continuar.");
+    if (!nome.trim() || !celular.trim() || !cpf.trim()) {
+      setErro("Informe nome, celular e CPF para continuar.");
+      return;
+    }
+    if (!validarCpf(cpf)) {
+      setErro("CPF inválido — confira os números digitados.");
       return;
     }
     if (itens.length === 0) {
@@ -190,6 +196,7 @@ export function CheckoutForm({
           eventoId,
           clienteNome: nome.trim(),
           clienteCelular: celular.trim(),
+          clienteCpf: cpf.trim(),
           latitude: localizacao?.latitude,
           longitude: localizacao?.longitude,
           itens: itens.map((i) => ({
@@ -216,7 +223,7 @@ export function CheckoutForm({
         return;
       }
 
-      salvarClienteLocal({ nome: nome.trim(), celular: celular.trim() });
+      salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), cpf: cpf.trim() });
       const novoPix = { pedidoPendenteId: dados.pedidoPendenteId, valor: total, criadoEm: Date.now(), ...dados.pix };
       salvarPixPendente(eventoId, novoPix);
       setPix(novoPix);
@@ -287,7 +294,7 @@ export function CheckoutForm({
         </p>
 
         <img
-          src={`data:image/png;base64,${pix.qrCodeBase64}`}
+          src={pix.qrCodeUrl ?? `data:image/png;base64,${pix.qrCodeBase64}`}
           alt="QR code do Pix"
           style={{ width: 220, height: 220, margin: "0 auto 16px", borderRadius: 12 }}
         />
@@ -441,6 +448,17 @@ export function CheckoutForm({
             value={celular}
             onChange={(e) => setCelular(e.target.value)}
             placeholder="(00) 00000-0000"
+          />
+        </div>
+        <div className="campo">
+          <label>CPF</label>
+          <input
+            type="tel"
+            inputMode="numeric"
+            value={cpf}
+            onChange={(e) => setCpf(formatarCpf(e.target.value))}
+            placeholder="000.000.000-00"
+            maxLength={14}
           />
         </div>
         {exigeLocalizacao && (

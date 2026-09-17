@@ -5,6 +5,9 @@ const CHAVE = "cathan:cliente";
 export type ClienteLocal = {
   nome: string;
   celular: string;
+  // opcional só pra não quebrar quem já tinha um cliente salvo antes deste
+  // campo existir (ver CheckoutForm — o Pagar.me exige CPF em todo pedido)
+  cpf?: string;
 };
 
 export function lerClienteLocal(): ClienteLocal | null {

@@ -100,6 +100,20 @@ export function ConectarPagarMeQuiosque({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  // "corporation" (padrão, restaurante de verdade com CNPJ) ou "individual"
+  // (pessoa física -- parceiro sem CNPJ ainda, ex.: cadastro de teste)
+  const [tipoRecebedor, setTipoRecebedor] = useState<"corporation" | "individual">("corporation");
+
+  // pessoa física (só usado quando tipoRecebedor = "individual")
+  const [pfNome, setPfNome] = useState(nomeInicial);
+  const [pfEmail, setPfEmail] = useState("");
+  const [pfCpf, setPfCpf] = useState("");
+  const [pfNascimento, setPfNascimento] = useState("");
+  const [pfRenda, setPfRenda] = useState("");
+  const [pfOcupacao, setPfOcupacao] = useState("");
+  const [pfCelular, setPfCelular] = useState("");
+  const [pfEndereco, setPfEndereco] = useState<Endereco>(ENDERECO_VAZIO);
+
   // empresa
   const [email, setEmail] = useState("");
   const [cnpj, setCnpj] = useState(cnpjInicial);
@@ -152,39 +166,62 @@ export function ConectarPagarMeQuiosque({
     setErro(null);
     setEnviando(true);
     try {
+      const corpoComum = {
+        contaBancaria: {
+          holderName,
+          holderType,
+          holderDocument,
+          banco,
+          agencia,
+          agenciaDigito,
+          conta,
+          contaDigito,
+          tipo: tipoConta,
+        },
+      };
+
+      const corpo =
+        tipoRecebedor === "individual"
+          ? {
+              tipoRecebedor: "individual" as const,
+              pessoa: {
+                nome: pfNome,
+                email: pfEmail,
+                cpf: pfCpf,
+                dataNascimento: pfNascimento,
+                rendaMensal: Number(pfRenda),
+                ocupacao: pfOcupacao,
+                celular: pfCelular,
+                endereco: pfEndereco,
+              },
+              ...corpoComum,
+            }
+          : {
+              tipoRecebedor: "corporation" as const,
+              email,
+              cnpj,
+              nomeFantasia,
+              razaoSocial,
+              faturamentoAnual: Number(faturamentoAnual),
+              celularEmpresa,
+              enderecoEmpresa,
+              representante: {
+                nome: repNome,
+                email: repEmail,
+                cpf: repCpf,
+                dataNascimento: repNascimento,
+                rendaMensal: Number(repRenda),
+                ocupacao: repOcupacao,
+                celular: repCelular,
+                endereco: repMesmoEndereco ? enderecoEmpresa : repEndereco,
+              },
+              ...corpoComum,
+            };
+
       const resposta = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          cnpj,
-          nomeFantasia,
-          razaoSocial,
-          faturamentoAnual: Number(faturamentoAnual),
-          celularEmpresa,
-          enderecoEmpresa,
-          representante: {
-            nome: repNome,
-            email: repEmail,
-            cpf: repCpf,
-            dataNascimento: repNascimento,
-            rendaMensal: Number(repRenda),
-            ocupacao: repOcupacao,
-            celular: repCelular,
-            endereco: repMesmoEndereco ? enderecoEmpresa : repEndereco,
-          },
-          contaBancaria: {
-            holderName,
-            holderType,
-            holderDocument,
-            banco,
-            agencia,
-            agenciaDigito,
-            conta,
-            contaDigito,
-            tipo: tipoConta,
-          },
-        }),
+        body: JSON.stringify(corpo),
       });
       const dados = await resposta.json();
       if (!resposta.ok) {
@@ -206,92 +243,155 @@ export function ConectarPagarMeQuiosque({
         recebedor que recebe a parte dele nas vendas divididas.
       </p>
 
-      <h6 style={{ fontFamily: "var(--font-sora)", marginBottom: 10 }}>Empresa</h6>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label className="campo">
-          <span>CNPJ</span>
-          <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} inputMode="numeric" />
-        </label>
-        <label className="campo">
-          <span>E-mail da empresa</span>
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
-        </label>
-        <label className="campo">
-          <span>Nome fantasia</span>
-          <input value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} />
-        </label>
-        <label className="campo">
-          <span>Razão social</span>
-          <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} />
-        </label>
-        <label className="campo">
-          <span>Faturamento anual (R$)</span>
-          <input
-            value={faturamentoAnual}
-            onChange={(e) => setFaturamentoAnual(e.target.value)}
-            inputMode="numeric"
-          />
-        </label>
-        <label className="campo">
-          <span>Celular da empresa</span>
-          <input
-            value={celularEmpresa}
-            onChange={(e) => setCelularEmpresa(e.target.value)}
-            inputMode="tel"
-            placeholder="DDD + número"
-          />
+      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+        <label className="campo" style={{ flex: 1 }}>
+          <span>Tipo de recebedor</span>
+          <select
+            value={tipoRecebedor}
+            onChange={(e) => {
+              const valor = e.target.value as "corporation" | "individual";
+              setTipoRecebedor(valor);
+              setHolderType(valor === "individual" ? "individual" : "company");
+            }}
+          >
+            <option value="corporation">Pessoa jurídica (CNPJ)</option>
+            <option value="individual">Pessoa física (CPF)</option>
+          </select>
         </label>
       </div>
 
-      <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Endereço da empresa</h6>
-      <CamposEndereco valor={enderecoEmpresa} onChange={setEnderecoEmpresa} />
+      {tipoRecebedor === "individual" ? (
+        <>
+          <h6 style={{ fontFamily: "var(--font-sora)", marginBottom: 10 }}>Dados pessoais</h6>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label className="campo">
+              <span>Nome completo</span>
+              <input value={pfNome} onChange={(e) => setPfNome(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>CPF</span>
+              <input value={pfCpf} onChange={(e) => setPfCpf(e.target.value)} inputMode="numeric" />
+            </label>
+            <label className="campo">
+              <span>E-mail</span>
+              <input value={pfEmail} onChange={(e) => setPfEmail(e.target.value)} type="email" />
+            </label>
+            <label className="campo">
+              <span>Data de nascimento</span>
+              <input value={pfNascimento} onChange={(e) => setPfNascimento(e.target.value)} type="date" />
+            </label>
+            <label className="campo">
+              <span>Renda mensal (R$)</span>
+              <input value={pfRenda} onChange={(e) => setPfRenda(e.target.value)} inputMode="numeric" />
+            </label>
+            <label className="campo">
+              <span>Ocupação</span>
+              <input value={pfOcupacao} onChange={(e) => setPfOcupacao(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Celular</span>
+              <input
+                value={pfCelular}
+                onChange={(e) => setPfCelular(e.target.value)}
+                inputMode="tel"
+                placeholder="DDD + número"
+              />
+            </label>
+          </div>
 
-      <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Representante legal</h6>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label className="campo">
-          <span>Nome completo</span>
-          <input value={repNome} onChange={(e) => setRepNome(e.target.value)} />
-        </label>
-        <label className="campo">
-          <span>CPF</span>
-          <input value={repCpf} onChange={(e) => setRepCpf(e.target.value)} inputMode="numeric" />
-        </label>
-        <label className="campo">
-          <span>E-mail</span>
-          <input value={repEmail} onChange={(e) => setRepEmail(e.target.value)} type="email" />
-        </label>
-        <label className="campo">
-          <span>Data de nascimento</span>
-          <input value={repNascimento} onChange={(e) => setRepNascimento(e.target.value)} type="date" />
-        </label>
-        <label className="campo">
-          <span>Renda mensal (R$)</span>
-          <input value={repRenda} onChange={(e) => setRepRenda(e.target.value)} inputMode="numeric" />
-        </label>
-        <label className="campo">
-          <span>Ocupação</span>
-          <input value={repOcupacao} onChange={(e) => setRepOcupacao(e.target.value)} />
-        </label>
-        <label className="campo">
-          <span>Celular</span>
-          <input
-            value={repCelular}
-            onChange={(e) => setRepCelular(e.target.value)}
-            inputMode="tel"
-            placeholder="DDD + número"
-          />
-        </label>
-      </div>
+          <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Endereço</h6>
+          <CamposEndereco valor={pfEndereco} onChange={setPfEndereco} />
+        </>
+      ) : (
+        <>
+          <h6 style={{ fontFamily: "var(--font-sora)", marginBottom: 10 }}>Empresa</h6>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label className="campo">
+              <span>CNPJ</span>
+              <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} inputMode="numeric" />
+            </label>
+            <label className="campo">
+              <span>E-mail da empresa</span>
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
+            </label>
+            <label className="campo">
+              <span>Nome fantasia</span>
+              <input value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Razão social</span>
+              <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Faturamento anual (R$)</span>
+              <input
+                value={faturamentoAnual}
+                onChange={(e) => setFaturamentoAnual(e.target.value)}
+                inputMode="numeric"
+              />
+            </label>
+            <label className="campo">
+              <span>Celular da empresa</span>
+              <input
+                value={celularEmpresa}
+                onChange={(e) => setCelularEmpresa(e.target.value)}
+                inputMode="tel"
+                placeholder="DDD + número"
+              />
+            </label>
+          </div>
 
-      <label style={{ display: "flex", gap: 8, alignItems: "center", margin: "4px 0 10px", fontSize: 13 }}>
-        <input
-          type="checkbox"
-          checked={repMesmoEndereco}
-          onChange={(e) => setRepMesmoEndereco(e.target.checked)}
-        />
-        Endereço do representante é o mesmo da empresa
-      </label>
-      {!repMesmoEndereco && <CamposEndereco valor={repEndereco} onChange={setRepEndereco} />}
+          <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Endereço da empresa</h6>
+          <CamposEndereco valor={enderecoEmpresa} onChange={setEnderecoEmpresa} />
+
+          <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Representante legal</h6>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label className="campo">
+              <span>Nome completo</span>
+              <input value={repNome} onChange={(e) => setRepNome(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>CPF</span>
+              <input value={repCpf} onChange={(e) => setRepCpf(e.target.value)} inputMode="numeric" />
+            </label>
+            <label className="campo">
+              <span>E-mail</span>
+              <input value={repEmail} onChange={(e) => setRepEmail(e.target.value)} type="email" />
+            </label>
+            <label className="campo">
+              <span>Data de nascimento</span>
+              <input value={repNascimento} onChange={(e) => setRepNascimento(e.target.value)} type="date" />
+            </label>
+            <label className="campo">
+              <span>Renda mensal (R$)</span>
+              <input value={repRenda} onChange={(e) => setRepRenda(e.target.value)} inputMode="numeric" />
+            </label>
+            <label className="campo">
+              <span>Ocupação</span>
+              <input value={repOcupacao} onChange={(e) => setRepOcupacao(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Celular</span>
+              <input
+                value={repCelular}
+                onChange={(e) => setRepCelular(e.target.value)}
+                inputMode="tel"
+                placeholder="DDD + número"
+              />
+            </label>
+          </div>
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center", margin: "4px 0 10px", fontSize: 13 }}>
+            <input
+              type="checkbox"
+              checked={repMesmoEndereco}
+              onChange={(e) => setRepMesmoEndereco(e.target.checked)}
+            />
+            Endereço do representante é o mesmo da empresa
+          </label>
+          {!repMesmoEndereco && <CamposEndereco valor={repEndereco} onChange={setRepEndereco} />}
+        </>
+      )}
 
       <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Conta bancária</h6>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>

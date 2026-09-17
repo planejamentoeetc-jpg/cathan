@@ -21,7 +21,7 @@ const LABEL_BRINCADEIRAS: Record<string, string> = {
 export type AnalyticsQuiosque = {
   vendasTotal: number;
   totalPedidos: number;
-  vendasPorForma: { mercadoPago: number; dinheiro: number };
+  vendasPorForma: { pix: number; dinheiro: number };
   ticketMedio: number | null;
   prazoPct: number | null;
   tempoMedioProducaoMin: number | null;
@@ -54,7 +54,7 @@ export async function calcularAnalyticsQuiosque(quiosqueId: string): Promise<Ana
   const cor = quiosque?.cor ?? "#333";
 
   let vendasTotal = 0;
-  const vendasPorForma = { mercadoPago: 0, dinheiro: 0 };
+  const vendasPorForma = { pix: 0, dinheiro: 0 };
   const quantidadePorProduto = new Map<string, { nome: string; quantidade: number }>();
   const funilCount = new Map<string, number>();
   const concluidos: { decorridoMin: number; prazoMin: number }[] = [];
@@ -64,7 +64,7 @@ export async function calcularAnalyticsQuiosque(quiosqueId: string): Promise<Ana
     const valorSub = sp.itens.reduce((soma, item) => soma + Number(item.precoUnitario) * item.quantidade, 0);
     vendasTotal += valorSub;
     if (sp.pedido.formaPagamento === "DINHEIRO") vendasPorForma.dinheiro += valorSub;
-    else vendasPorForma.mercadoPago += valorSub;
+    else vendasPorForma.pix += valorSub;
 
     for (const item of sp.itens) {
       const atual = quantidadePorProduto.get(item.produtoId) ?? { nome: item.produto.nome, quantidade: 0 };

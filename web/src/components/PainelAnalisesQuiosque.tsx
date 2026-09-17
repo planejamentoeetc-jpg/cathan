@@ -76,7 +76,7 @@ export function PainelAnalisesQuiosque({ dados }: { dados: AnalyticsQuiosque }) 
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>💳 Formas de pagamento</h5>
           <GraficoDonut
             segmentos={[
-              { label: "Mercado Pago", valor: dados.vendasPorForma.mercadoPago, cor: "#1E8E5A", texto: dinheiro(dados.vendasPorForma.mercadoPago) },
+              { label: "Pix", valor: dados.vendasPorForma.pix, cor: "#1E8E5A", texto: dinheiro(dados.vendasPorForma.pix) },
               { label: "Dinheiro (caixa)", valor: dados.vendasPorForma.dinheiro, cor: "#FFB94A", texto: dinheiro(dados.vendasPorForma.dinheiro) },
             ]}
           />

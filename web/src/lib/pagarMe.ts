@@ -151,6 +151,44 @@ export async function criarRecebedorRestaurante(dados: {
   });
 }
 
+// Pessoa física -- usado quando o parceiro ainda não tem CNPJ (ex.: teste com
+// um parceiro novo, ou vendedor autônomo/MEI que opera com CPF mesmo). Bem
+// mais simples que o recebedor de empresa: sem endereço de empresa nem sócio
+// separado, é a própria pessoa.
+export async function criarRecebedorIndividual(dados: {
+  email: string;
+  cpf: string;
+  nome: string;
+  dataNascimento: string; // AAAA-MM-DD
+  rendaMensal: number;
+  ocupacao: string;
+  celular: string;
+  endereco: EnderecoRecebedor;
+  contaBancaria: ContaBancariaRecebedor;
+  code?: string;
+}): Promise<RecebedorPagarMe> {
+  const { ddd, number } = separarDdd(dados.celular);
+
+  return chamarPagarMe<RecebedorPagarMe>("/recipients", {
+    method: "POST",
+    body: JSON.stringify({
+      code: dados.code,
+      register_information: {
+        email: dados.email,
+        document: dados.cpf.replace(/\D/g, ""),
+        type: "individual",
+        name: dados.nome,
+        birthdate: dados.dataNascimento,
+        monthly_income: dados.rendaMensal,
+        professional_occupation: dados.ocupacao,
+        phone_numbers: [{ ddd, number, type: "mobile" }],
+        address: enderecoParaApi(dados.endereco),
+      },
+      default_bank_account: dados.contaBancaria,
+    }),
+  });
+}
+
 export async function obterRecebedor(recebedorId: string): Promise<RecebedorPagarMe> {
   return chamarPagarMe(`/recipients/${recebedorId}`);
 }
@@ -191,7 +229,10 @@ export async function criarPedidoPixComSplit(dados: {
   clienteEmail: string;
   clienteCelular: string;
   referenciaExterna: string;
-  divisoes: DivisaoSplitPagarMe[];
+  // omitido/vazio = pedido sem divisão, 100% cai na conta principal da Cathan
+  // (mesmo comportamento de hoje pra quiosque do evento, sem restaurante
+  // independente envolvido -- não precisa listar recebedor nenhum pra isso)
+  divisoes?: DivisaoSplitPagarMe[];
 }): Promise<PedidoPagarMe> {
   // Pagar.me exige pelo menos um telefone do cliente no pedido -- sem isso a
   // cobrança nasce direto como "failed" (erro só aparece no last_transaction,
@@ -218,14 +259,25 @@ export async function criarPedidoPixComSplit(dados: {
         {
           payment_method: "pix",
           pix: { expires_in: 3600 },
-          split: dados.divisoes.map((d) => ({
-            recipient_id: d.recipientId,
-            type: d.tipo,
-            amount: d.valor,
-            options: { charge_processing_fee: d.responsavelPelaTaxa ?? false, liable: true },
-          })),
+          ...(dados.divisoes && dados.divisoes.length > 0
+            ? {
+                split: dados.divisoes.map((d) => ({
+                  recipient_id: d.recipientId,
+                  type: d.tipo,
+                  amount: d.valor,
+                  options: { charge_processing_fee: d.responsavelPelaTaxa ?? false, liable: true },
+                })),
+              }
+            : {}),
         },
       ],
     }),
   });
+}
+
+// Consulta autoritativa do pedido -- o webhook manda só o id, quem confia é
+// sempre a resposta desta chamada (mesmo padrão do webhook do Mercado Pago:
+// nunca usar valor de status vindo direto do corpo da notificação).
+export async function obterPedido(pedidoId: string): Promise<PedidoPagarMe> {
+  return chamarPagarMe(`/orders/${pedidoId}`);
 }

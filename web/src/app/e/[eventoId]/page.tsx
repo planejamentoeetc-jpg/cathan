@@ -16,10 +16,13 @@ export default async function PracaDoEvento({
     where: { id: params.eventoId },
     include: {
       quiosques: {
-        // restaurante independente sem conta Mercado Pago conectada ainda não
-        // pode receber pagamento nenhum -- fica invisível pro cliente até o
-        // gestor completar a conexão (ver /gestor/eventos/[eventoId]/quiosques/[quiosqueId])
-        where: { OR: [{ tipo: "DO_EVENTO" }, { mpAccessTokenCifrado: { not: null } }] },
+        // restaurante independente sem recebedor conectado (Pagar.me, o
+        // oficial hoje, ou Mercado Pago, legado) ainda não pode receber
+        // pagamento nenhum -- fica invisível pro cliente até o gestor
+        // completar a conexão (ver /gestor/eventos/[eventoId]/quiosques/[quiosqueId])
+        where: {
+          OR: [{ tipo: "DO_EVENTO" }, { pagarmeRecipientId: { not: null } }, { mpAccessTokenCifrado: { not: null } }],
+        },
         orderBy: { nome: "asc" },
         include: {
           produtos: {

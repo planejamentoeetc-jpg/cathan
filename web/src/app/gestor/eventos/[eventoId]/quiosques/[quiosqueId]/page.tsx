@@ -123,13 +123,32 @@ export default async function QuiosqueGestor({
       {quiosque.tipo === "INDEPENDENTE" && (
         <div className="g-sec" style={{ marginTop: 16 }}>
           <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
-            💳 Recebimento — Mercado Pago
+            💠 Recebimento — Pagar.me
           </h5>
           <p className="texto-fraco" style={{ marginBottom: 14 }}>
-            Conecte a conta Mercado Pago do próprio restaurante pra ele receber o Pix direto na
-            conta dele, com a comissão da Cathan descontada automaticamente em cada venda. Faça
-            isso junto com o responsável do restaurante, já que ele vai precisar autorizar do lado
-            dele.
+            É o recebedor oficial da Cathan: o restaurante recebe a parte dele automaticamente em
+            todo pedido, mesmo quando o cliente monta um carrinho com itens de mais de um
+            restaurante independente — a divisão acontece sozinha, o que o Mercado Pago não faz.
+          </p>
+          <ConectarPagarMeQuiosque
+            apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/pagarme-recebedor`}
+            jaConectado={Boolean(quiosque.pagarmeRecipientId)}
+            statusInicial={quiosque.pagarmeRecipientStatus}
+            cnpjInicial={quiosque.cnpj ?? ""}
+            nomeInicial={quiosque.nome}
+          />
+        </div>
+      )}
+
+      {quiosque.tipo === "INDEPENDENTE" && (
+        <div className="g-sec" style={{ marginTop: 16 }}>
+          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
+            💳 Recebimento — Mercado Pago <span className="texto-fraco" style={{ fontWeight: 400 }}>(legado)</span>
+          </h5>
+          <p className="texto-fraco" style={{ marginBottom: 14 }}>
+            Só existe pra quem já conectou antes de o Pagar.me virar o recebedor oficial. Restaurante
+            só com Mercado Pago não pode dividir carrinho com outro restaurante — precisa de
+            pedido separado. Cadastre o Pagar.me acima pra não ter essa limitação.
           </p>
 
           {searchParams.conectado && conectadoMp && (
@@ -171,13 +190,13 @@ export default async function QuiosqueGestor({
             <>
               <div className="g-row" style={{ marginBottom: 14 }}>
                 Status
-                <span className="val" style={{ color: "var(--festa)" }}>
-                  não conectado — invisível pro cliente até conectar
+                <span className="val" style={{ color: "var(--cinza)" }}>
+                  não conectado
                 </span>
               </div>
               <a
                 href={`/api/mercado-pago/oauth/iniciar-quiosque/${quiosque.id}`}
-                className="btn btn-primario btn-bloco"
+                className="btn btn-secundario btn-bloco"
               >
                 Conectar Mercado Pago deste restaurante
               </a>
@@ -191,27 +210,6 @@ export default async function QuiosqueGestor({
               </p>
             </>
           )}
-        </div>
-      )}
-
-      {quiosque.tipo === "INDEPENDENTE" && (
-        <div className="g-sec" style={{ marginTop: 16 }}>
-          <h5 style={{ fontFamily: "var(--font-sora)", marginBottom: 12 }}>
-            💠 Recebimento — Pagar.me (split entre restaurantes)
-          </h5>
-          <p className="texto-fraco" style={{ marginBottom: 14 }}>
-            Use quando o evento junta vários restaurantes independentes e o cliente pode montar um
-            pedido só com itens de mais de um — o Pagar.me divide o Pix entre os recebedores
-            automaticamente, o que o Mercado Pago não faz. Cada restaurante recebe a parte dele e a
-            comissão da Cathan sai do valor restante.
-          </p>
-          <ConectarPagarMeQuiosque
-            apiUrl={`/api/eventos/${params.eventoId}/quiosques/${params.quiosqueId}/pagarme-recebedor`}
-            jaConectado={Boolean(quiosque.pagarmeRecipientId)}
-            statusInicial={quiosque.pagarmeRecipientStatus}
-            cnpjInicial={quiosque.cnpj ?? ""}
-            nomeInicial={quiosque.nome}
-          />
         </div>
       )}
 

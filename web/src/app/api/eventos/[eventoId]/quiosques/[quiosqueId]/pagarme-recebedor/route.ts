@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obterOrganizadorId } from "@/lib/organizadorAtual";
-import { criarRecebedorRestaurante, type EnderecoRecebedor } from "@/lib/pagarMe";
+import { criarRecebedorIndividual, criarRecebedorRestaurante, type EnderecoRecebedor } from "@/lib/pagarMe";
 
 type CorpoEndereco = {
   rua?: string;
@@ -14,7 +14,22 @@ type CorpoEndereco = {
   pontoReferencia?: string;
 };
 
+type CorpoContaBancaria = {
+  holderName?: string;
+  holderType?: "individual" | "company";
+  holderDocument?: string;
+  banco?: string;
+  agencia?: string;
+  agenciaDigito?: string;
+  conta?: string;
+  contaDigito?: string;
+  tipo?: "checking" | "savings";
+};
+
 type Corpo = {
+  // "corporation" (padrão, restaurante de verdade com CNPJ) ou "individual"
+  // (pessoa física -- parceiro sem CNPJ ainda, ex.: cadastro de teste)
+  tipoRecebedor?: "corporation" | "individual";
   email?: string;
   cnpj?: string;
   nomeFantasia?: string;
@@ -32,17 +47,18 @@ type Corpo = {
     celular?: string;
     endereco?: CorpoEndereco;
   };
-  contaBancaria?: {
-    holderName?: string;
-    holderType?: "individual" | "company";
-    holderDocument?: string;
-    banco?: string;
-    agencia?: string;
-    agenciaDigito?: string;
-    conta?: string;
-    contaDigito?: string;
-    tipo?: "checking" | "savings";
+  // só quando tipoRecebedor = "individual" -- é a própria pessoa, não uma empresa
+  pessoa?: {
+    nome?: string;
+    email?: string;
+    cpf?: string;
+    dataNascimento?: string;
+    rendaMensal?: number;
+    ocupacao?: string;
+    celular?: string;
+    endereco?: CorpoEndereco;
   };
+  contaBancaria?: CorpoContaBancaria;
 };
 
 function validarEndereco(e: CorpoEndereco | undefined, rotulo: string): EnderecoRecebedor {
@@ -61,11 +77,38 @@ function validarEndereco(e: CorpoEndereco | undefined, rotulo: string): Endereco
   };
 }
 
+function validarContaBancaria(c: CorpoContaBancaria | undefined) {
+  if (
+    !c?.holderName ||
+    !c.holderType ||
+    !c.holderDocument ||
+    !c.banco ||
+    !c.agencia ||
+    !c.conta ||
+    !c.contaDigito ||
+    !c.tipo
+  ) {
+    throw new Error("Preencha todos os campos obrigatórios da conta bancária.");
+  }
+  return {
+    holder_name: c.holderName.trim(),
+    holder_type: c.holderType,
+    holder_document: c.holderDocument.replace(/\D/g, ""),
+    bank: c.banco.replace(/\D/g, ""),
+    branch_number: c.agencia.replace(/\D/g, ""),
+    branch_check_digit: (c.agenciaDigito ?? "").replace(/\D/g, "") || undefined,
+    account_number: c.conta.replace(/\D/g, ""),
+    account_check_digit: c.contaDigito.replace(/[^\dxX]/g, ""),
+    type: c.tipo,
+  };
+}
+
 // Cria o recebedor Pagar.me do restaurante (split N:1). Só o gestor dono do
 // evento pode fazer isso, e só pra quiosque INDEPENDENTE que ainda não tem
 // recebedor. O KYC completo é preenchido pelo gestor junto com o responsável
 // do restaurante -- diferente do Mercado Pago (um clique de OAuth), o Pagar.me
-// precisa de dados cadastrais + representante legal + conta bancária.
+// precisa de dados cadastrais + conta bancária (e representante legal, se for
+// pessoa jurídica).
 export async function POST(
   req: NextRequest,
   { params }: { params: { eventoId: string; quiosqueId: string } }
@@ -90,75 +133,75 @@ export async function POST(
     return NextResponse.json({ erro: "JSON inválido." }, { status: 400 });
   }
 
-  const c = corpo.contaBancaria;
-  const r = corpo.representante;
-  if (
-    !corpo.email ||
-    !corpo.cnpj ||
-    !corpo.nomeFantasia ||
-    !corpo.razaoSocial ||
-    !corpo.faturamentoAnual ||
-    !corpo.celularEmpresa ||
-    !r?.nome ||
-    !r.email ||
-    !r.cpf ||
-    !r.dataNascimento ||
-    !r.rendaMensal ||
-    !r.ocupacao ||
-    !r.celular ||
-    !c?.holderName ||
-    !c.holderType ||
-    !c.holderDocument ||
-    !c.banco ||
-    !c.agencia ||
-    !c.conta ||
-    !c.contaDigito ||
-    !c.tipo
-  ) {
-    return NextResponse.json({ erro: "Preencha todos os campos obrigatórios." }, { status: 400 });
-  }
-
-  let enderecoEmpresa: EnderecoRecebedor;
-  let enderecoRep: EnderecoRecebedor;
   try {
-    enderecoEmpresa = validarEndereco(corpo.enderecoEmpresa, "da empresa");
-    enderecoRep = validarEndereco(r.endereco, "do representante");
-  } catch (erro) {
-    return NextResponse.json({ erro: erro instanceof Error ? erro.message : "Endereço inválido." }, { status: 400 });
-  }
+    let recebedor;
 
-  try {
-    const recebedor = await criarRecebedorRestaurante({
-      email: corpo.email.trim(),
-      cnpj: corpo.cnpj,
-      nomeFantasia: corpo.nomeFantasia.trim(),
-      razaoSocial: corpo.razaoSocial.trim(),
-      faturamentoAnual: corpo.faturamentoAnual,
-      celularEmpresa: corpo.celularEmpresa,
-      enderecoEmpresa,
-      representante: {
-        nome: r.nome.trim(),
-        email: r.email.trim(),
-        cpf: r.cpf,
-        dataNascimento: r.dataNascimento,
-        rendaMensal: r.rendaMensal,
-        ocupacao: r.ocupacao.trim(),
-        celular: r.celular,
-        endereco: enderecoRep,
-      },
-      contaBancaria: {
-        holder_name: c.holderName.trim(),
-        holder_type: c.holderType,
-        holder_document: c.holderDocument.replace(/\D/g, ""),
-        bank: c.banco.replace(/\D/g, ""),
-        branch_number: c.agencia.replace(/\D/g, ""),
-        branch_check_digit: (c.agenciaDigito ?? "").replace(/\D/g, "") || undefined,
-        account_number: c.conta.replace(/\D/g, ""),
-        account_check_digit: c.contaDigito.replace(/[^\dxX]/g, ""),
-        type: c.tipo,
-      },
-      code: `quiosque-${quiosque.id}`,
-    });
+    if (corpo.tipoRecebedor === "individual") {
+      const p = corpo.pessoa;
+      if (!p?.nome || !p.email || !p.cpf || !p.dataNascimento || !p.rendaMensal || !p.ocupacao || !p.celular) {
+        return NextResponse.json({ erro: "Preencha todos os campos obrigatórios." }, { status: 400 });
+      }
+      const endereco = validarEndereco(p.endereco, "do recebedor");
+      const contaBancaria = validarContaBancaria(corpo.contaBancaria);
+
+      recebedor = await criarRecebedorIndividual({
+        email: p.email.trim(),
+        cpf: p.cpf,
+        nome: p.nome.trim(),
+        dataNascimento: p.dataNascimento,
+        rendaMensal: p.rendaMensal,
+        ocupacao: p.ocupacao.trim(),
+        celular: p.celular,
+        endereco,
+        contaBancaria,
+        code: `quiosque-${quiosque.id}`,
+      });
+    } else {
+      const r = corpo.representante;
+      if (
+        !corpo.email ||
+        !corpo.cnpj ||
+        !corpo.nomeFantasia ||
+        !corpo.razaoSocial ||
+        !corpo.faturamentoAnual ||
+        !corpo.celularEmpresa ||
+        !r?.nome ||
+        !r.email ||
+        !r.cpf ||
+        !r.dataNascimento ||
+        !r.rendaMensal ||
+        !r.ocupacao ||
+        !r.celular
+      ) {
+        return NextResponse.json({ erro: "Preencha todos os campos obrigatórios." }, { status: 400 });
+      }
+
+      const enderecoEmpresa = validarEndereco(corpo.enderecoEmpresa, "da empresa");
+      const enderecoRep = validarEndereco(r.endereco, "do representante");
+      const contaBancaria = validarContaBancaria(corpo.contaBancaria);
+
+      recebedor = await criarRecebedorRestaurante({
+        email: corpo.email.trim(),
+        cnpj: corpo.cnpj,
+        nomeFantasia: corpo.nomeFantasia.trim(),
+        razaoSocial: corpo.razaoSocial.trim(),
+        faturamentoAnual: corpo.faturamentoAnual,
+        celularEmpresa: corpo.celularEmpresa,
+        enderecoEmpresa,
+        representante: {
+          nome: r.nome.trim(),
+          email: r.email.trim(),
+          cpf: r.cpf,
+          dataNascimento: r.dataNascimento,
+          rendaMensal: r.rendaMensal,
+          ocupacao: r.ocupacao.trim(),
+          celular: r.celular,
+          endereco: enderecoRep,
+        },
+        contaBancaria,
+        code: `quiosque-${quiosque.id}`,
+      });
+    }
 
     await prisma.quiosque.update({
       where: { id: quiosque.id },

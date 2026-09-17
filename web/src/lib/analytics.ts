@@ -46,7 +46,7 @@ export type LinhaSla = {
 export type AnalyticsEvento = {
   vendasTotal: number;
   totalPedidos: number;
-  vendasPorForma: { mercadoPago: number; dinheiro: number };
+  vendasPorForma: { pix: number; dinheiro: number };
   vendasPorQuiosque: SegmentoGrafico[];
   ticketMedio: number | null;
   prazoPct: number | null;
@@ -78,7 +78,7 @@ export async function calcularAnalyticsEvento(eventoId: string): Promise<Analyti
   ]);
 
   let vendasTotal = 0;
-  const vendasPorForma = { mercadoPago: 0, dinheiro: 0 };
+  const vendasPorForma = { pix: 0, dinheiro: 0 };
   const vendasPorQuiosqueMap = new Map<string, number>();
   const quantidadePorProduto = new Map<string, { nome: string; quantidade: number; cor: string }>();
   const funilAlimentacaoCount = new Map<string, number>();
@@ -94,7 +94,7 @@ export async function calcularAnalyticsEvento(eventoId: string): Promise<Analyti
       );
       vendasTotal += valorSub;
       if (pedido.formaPagamento === "DINHEIRO") vendasPorForma.dinheiro += valorSub;
-      else vendasPorForma.mercadoPago += valorSub;
+      else vendasPorForma.pix += valorSub;
 
       vendasPorQuiosqueMap.set(
         subPedido.quiosqueId,

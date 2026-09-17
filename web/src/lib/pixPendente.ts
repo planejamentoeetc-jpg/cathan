@@ -11,7 +11,10 @@ const LIMITE_RESTAURACAO_MS = 20 * 60 * 1000;
 export type PixPendenteLocal = {
   pedidoPendenteId: string;
   copiaECola: string;
-  qrCodeBase64: string;
+  // Mercado Pago manda o PNG já em base64; Pagar.me manda uma URL de imagem
+  // (ver POST /api/pedidos) -- só um dos dois vem preenchido por vez.
+  qrCodeBase64?: string;
+  qrCodeUrl?: string;
   valor: number;
   criadoEm: number;
   // presente só depois que o pagamento é confirmado — permite reabrir direto na

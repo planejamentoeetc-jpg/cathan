@@ -12,9 +12,11 @@ export type ItemCarrinho = {
   quiosqueNome: string;
   quiosqueCor: string;
   quiosqueModalidade: "ALIMENTACAO" | "BEBIDAS" | "BRINCADEIRAS";
-  // true quando este quiosque recebe direto na própria conta Mercado Pago
-  // (split 1:1) -- o Mercado Pago não permite dividir 1 cobrança entre contas
-  // diferentes, então um carrinho não pode misturar este quiosque com outro
+  // true quando este quiosque só tem o Mercado Pago próprio conectado (ainda
+  // não migrou pro Pagar.me) -- o Mercado Pago não permite dividir 1 cobrança
+  // entre contas diferentes, então um carrinho não pode misturar este
+  // quiosque com outro. Quem já tem recebedor Pagar.me pode se misturar
+  // normalmente (é o split N:1 que o Pagar.me resolve).
   quiosqueRecebeDireto: boolean;
 };
 

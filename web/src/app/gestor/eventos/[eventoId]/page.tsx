@@ -108,7 +108,7 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
         kpis={[
           { valor: formatarReais(dados.vendasTotal), rotulo: "Vendas do evento" },
           { valor: String(dados.totalPedidos), rotulo: "Pedidos", oculta: false },
-          { valor: formatarReais(dados.vendasPorForma.mercadoPago), rotulo: "Via plataforma (split)" },
+          { valor: formatarReais(dados.vendasPorForma.pix), rotulo: "Via plataforma (split)" },
           { valor: formatarReais(dados.vendasPorForma.dinheiro), rotulo: "Em caixa (dinheiro)" },
         ]}
       >
