@@ -273,7 +273,16 @@ export async function criarPedidoPixComSplit(dados: {
                   recipient_id: d.recipientId,
                   type: d.tipo,
                   amount: d.valor,
-                  options: { charge_processing_fee: d.responsavelPelaTaxa ?? false, liable: true },
+                  // Pagar.me exige que pelo menos 1 recebedor assuma o
+                  // charge_remainder_fee (confirmado por um 400 real:
+                  // "At least 1 recipient must be responsible for the
+                  // charge_remainder_fee") -- é sempre o mesmo recebedor que
+                  // absorve a taxa (o padrão da Cathan, ver pedidos/route.ts)
+                  options: {
+                    charge_processing_fee: d.responsavelPelaTaxa ?? false,
+                    charge_remainder_fee: d.responsavelPelaTaxa ?? false,
+                    liable: true,
+                  },
                 })),
               }
             : {}),
