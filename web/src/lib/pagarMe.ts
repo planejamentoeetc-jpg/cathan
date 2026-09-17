@@ -20,6 +20,14 @@ function separarDdd(celular: string): { ddd: string; number: string } {
   return { ddd: digitos.slice(0, 2), number: digitos.slice(2) };
 }
 
+// O Pagar.me exige "birthdate" no formato DD/MM/AAAA (confirmado por um 412
+// real: "fails to match the required pattern /^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/") --
+// o <input type="date"> do formulário manda AAAA-MM-DD, então precisa converter.
+function dataNascimentoParaPagarMe(isoAaaaMmDd: string): string {
+  const [ano, mes, dia] = isoAaaaMmDd.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
 async function chamarPagarMe<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> {
   // Basic Auth: usuário = chave secreta, senha em branco (padrão Pagar.me)
   const auth = Buffer.from(`${chaveApi()}:`).toString("base64");
@@ -137,7 +145,7 @@ export async function criarRecebedorRestaurante(dados: {
             name: dados.representante.nome,
             email: dados.representante.email,
             document: dados.representante.cpf.replace(/\D/g, ""),
-            birthdate: dados.representante.dataNascimento,
+            birthdate: dataNascimentoParaPagarMe(dados.representante.dataNascimento),
             monthly_income: dados.representante.rendaMensal,
             professional_occupation: dados.representante.ocupacao,
             self_declared_legal_representative: true,
@@ -178,7 +186,7 @@ export async function criarRecebedorIndividual(dados: {
         document: dados.cpf.replace(/\D/g, ""),
         type: "individual",
         name: dados.nome,
-        birthdate: dados.dataNascimento,
+        birthdate: dataNascimentoParaPagarMe(dados.dataNascimento),
         monthly_income: dados.rendaMensal,
         professional_occupation: dados.ocupacao,
         phone_numbers: [{ ddd, number, type: "mobile" }],
