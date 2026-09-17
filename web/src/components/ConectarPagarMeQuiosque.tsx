@@ -166,11 +166,13 @@ export function ConectarPagarMeQuiosque({
     setErro(null);
     setEnviando(true);
     try {
+      // pessoa física: o titular da conta é a própria pessoa -- não faz
+      // sentido pedir nome/CPF de novo, já preenchidos ali em cima
       const corpoComum = {
         contaBancaria: {
-          holderName,
-          holderType,
-          holderDocument,
+          holderName: tipoRecebedor === "individual" ? pfNome : holderName,
+          holderType: tipoRecebedor === "individual" ? ("individual" as const) : holderType,
+          holderDocument: tipoRecebedor === "individual" ? pfCpf : holderDocument,
           banco,
           agencia,
           agenciaDigito,
@@ -395,21 +397,25 @@ export function ConectarPagarMeQuiosque({
 
       <h6 style={{ fontFamily: "var(--font-sora)", margin: "6px 0 10px" }}>Conta bancária</h6>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label className="campo">
-          <span>Titular da conta</span>
-          <input value={holderName} onChange={(e) => setHolderName(e.target.value)} />
-        </label>
-        <label className="campo">
-          <span>Tipo do titular</span>
-          <select value={holderType} onChange={(e) => setHolderType(e.target.value as "company" | "individual")}>
-            <option value="company">Pessoa jurídica</option>
-            <option value="individual">Pessoa física</option>
-          </select>
-        </label>
-        <label className="campo">
-          <span>CPF/CNPJ do titular</span>
-          <input value={holderDocument} onChange={(e) => setHolderDocument(e.target.value)} inputMode="numeric" />
-        </label>
+        {tipoRecebedor === "corporation" && (
+          <>
+            <label className="campo">
+              <span>Titular da conta</span>
+              <input value={holderName} onChange={(e) => setHolderName(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Tipo do titular</span>
+              <select value={holderType} onChange={(e) => setHolderType(e.target.value as "company" | "individual")}>
+                <option value="company">Pessoa jurídica</option>
+                <option value="individual">Pessoa física</option>
+              </select>
+            </label>
+            <label className="campo">
+              <span>CPF/CNPJ do titular</span>
+              <input value={holderDocument} onChange={(e) => setHolderDocument(e.target.value)} inputMode="numeric" />
+            </label>
+          </>
+        )}
         <label className="campo">
           <span>Banco (código, ex.: 341)</span>
           <input value={banco} onChange={(e) => setBanco(e.target.value)} inputMode="numeric" />
