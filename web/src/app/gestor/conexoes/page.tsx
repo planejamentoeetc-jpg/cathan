@@ -47,6 +47,7 @@ export default async function Conexoes() {
           statusInicial={organizador?.pagarmeRecipientStatus ?? null}
           cnpjInicial=""
           nomeInicial={organizador?.nome ?? ""}
+          descricao="Esses dados vão pro Pagar.me criar o recebedor que recebe seus pagamentos direto, com a comissão da Cathan descontada automaticamente."
         />
       </div>
 

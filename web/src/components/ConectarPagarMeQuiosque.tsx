@@ -89,12 +89,14 @@ export function ConectarPagarMeQuiosque({
   statusInicial,
   cnpjInicial,
   nomeInicial,
+  descricao = "Preencha junto com o responsável do restaurante. Esses dados vão pro Pagar.me criar o recebedor que recebe a parte dele nas vendas divididas.",
 }: {
   apiUrl: string;
   jaConectado: boolean;
   statusInicial: string | null;
   cnpjInicial: string;
   nomeInicial: string;
+  descricao?: string;
 }) {
   const router = useRouter();
   const [enviando, setEnviando] = useState(false);
@@ -155,7 +157,7 @@ export function ConectarPagarMeQuiosque({
           </span>
         </div>
         <p className="texto-fraco" style={{ marginTop: 10, fontSize: 12 }}>
-          O restaurante já tem um recebedor Pagar.me. Se o status não estiver “active”, o Pagar.me
+          Já existe um recebedor Pagar.me cadastrado. Se o status não estiver "active", o Pagar.me
           ainda está verificando os dados cadastrais.
         </p>
       </div>
@@ -240,10 +242,7 @@ export function ConectarPagarMeQuiosque({
 
   return (
     <div className="cartao">
-      <p className="texto-fraco" style={{ marginBottom: 16 }}>
-        Preencha junto com o responsável do restaurante. Esses dados vão pro Pagar.me criar o
-        recebedor que recebe a parte dele nas vendas divididas.
-      </p>
+      <p className="texto-fraco" style={{ marginBottom: 16 }}>{descricao}</p>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <label className="campo" style={{ flex: 1 }}>
