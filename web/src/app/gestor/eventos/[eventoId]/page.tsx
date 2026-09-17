@@ -226,8 +226,24 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
               <b>{quiosque.nome}</b>
               <div className="texto-fraco">{NOME_MODALIDADE[quiosque.modalidade]}</div>
               {quiosque.tipo === "INDEPENDENTE" ? (
-                <div style={{ fontSize: 11.5, color: "var(--verde)", fontWeight: 700, marginTop: 2 }}>
-                  🏢 Independente · PIX {quiosque.chavePix}
+                <div
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    marginTop: 2,
+                    color: quiosque.pagarmeRecipientId
+                      ? "var(--verde)"
+                      : quiosque.mpAccessTokenCifrado
+                      ? "var(--cinza)"
+                      : "var(--festa)",
+                  }}
+                >
+                  🏢 Independente ·{" "}
+                  {quiosque.pagarmeRecipientId
+                    ? "Pagar.me conectado"
+                    : quiosque.mpAccessTokenCifrado
+                    ? "Mercado Pago (legado)"
+                    : "recebedor não conectado"}
                 </div>
               ) : (
                 <div className="texto-fraco" style={{ fontSize: 11.5, marginTop: 2 }}>
