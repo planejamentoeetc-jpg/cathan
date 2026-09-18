@@ -1,4 +1,5 @@
-import { Prisma } from "@prisma/client";
+import { FormaPagamento, Prisma } from "@prisma/client";
+import { PedidoInvalidoError, criarPedidoAPartirDeItensValidados } from "@/lib/criarPedido";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { NextRequest, NextResponse } from "next/server";
 import { distanciaMetros } from "@/lib/geo";
@@ -49,16 +50,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "JSON inválido." }, { status: 400 });
   }
 
-  if (
-    !corpo.eventoId ||
-    !corpo.clienteNome?.trim() ||
-    !corpo.clienteCelular?.trim() ||
-    !corpo.clienteCpf?.trim()
-  ) {
+  if (!corpo.eventoId || !corpo.clienteNome?.trim() || !corpo.clienteCelular?.trim()) {
     return NextResponse.json({ erro: "Dados do cliente incompletos." }, { status: 400 });
-  }
-  if (!validarCpf(corpo.clienteCpf)) {
-    return NextResponse.json({ erro: "CPF inválido." }, { status: 400 });
   }
   if (!Array.isArray(corpo.itens) || corpo.itens.length === 0) {
     return NextResponse.json({ erro: "Carrinho vazio." }, { status: 400 });
@@ -73,6 +66,17 @@ export async function POST(req: NextRequest) {
   });
   if (!evento) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
+  }
+
+  // CPF só é exigido de quem paga de verdade (Pagar.me pede o documento do
+  // comprador em todo pedido); evento de demonstração não cobra nada
+  if (!evento.modoDemonstracao) {
+    if (!corpo.clienteCpf?.trim()) {
+      return NextResponse.json({ erro: "Dados do cliente incompletos." }, { status: 400 });
+    }
+    if (!validarCpf(corpo.clienteCpf)) {
+      return NextResponse.json({ erro: "CPF inválido." }, { status: 400 });
+    }
   }
 
   if (evento.pedidosPausados) {
@@ -180,6 +184,42 @@ export async function POST(req: NextRequest) {
           : [],
     };
   });
+
+  // Evento de demonstração: confirma o pedido na hora, sem provedor de pagamento
+  // (mesmo caminho que o webhook usa depois de um pagamento aprovado).
+  if (evento.modoDemonstracao) {
+    try {
+      const pendente = await prisma.pedidoPendente.create({
+        data: {
+          eventoId: evento.id,
+          clienteNome: corpo.clienteNome.trim(),
+          clienteCelular: corpo.clienteCelular.trim(),
+          itens: itensValidados as unknown as Prisma.InputJsonValue,
+        },
+      });
+      const resultado = await criarPedidoAPartirDeItensValidados({
+        eventoId: evento.id,
+        clienteNome: corpo.clienteNome.trim(),
+        clienteCelular: corpo.clienteCelular.trim(),
+        itens: itensValidados,
+        formaPagamento: FormaPagamento.DEMONSTRACAO,
+      });
+      await prisma.pedidoPendente.update({
+        where: { id: pendente.id },
+        data: { status: "CONFIRMADO", pedidoId: resultado.pedidoId },
+      });
+      return NextResponse.json(
+        { pedidoPendenteId: pendente.id, pedidoId: resultado.pedidoId, demo: true },
+        { status: 201 }
+      );
+    } catch (erro) {
+      if (erro instanceof PedidoInvalidoError) {
+        return NextResponse.json({ erro: erro.message }, { status: 409 });
+      }
+      console.error("Falha ao criar pedido de demonstração", erro);
+      return NextResponse.json({ erro: "Não foi possível criar o pedido." }, { status: 500 });
+    }
+  }
 
   const valorTotal = itensValidados.reduce((soma, i) => soma + i.precoUnitario * i.quantidade, 0);
   const valorTotalCentavos = Math.round(valorTotal * 100);

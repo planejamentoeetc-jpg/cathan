@@ -250,6 +250,8 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
                     ? "Pagar.me conectado"
                     : quiosque.mpAccessTokenCifrado
                     ? "Mercado Pago (legado)"
+                    : evento.modoDemonstracao
+                    ? "modo demonstração"
                     : "recebedor não conectado"}
                 </div>
               ) : (

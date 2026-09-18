@@ -6,7 +6,7 @@ import { CheckoutForm } from "@/components/CheckoutForm";
 export default async function Checkout({ params }: { params: { eventoId: string } }) {
   const evento = await prisma.evento.findUnique({
     where: { id: params.eventoId },
-    select: { id: true, nome: true, raioPedidosMetros: true, pedidosPausados: true },
+    select: { id: true, nome: true, raioPedidosMetros: true, pedidosPausados: true, modoDemonstracao: true },
   });
 
   if (!evento) notFound();
@@ -25,8 +25,14 @@ export default async function Checkout({ params }: { params: { eventoId: string 
           novamente em instantes.
         </div>
       )}
+      {evento.modoDemonstracao && (
+        <div className="aviso" style={{ marginBottom: 16 }}>
+          Ambiente de demonstração: nenhum pagamento real é cobrado, o pedido é confirmado na hora.
+        </div>
+      )}
       <CheckoutForm
         eventoId={evento.id}
+        modoDemonstracao={evento.modoDemonstracao}
         exigeLocalizacao={evento.raioPedidosMetros !== null}
         pedidosPausados={evento.pedidosPausados}
       />

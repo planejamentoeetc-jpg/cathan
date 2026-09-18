@@ -34,7 +34,7 @@ export type PedidoRegistro = {
   criadoEm: string;
   clienteNome: string;
   clienteCelular: string;
-  formaPagamento: "MERCADO_PAGO" | "PAGARME" | "DINHEIRO";
+  formaPagamento: "MERCADO_PAGO" | "PAGARME" | "DINHEIRO" | "DEMONSTRACAO";
   subPedidos: SubPedidoRegistro[];
 };
 
@@ -182,6 +182,8 @@ export function RegistroPedidos({ pedidos }: { pedidos: PedidoRegistro[] }) {
                     >
                       {pedido.formaPagamento === "DINHEIRO"
                         ? "Dinheiro (caixa)"
+                        : pedido.formaPagamento === "DEMONSTRACAO"
+                        ? "Demonstração"
                         : pedido.formaPagamento === "PAGARME"
                         ? "Pix (Pagar.me)"
                         : "Pix (Mercado Pago)"}

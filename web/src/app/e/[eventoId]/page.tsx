@@ -21,7 +21,12 @@ export default async function PracaDoEvento({
         // pagamento nenhum -- fica invisível pro cliente até o gestor
         // completar a conexão (ver /gestor/eventos/[eventoId]/quiosques/[quiosqueId])
         where: {
-          OR: [{ tipo: "DO_EVENTO" }, { pagarmeRecipientId: { not: null } }, { mpAccessTokenCifrado: { not: null } }],
+          OR: [
+            { tipo: "DO_EVENTO" },
+            { pagarmeRecipientId: { not: null } },
+            { mpAccessTokenCifrado: { not: null } },
+            { evento: { modoDemonstracao: true } },
+          ],
         },
         orderBy: { nome: "asc" },
         include: {
@@ -65,6 +70,12 @@ export default async function PracaDoEvento({
         </div>
 
         <MeusPedidosBanner eventoId={evento.id} />
+
+        {evento.modoDemonstracao && (
+          <div className="aviso" style={{ marginBottom: 16 }}>
+            Ambiente de demonstração: você pode fazer pedidos de teste, nenhum pagamento real é cobrado.
+          </div>
+        )}
 
         {evento.pedidosPausados && (
           <div className="aviso" style={{ marginBottom: 16 }}>

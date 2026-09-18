@@ -20,6 +20,7 @@ export default async function LojaDoQuiosque({
       { tipo: "DO_EVENTO" as const },
       { pagarmeRecipientId: { not: null } },
       { mpAccessTokenCifrado: { not: null } },
+      { evento: { modoDemonstracao: true } },
     ],
   };
 

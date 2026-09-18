@@ -38,10 +38,12 @@ export function CheckoutForm({
   eventoId,
   exigeLocalizacao,
   pedidosPausados = false,
+  modoDemonstracao = false,
 }: {
   eventoId: string;
   exigeLocalizacao: boolean;
   pedidosPausados?: boolean;
+  modoDemonstracao?: boolean;
 }) {
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
@@ -169,11 +171,11 @@ export function CheckoutForm({
     setErro(null);
     setForaDoRaio(null);
 
-    if (!nome.trim() || !celular.trim() || !cpf.trim()) {
-      setErro("Informe nome, celular e CPF para continuar.");
+    if (!nome.trim() || !celular.trim() || (!modoDemonstracao && !cpf.trim())) {
+      setErro(modoDemonstracao ? "Informe nome e celular para continuar." : "Informe nome, celular e CPF para continuar.");
       return;
     }
-    if (!validarCpf(cpf)) {
+    if (!modoDemonstracao && !validarCpf(cpf)) {
       setErro("CPF inválido — confira os números digitados.");
       return;
     }
@@ -224,6 +226,11 @@ export function CheckoutForm({
       }
 
       salvarClienteLocal({ nome: nome.trim(), celular: celular.trim(), cpf: cpf.trim() });
+      if (dados.demo && dados.pedidoId) {
+        limparCarrinho(eventoId);
+        setPedidoConfirmadoId(dados.pedidoId);
+        return;
+      }
       const novoPix = { pedidoPendenteId: dados.pedidoPendenteId, valor: total, criadoEm: Date.now(), ...dados.pix };
       salvarPixPendente(eventoId, novoPix);
       setPix(novoPix);
@@ -450,6 +457,7 @@ export function CheckoutForm({
             placeholder="(00) 00000-0000"
           />
         </div>
+        {!modoDemonstracao && (
         <div className="campo">
           <label>CPF</label>
           <input
@@ -461,6 +469,7 @@ export function CheckoutForm({
             maxLength={14}
           />
         </div>
+        )}
         {exigeLocalizacao && (
           <p className="texto-fraco" style={{ marginBottom: 10 }}>
             Este evento exige que você esteja dentro do raio de pedidos. Vamos pedir sua
@@ -484,6 +493,8 @@ export function CheckoutForm({
             ? "Pedidos pausados"
             : enviando
             ? "Gerando Pix…"
+            : modoDemonstracao
+            ? `Confirmar pedido (demo) · ${formatarReais(total)}`
             : `Pagar com Pix · ${formatarReais(total)}`}
         </button>
       </div>
