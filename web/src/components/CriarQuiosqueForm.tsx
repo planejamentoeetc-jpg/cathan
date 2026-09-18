@@ -109,8 +109,9 @@ export function CriarQuiosqueForm({
       {tipo === "INDEPENDENTE" && (
         <p className="texto-fraco" style={{ marginBottom: 14 }}>
           Depois de criar, use a própria tela do quiosque pra cadastrar produtos, enviar a logo e
-          conectar a conta Mercado Pago do restaurante — até conectar, ele fica invisível pro
-          cliente (não aparece pra pedir), já que ainda não tem como receber o pagamento.
+          fazer o cadastro do recebedor Stone (Pagar.me) do restaurante — até cadastrar, ele fica
+          invisível pro cliente (não aparece pra pedir), já que ainda não tem como receber o
+          pagamento.
         </p>
       )}
 
