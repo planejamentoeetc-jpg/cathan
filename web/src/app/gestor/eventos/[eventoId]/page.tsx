@@ -221,8 +221,13 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
             href={`/gestor/eventos/${evento.id}/quiosques/${quiosque.id}`}
             className="cartao quiosque-card"
           >
-            <div className="quiosque-logo" style={{ background: quiosque.cor }}>
-              <IconeModalidade modalidade={quiosque.modalidade} />
+            <div className="quiosque-logo" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
+              {quiosque.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={quiosque.logoUrl} alt={quiosque.nome} />
+              ) : (
+                <IconeModalidade modalidade={quiosque.modalidade} />
+              )}
             </div>
             <div style={{ flex: 1 }}>
               <b>{quiosque.nome}</b>

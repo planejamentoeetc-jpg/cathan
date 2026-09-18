@@ -119,8 +119,13 @@ export default async function PreviaPracaDoEvento({ params }: { params: { evento
                     href={`/gestor/eventos/${evento.id}/preview/q/${quiosque.id}`}
                     className="quiosque-aba"
                   >
-                    <div className="quiosque-logo" style={{ background: quiosque.cor }}>
-                      <IconeModalidade modalidade={quiosque.modalidade} />
+                    <div className="quiosque-logo" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
+                      {quiosque.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={quiosque.logoUrl} alt={quiosque.nome} />
+                      ) : (
+                        <IconeModalidade modalidade={quiosque.modalidade} />
+                      )}
                     </div>
                     <b>{quiosque.nome}</b>
                     <div className="espera">{formatarEspera(esperaMinutos)}</div>
