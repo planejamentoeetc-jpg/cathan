@@ -492,7 +492,9 @@ export function CheckoutForm({
           {pedidosPausados
             ? "Pedidos pausados"
             : enviando
-            ? "Gerando Pix…"
+            ? modoDemonstracao
+              ? "Confirmando pedido…"
+              : "Gerando Pix…"
             : modoDemonstracao
             ? `Confirmar pedido (demo) · ${formatarReais(total)}`
             : `Pagar com Pix · ${formatarReais(total)}`}
