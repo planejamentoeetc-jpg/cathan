@@ -204,9 +204,14 @@ export default async function EventoGestor({ params }: { params: { eventoId: str
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <b style={{ fontFamily: "var(--font-sora)" }}>Quiosques</b>
-        <Link href={`/gestor/eventos/${evento.id}/quiosques/novo`} className="btn btn-primario">
-          + Quiosque
-        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link href={`/gestor/eventos/${evento.id}/preview`} className="btn btn-secundario">
+            👁 Ver prévia
+          </Link>
+          <Link href={`/gestor/eventos/${evento.id}/quiosques/novo`} className="btn btn-primario">
+            + Quiosque
+          </Link>
+        </div>
       </div>
 
       <div className="lista">

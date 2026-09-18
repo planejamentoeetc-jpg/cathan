@@ -78,6 +78,9 @@ export default async function PainelQuiosque({
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <Link href={`/painel/${params.eventoId}/q/${quiosque.id}/preview`} className="btn btn-secundario">
+          👁 Ver como o cliente vai ver
+        </Link>
         <Link href={`/painel/${params.eventoId}/q/${quiosque.id}/vendas`} className="btn btn-secundario">
           📊 Minhas vendas
         </Link>

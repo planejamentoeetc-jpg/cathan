@@ -44,9 +44,17 @@ export default async function QuiosqueGestor({
         }}
       >
         <span>{quiosque.nome}</span>
-        <Link href={`/gestor/eventos/${params.eventoId}`} style={{ fontSize: 12.5, color: "#BFD4DA" }}>
-          ‹ Voltar ao evento
-        </Link>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <Link
+            href={`/gestor/eventos/${params.eventoId}/preview/q/${params.quiosqueId}`}
+            style={{ fontSize: 12.5, color: "#BFD4DA" }}
+          >
+            👁 Ver prévia
+          </Link>
+          <Link href={`/gestor/eventos/${params.eventoId}`} style={{ fontSize: 12.5, color: "#BFD4DA" }}>
+            ‹ Voltar ao evento
+          </Link>
+        </div>
       </div>
 
       <div className="painel-split">
