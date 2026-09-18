@@ -78,7 +78,12 @@ export default async function PreviaLojaDoQuiosque({
         </div>
 
         {irmaos.length > 1 && (
-          <AbasQuiosques eventoId={params.eventoId} irmaos={irmaos} atualId={quiosque.id} />
+          <AbasQuiosques
+            eventoId={params.eventoId}
+            irmaos={irmaos}
+            atualId={quiosque.id}
+            baseHref={`/gestor/eventos/${params.eventoId}/preview/q`}
+          />
         )}
 
         <div style={{ marginTop: 14 }}>

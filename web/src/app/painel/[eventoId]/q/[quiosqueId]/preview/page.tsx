@@ -5,7 +5,6 @@ import { exigirSessaoQuiosque } from "@/lib/exigirSessaoQuiosque";
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
-import { AbasQuiosques } from "@/components/AbasQuiosques";
 import { DicaLoja } from "@/components/DicaLoja";
 
 // Mesma prévia de /gestor/eventos/[eventoId]/preview/q/[quiosqueId], só que
@@ -26,12 +25,6 @@ export default async function PreviaLojaQuiosqueProprio({
 
   if (!quiosque) notFound();
   await exigirSessaoQuiosque(quiosque, `/painel/${params.eventoId}/q/${params.quiosqueId}/preview`);
-
-  const irmaos = await prisma.quiosque.findMany({
-    where: { eventoId: params.eventoId },
-    select: { id: true, nome: true, cor: true, modalidade: true, logoUrl: true },
-    orderBy: { nome: "asc" },
-  });
 
   const semRecebedor = !quiosque.pagarmeRecipientId && !quiosque.mpAccessTokenCifrado;
 
@@ -77,10 +70,6 @@ export default async function PreviaLojaQuiosqueProprio({
         <div className="loja-cabecalho">
           <h1 className="loja-nome">{quiosque.nome}</h1>
         </div>
-
-        {irmaos.length > 1 && (
-          <AbasQuiosques eventoId={params.eventoId} irmaos={irmaos} atualId={quiosque.id} />
-        )}
 
         <div style={{ marginTop: 14 }}>
           <DicaLoja

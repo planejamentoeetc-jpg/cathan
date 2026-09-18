@@ -28,10 +28,15 @@ export function AbasQuiosques({
   eventoId,
   irmaos,
   atualId,
+  // pra reaproveitar este componente na prévia do gestor
+  // (/gestor/eventos/[eventoId]/preview/q/...), que mostra quiosque mesmo
+  // sem recebedor -- a rota real do cliente (padrão) filtra e dá 404 neles.
+  baseHref = `/e/${eventoId}/q`,
 }: {
   eventoId: string;
   irmaos: Irmao[];
   atualId: string;
+  baseHref?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [temMaisEsquerda, setTemMaisEsquerda] = useState(false);
@@ -92,7 +97,7 @@ export function AbasQuiosques({
           {irmaos.map((irmao) => (
             <Link
               key={irmao.id}
-              href={`/e/${eventoId}/q/${irmao.id}`}
+              href={`${baseHref}/${irmao.id}`}
               className="quiosque-aba"
               style={irmao.id === atualId ? { borderColor: irmao.cor, borderWidth: 2 } : undefined}
             >
