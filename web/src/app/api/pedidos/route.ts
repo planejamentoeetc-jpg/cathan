@@ -196,11 +196,14 @@ export async function POST(req: NextRequest) {
 
   // Decide quem recebe o Pix, em ordem de prioridade:
   // 1) restaurante independente único já migrado pro Pagar.me — o recebedor
-  //    dele entra no split junto com a comissão da Cathan.
-  // 2) restaurante independente único, ainda só no Mercado Pago (legado).
+  //    dele entra no split junto com a comissão da Cathan e, se configurada
+  //    e o organizador também tiver recebedor Pagar.me, a comissão dele também.
+  // 2) restaurante independente único, ainda só no Mercado Pago (legado) —
+  //    aqui não dá pra cobrar comissão de organizador, o MP não faz split de 3.
   // 3) carrinho com 2+ restaurantes independentes — só chega aqui se todos os
   //    que têm conexão própria já migraram pro Pagar.me (bloqueio acima cobre
-  //    o resto); é o split N:1 que o Mercado Pago nunca fez.
+  //    o resto); é o split N:1 que o Mercado Pago nunca fez. Comissão do
+  //    organizador entra aqui do mesmo jeito que no caso 1.
   // 4) sem restaurante independente envolvido, organizador já migrado pro
   //    Pagar.me — mesmo split de dois recebedores do caso 1, só que o
   //    recebedor é do organizador em vez de um restaurante.
@@ -212,23 +215,47 @@ export async function POST(req: NextRequest) {
   // essa cópia carrega o tipo já não-nulo pro closure abaixo.
   const eventoValidado = evento;
 
+  // Comissão do organizador (além da comissão da Cathan) sobre a venda de
+  // restaurante(s) independente(s) -- caso real: organizador de feira que
+  // cobra participação sobre o faturamento dos participantes. Só existe
+  // quando ele já tem recebedor Pagar.me próprio (/gestor/conexoes) E o
+  // evento tem essa % configurada; incide sobre o valor total do pedido.
+  function calcularComissaoOrganizador(): { recipientId: string; valor: number } | null {
+    if (!eventoValidado.organizador?.pagarmeRecipientId) return null;
+    const percentual = Number(eventoValidado.comissaoOrganizadorPercentual);
+    if (percentual <= 0) return null;
+    return {
+      recipientId: eventoValidado.organizador.pagarmeRecipientId,
+      valor: Math.round(valorTotalCentavos * (percentual / 100)),
+    };
+  }
+
   async function decidirRota(): Promise<RotaPagamento> {
     if (quiosqueUnico?.pagarmeRecipientId) {
       const recebedorPadrao = await obterRecebedorPadrao();
       const percentual = Number(quiosqueUnico.comissaoPercentual ?? eventoValidado.comissaoPercentual);
-      const comissaoCentavos = Math.round(valorTotalCentavos * (percentual / 100));
-      return {
-        provedor: "pagarme",
-        divisoes: [
-          {
-            recipientId: quiosqueUnico.pagarmeRecipientId,
-            tipo: "flat",
-            valor: valorTotalCentavos - comissaoCentavos,
-            responsavelPelaTaxa: false,
-          },
-          { recipientId: recebedorPadrao.id, tipo: "flat", valor: comissaoCentavos, responsavelPelaTaxa: true },
-        ],
-      };
+      const comissaoCathanCentavos = Math.round(valorTotalCentavos * (percentual / 100));
+      const comissaoOrganizador = calcularComissaoOrganizador();
+
+      const divisoes: DivisaoSplitPagarMe[] = [
+        {
+          recipientId: quiosqueUnico.pagarmeRecipientId,
+          tipo: "flat",
+          valor: valorTotalCentavos - comissaoCathanCentavos - (comissaoOrganizador?.valor ?? 0),
+          responsavelPelaTaxa: false,
+        },
+      ];
+      if (comissaoOrganizador) {
+        divisoes.push({
+          recipientId: comissaoOrganizador.recipientId,
+          tipo: "flat",
+          valor: comissaoOrganizador.valor,
+          responsavelPelaTaxa: false,
+        });
+      }
+      divisoes.push({ recipientId: recebedorPadrao.id, tipo: "flat", valor: comissaoCathanCentavos, responsavelPelaTaxa: true });
+
+      return { provedor: "pagarme", divisoes };
     }
 
     if (quiosqueUnico) {
@@ -244,14 +271,15 @@ export async function POST(req: NextRequest) {
 
     if (independentesComPagarme.length > 0) {
       const recebedorPadrao = await obterRecebedorPadrao();
-      let somaRestaurantes = 0;
+      const comissaoOrganizador = calcularComissaoOrganizador();
+      let somaOutrasDivisoes = comissaoOrganizador?.valor ?? 0;
       const divisoesRestaurantes: DivisaoSplitPagarMe[] = [];
       for (const quiosque of independentesComPagarme) {
         const subtotalCentavos = Math.round((subtotalPorQuiosque.get(quiosque.id) ?? 0) * 100);
         const percentual = Number(quiosque.comissaoPercentual ?? eventoValidado.comissaoPercentual);
         const comissaoCentavos = Math.round(subtotalCentavos * (percentual / 100));
         const valorRestaurante = subtotalCentavos - comissaoCentavos;
-        somaRestaurantes += valorRestaurante;
+        somaOutrasDivisoes += valorRestaurante;
         divisoesRestaurantes.push({
           recipientId: quiosque.pagarmeRecipientId!,
           tipo: "flat",
@@ -259,10 +287,18 @@ export async function POST(req: NextRequest) {
           responsavelPelaTaxa: false,
         });
       }
+      if (comissaoOrganizador) {
+        divisoesRestaurantes.push({
+          recipientId: comissaoOrganizador.recipientId,
+          tipo: "flat",
+          valor: comissaoOrganizador.valor,
+          responsavelPelaTaxa: false,
+        });
+      }
       divisoesRestaurantes.push({
         recipientId: recebedorPadrao.id,
         tipo: "flat",
-        valor: valorTotalCentavos - somaRestaurantes,
+        valor: valorTotalCentavos - somaOutrasDivisoes,
         responsavelPelaTaxa: true,
       });
       return { provedor: "pagarme", divisoes: divisoesRestaurantes };

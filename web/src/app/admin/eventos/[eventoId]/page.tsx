@@ -79,6 +79,7 @@ export default async function EventoAdmin({ params }: { params: { eventoId: stri
             <FormularioComissaoEvento
               eventoId={evento.id}
               comissaoInicial={Number(evento.comissaoPercentual)}
+              comissaoOrganizadorInicial={Number(evento.comissaoOrganizadorPercentual)}
             />
           </div>
         </div>

@@ -128,6 +128,18 @@ model Evento {
   // configurável por evento (não por organizador) — editável só pelo admin em
   // /admin/eventos/[eventoId]
   comissaoPercentual Decimal @default(4.9) @map("comissao_percentual") @db.Decimal(5, 2)
+  // % que o ORGANIZADOR retém sobre as vendas dos quiosques independentes do
+  // evento (além da comissão da Cathan acima) -- caso real: organizador de
+  // feira que cobra participação dos restaurantes sobre o faturamento, não só
+  // repassa 100%. Só faz sentido (e só é aplicado) quando há quiosque
+  // independente com recebedor Pagar.me no carrinho E o organizador também
+  // tem um recebedor Pagar.me próprio (ver decidirRota() em
+  // api/pedidos/route.ts) -- num evento de instituição única (Quiosque
+  // DO_EVENTO, ex.: Festa Confraternização Terezinha) o organizador já é
+  // quem recebe o valor inteiro, então esse campo fica sem efeito ali.
+  // Editável só pelo admin em /admin/eventos/[eventoId], mesmo padrão do
+  // campo acima.
+  comissaoOrganizadorPercentual Decimal @default(0) @map("comissao_organizador_percentual") @db.Decimal(5, 2)
   nome              String
   local             String
   data              DateTime
