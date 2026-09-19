@@ -66,11 +66,11 @@ export function IconeCathan({ tamanho = 36 }: { tamanho?: number }) {
 
 // Assinatura discreta pras telas do cliente ("pedidos por cathan"): o cliente vê
 // primeiro a marca do restaurante/evento, a Cathan aparece só como selo.
-export function SeloCathan({ largura = 76 }: { largura?: number }) {
+export function SeloCathan({ largura = 76, escuro = false }: { largura?: number; escuro?: boolean }) {
   return (
-    <div className="selo-cathan">
+    <div className={escuro ? "selo-cathan escuro" : "selo-cathan"}>
       <span>pedidos por</span>
-      <MarcaCathan variante="mono" largura={largura} />
+      <MarcaCathan variante={escuro ? "negativa" : "mono"} largura={largura} />
     </div>
   );
 }

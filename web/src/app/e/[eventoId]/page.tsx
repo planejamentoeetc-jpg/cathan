@@ -155,7 +155,7 @@ export default async function PracaDoEvento({
           <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
         )}
 
-        <SeloCathan />
+        <SeloCathan escuro={Boolean(evento.imagemFundoUrl)} />
         <BarraCarrinho eventoId={evento.id} />
       </div>
     </main>

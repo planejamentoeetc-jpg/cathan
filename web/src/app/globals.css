@@ -1177,3 +1177,8 @@ input[type="password"]::-ms-clear {
   color: var(--cinza);
   opacity: 0.85;
 }
+
+.selo-cathan.escuro {
+  color: #fff;
+  opacity: 1;
+}
