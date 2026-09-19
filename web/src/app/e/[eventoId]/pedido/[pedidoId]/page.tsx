@@ -7,6 +7,7 @@ import { STATUS_LABEL } from "@/lib/statusSubPedido";
 import { adicionarPedidoLocal } from "@/lib/meusPedidos";
 import { ItemPager, PagerPronto } from "@/components/PagerPronto";
 import { StatusPedidoStepper } from "@/components/StatusPedidoStepper";
+import { SeloCathan } from "@/components/MarcaCathan";
 
 type SubPedido = {
   id: string;
@@ -368,6 +369,7 @@ export default function Acompanhamento() {
       <Link href={`/e/${eventoId}`} className="btn btn-secundario btn-bloco" style={{ marginTop: 14 }}>
         ‹ Voltar à praça do evento
       </Link>
+      <SeloCathan />
     </main>
   );
 }

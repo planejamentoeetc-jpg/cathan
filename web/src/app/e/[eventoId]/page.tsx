@@ -6,6 +6,7 @@ import { calcularEsperaEstimadaMinutos, formatarEspera } from "@/lib/esperaEstim
 import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { MeusPedidosBanner } from "@/components/MeusPedidosBanner";
+import { SeloCathan } from "@/components/MarcaCathan";
 
 export default async function PracaDoEvento({
   params,
@@ -154,6 +155,7 @@ export default async function PracaDoEvento({
           <p className="texto-fraco">Nenhum quiosque cadastrado neste evento ainda.</p>
         )}
 
+        <SeloCathan />
         <BarraCarrinho eventoId={evento.id} />
       </div>
     </main>

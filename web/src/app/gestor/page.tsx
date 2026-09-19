@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { obterOrganizadorId } from "@/lib/organizadorAtual";
 import { BotaoSairGestor } from "@/components/BotaoSairGestor";
+import { MarcaCathan } from "@/components/MarcaCathan";
 
 // sem chamada a cookies()/headers(), o Next marcaria esta página como estática
 // (prerendered no build) — o que congelaria a lista de eventos na foto do último
@@ -32,7 +33,7 @@ export default async function PainelGestor() {
           alignItems: "center",
         }}
       >
-        <span>Meus eventos</span>
+        <MarcaCathan variante="negativa" largura={96} />
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <Link href="/gestor/conexoes" style={{ fontSize: 12.5, color: "#BFD4DA" }}>
             Conexões

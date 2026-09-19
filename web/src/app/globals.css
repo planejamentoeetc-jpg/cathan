@@ -1,15 +1,15 @@
 :root {
-  --verde: #1e8e5a;
-  --verde-vivo: #23a76b;
-  --verde-suave: #e3f2ea;
-  --petroleo: #16333d;
-  --petroleo-2: #1f4e5f;
+  --verde: #24893f; /* derivado do Verde Sorriso, escurecido pra contraste em texto/botão */
+  --verde-vivo: #4cc15a; /* Verde Sorriso oficial */
+  --verde-suave: #e6f5e8;
+  --petroleo: #0d3b34; /* Verde Cathan oficial */
+  --petroleo-2: #17564c;
   --pipoca: #ffb94a;
   --pipoca-suave: #fff1d9;
   --festa: #ff7a45;
   --festa-suave: #ffe7dc;
-  --neve: #f5f8f6;
-  --grafite: #142228;
+  --neve: #f2f2f2; /* Cinza Claro oficial */
+  --grafite: #1d1d1f; /* Grafite oficial */
   --cinza: #5c6b70;
   --linha: #e2e9e6;
 }
@@ -1140,4 +1140,40 @@ input[type="password"]::-ms-clear {
   font-family: inherit;
   background: transparent;
   color: var(--grafite);
+}
+
+/* ---- identidade Cathan (guideline) ---- */
+.marca-topo {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 18px;
+}
+
+.topo-marca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topo-marca small {
+  font-family: var(--font-manrope);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
+.selo-cathan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 28px auto 88px;
+  font-family: var(--font-manrope);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cinza);
+  opacity: 0.85;
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { agruparPorQuiosque, atualizarQuantidade, calcularTotal, useCarrinho } from "@/lib/cart";
+import { SeloCathan } from "@/components/MarcaCathan";
 
 function formatarReais(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -103,6 +104,7 @@ export default function Carrinho() {
           </button>
         </div>
       )}
+      <SeloCathan />
     </main>
   );
 }

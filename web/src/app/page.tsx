@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BuscaEventos } from "@/components/BuscaEventos";
+import { MarcaCathan, SeloCathan } from "@/components/MarcaCathan";
 
 // duração estimada de um evento pra fins de "em andamento" — o cadastro só
 // tem hora de início, sem hora de fim; ver pergunta ao usuário sobre isso.
@@ -28,11 +29,13 @@ export default async function Home() {
 
   return (
     <main className="tela">
-      <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
-        Cathan — Encontre seu evento
+      <div className="topo topo-marca" style={{ borderRadius: 18, marginBottom: 16 }}>
+        <MarcaCathan variante="negativa" largura={110} />
+        <small>Encontre seu evento</small>
       </div>
 
       <BuscaEventos eventos={eventosComStatus} />
+      <SeloCathan />
     </main>
   );
 }

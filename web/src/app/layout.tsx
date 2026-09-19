@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Manrope, Sora } from "next/font/google";
+import { IBM_Plex_Mono, Manrope, Poppins } from "next/font/google";
 import "./globals.css";
 
-const sora = Sora({ subsets: ["latin"], weight: ["600", "700", "800"], variable: "--font-sora" });
+// Poppins é a tipografia oficial da marca (guideline) -- mantém o nome da
+// variável CSS antiga (--font-sora) pra não ter que mexer em cada tela.
+const sora = Poppins({ subsets: ["latin"], weight: ["600", "700", "800"], variable: "--font-sora" });
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -11,8 +13,18 @@ const manrope = Manrope({
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Cathan",
-  description: "O balcão digital do seu evento",
+  metadataBase: new URL(process.env.APP_URL ?? "https://app.cathan.com.br"),
+  title: { default: "cathan", template: "%s | cathan" },
+  description: "Viva o momento. Nós cuidamos do resto. O balcão digital do seu evento.",
+  applicationName: "cathan",
+  appleWebApp: { capable: true, title: "cathan", statusBarStyle: "default" },
+  openGraph: {
+    siteName: "cathan",
+    title: "cathan",
+    description: "Viva o momento. Nós cuidamos do resto.",
+    locale: "pt_BR",
+    type: "website",
+  },
 };
 
 // sem isso, o Next só injeta o viewport padrão (sem travar o zoom) — no celular,
@@ -27,6 +39,7 @@ export const metadata: Metadata = {
 // compensar — sem isso (ainda não implementado), o topo da tela fica
 // escondido atrás da barra de status, parecendo "sem navegabilidade".
 export const viewport: Viewport = {
+  themeColor: "#0D3B34",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

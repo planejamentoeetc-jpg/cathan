@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { CampoSenha } from "@/components/CampoSenha";
+import { MarcaCathan } from "@/components/MarcaCathan";
 
 export default function EntrarGestor() {
   return (
@@ -46,8 +47,9 @@ function EntrarGestorConteudo() {
 
   return (
     <main className="tela">
-      <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
-        Painel do gestor
+      <div className="topo topo-marca" style={{ borderRadius: 18, marginBottom: 16 }}>
+        <MarcaCathan variante="negativa" largura={104} />
+        <small>Painel do gestor</small>
       </div>
 
       <div className="cartao">

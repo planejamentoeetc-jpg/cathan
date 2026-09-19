@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/CheckoutForm";
+import { SeloCathan } from "@/components/MarcaCathan";
 
 export default async function Checkout({ params }: { params: { eventoId: string } }) {
   const evento = await prisma.evento.findUnique({
@@ -36,6 +37,7 @@ export default async function Checkout({ params }: { params: { eventoId: string 
         exigeLocalizacao={evento.raioPedidosMetros !== null}
         pedidosPausados={evento.pedidosPausados}
       />
+      <SeloCathan />
     </main>
   );
 }

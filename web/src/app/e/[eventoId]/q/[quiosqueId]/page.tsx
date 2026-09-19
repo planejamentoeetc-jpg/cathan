@@ -6,6 +6,7 @@ import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
 import { AbasQuiosques } from "@/components/AbasQuiosques";
 import { DicaLoja } from "@/components/DicaLoja";
+import { SeloCathan } from "@/components/MarcaCathan";
 
 export default async function LojaDoQuiosque({
   params,
@@ -110,6 +111,7 @@ export default async function LojaDoQuiosque({
           }}
         />
 
+        <SeloCathan />
         <BarraCarrinho eventoId={params.eventoId} />
       </div>
     </main>

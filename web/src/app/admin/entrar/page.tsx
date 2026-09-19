@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { CampoSenha } from "@/components/CampoSenha";
+import { MarcaCathan } from "@/components/MarcaCathan";
 
 export default function EntrarAdmin() {
   return (
@@ -45,8 +46,9 @@ function EntrarAdminConteudo() {
 
   return (
     <main className="tela">
-      <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
-        Console Cathan
+      <div className="topo topo-marca" style={{ borderRadius: 18, marginBottom: 16 }}>
+        <MarcaCathan variante="negativa" largura={104} />
+        <small>Console Cathan</small>
       </div>
 
       <div className="cartao">
