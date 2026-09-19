@@ -40,7 +40,7 @@ export function MarcaCathan({
         strokeWidth={CATHAN_ARREDONDAMENTO}
         strokeLinejoin="round"
       />
-      <path d={CATHAN_SORRISO_PATH} fill="none" stroke={sorriso} strokeWidth={82} strokeLinecap="round" />
+      <path d={CATHAN_SORRISO_PATH} fill="none" stroke={sorriso} strokeWidth={104} strokeLinecap="round" />
     </svg>
   );
 }

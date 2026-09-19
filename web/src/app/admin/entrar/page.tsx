@@ -47,7 +47,7 @@ function EntrarAdminConteudo() {
   return (
     <main className="tela">
       <div className="topo topo-marca" style={{ borderRadius: 18, marginBottom: 16 }}>
-        <MarcaCathan variante="negativa" largura={104} />
+        <MarcaCathan variante="negativa" largura={126} />
         <small>Console Cathan</small>
       </div>
 

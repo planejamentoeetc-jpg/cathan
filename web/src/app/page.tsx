@@ -35,7 +35,7 @@ export default async function Home() {
   return (
     <main className="tela">
       <div className="topo topo-marca" style={{ borderRadius: 18, marginBottom: 16 }}>
-        <MarcaCathan variante="negativa" largura={110} />
+        <MarcaCathan variante="negativa" largura={130} />
         <small>Encontre seu evento</small>
       </div>
 

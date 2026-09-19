@@ -33,7 +33,7 @@ export default async function PainelGestor() {
           alignItems: "center",
         }}
       >
-        <MarcaCathan variante="negativa" largura={96} />
+        <MarcaCathan variante="negativa" largura={116} />
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <Link href="/gestor/conexoes" style={{ fontSize: 12.5, color: "#BFD4DA" }}>
             Conexões
