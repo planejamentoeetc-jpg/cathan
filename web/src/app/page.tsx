@@ -12,7 +12,12 @@ const JANELA_EM_ANDAMENTO_HORAS = 6;
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const eventos = await prisma.evento.findMany({ orderBy: { data: "desc" } });
+  // evento de demonstração não entra na lista pública -- só quem recebe o
+  // link direto (ex.: organizador avaliando o produto) enxerga
+  const eventos = await prisma.evento.findMany({
+    where: { modoDemonstracao: false },
+    orderBy: { data: "desc" },
+  });
 
   const agora = Date.now();
   const janelaMs = JANELA_EM_ANDAMENTO_HORAS * 60 * 60 * 1000;
