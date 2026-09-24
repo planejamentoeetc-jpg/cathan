@@ -158,6 +158,11 @@ model Evento {
   // confirma o pedido na hora, sem Pix nem provedor de pagamento, e os
   // quiosques aparecem pro cliente mesmo sem recebedor conectado.
   modoDemonstracao  Boolean  @default(false) @map("modo_demonstracao")
+  // controla se o evento aparece na lista pública de descoberta (a home "/",
+  // pra onde aponta o QR code genérico de banner/divulgação) -- eventos
+  // antigos, duplicados ou de teste ficam cadastrados mas fora dessa lista.
+  // Não afeta o link direto do evento (/e/[eventoId]), que sempre funciona.
+  visivelNaLista    Boolean  @default(true) @map("visivel_na_lista")
   criadoEm          DateTime @default(now()) @map("criado_em")
   atualizadoEm      DateTime @updatedAt @map("atualizado_em")
 

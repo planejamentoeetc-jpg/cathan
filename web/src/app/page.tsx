@@ -12,10 +12,13 @@ const JANELA_EM_ANDAMENTO_HORAS = 6;
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  // evento de demonstração não entra na lista pública -- só quem recebe o
-  // link direto (ex.: organizador avaliando o produto) enxerga
+  // evento de demonstração, ou marcado como oculto no Console Cathan
+  // (/admin), não entra na lista pública -- só quem recebe o link direto
+  // (ex.: organizador avaliando o produto, ou o QR code do próprio evento)
+  // enxerga. Não é segurança de verdade (o link direto sempre funciona),
+  // é só pra não poluir a lista de descoberta com evento antigo/duplicado.
   const eventos = await prisma.evento.findMany({
-    where: { modoDemonstracao: false },
+    where: { modoDemonstracao: false, visivelNaLista: true },
     orderBy: { data: "desc" },
   });
 

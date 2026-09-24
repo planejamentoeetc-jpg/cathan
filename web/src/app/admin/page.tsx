@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { BotaoSairAdmin } from "@/components/BotaoSairAdmin";
+import { ToggleVisibilidadeEvento } from "@/components/ToggleVisibilidadeEvento";
 
 // mesmo motivo do /gestor: sem isso, o Next prerenderia esta lista estática no
 // build e congelaria a foto do último deploy, ignorando eventos criados/excluídos depois.
@@ -38,7 +39,9 @@ export default async function ConsoleCathan() {
       </div>
 
       <p className="texto-fraco" style={{ marginBottom: 16 }}>
-        Visão da equipe Cathan sobre todos os eventos da plataforma.
+        Visão da equipe Cathan sobre todos os eventos da plataforma. O selo ao lado de cada evento
+        controla se ele aparece na lista pública de descoberta (pra onde aponta o QR code genérico
+        de banner) — não afeta o link direto do evento, que continua funcionando sempre.
       </p>
 
       <div className="lista">
@@ -54,6 +57,7 @@ export default async function ConsoleCathan() {
                 {evento._count.pedidos} {evento._count.pedidos === 1 ? "pedido" : "pedidos"}
               </span>
             </div>
+            <ToggleVisibilidadeEvento eventoId={evento.id} visivelInicial={evento.visivelNaLista} />
             <div className="seta">›</div>
           </Link>
         ))}
