@@ -112,6 +112,22 @@ async function escrever(conexao: ConexaoImpressora, bytes: Uint8Array) {
   }
 }
 
+// A maioria das térmicas ESC/POS baratas só entende um code page de 1 byte
+// (CP437/CP850 ou uma tabela própria do fabricante) e não decodifica UTF-8 --
+// acento e "×" saem como caractere errado ou lixo no papel. Em vez de acertar
+// o code page exato de cada impressora (comando ESC/POS diferente por
+// fabricante), tira os acentos e troca símbolos comuns por equivalente ASCII
+// puro, que qualquer térmica imprime certo.
+function paraAsciiImpressora(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // remove os acentos (ficam como marca separada depois do NFD)
+    .replace(/×/g, "x")
+    .replace(/[""]/g, '"')
+    .replace(/['']/g, "'")
+    .replace(/–|—/g, "-");
+}
+
 export type VendaParaImprimir = {
   eventoNome: string;
   eventoLocal: string;
@@ -126,9 +142,11 @@ export async function imprimirRecibo(conexao: ConexaoImpressora, venda: VendaPar
 
   partes.push(
     ...enc.encode(
-      `CATHAN\n${venda.eventoNome} - ${venda.eventoLocal}\n${venda.clienteNome} - ${new Date(
-        venda.criadoEm
-      ).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}\n`
+      paraAsciiImpressora(
+        `CATHAN\n${venda.eventoNome} - ${venda.eventoLocal}\n${venda.clienteNome} - ${new Date(
+          venda.criadoEm
+        ).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}\n`
+      )
     )
   );
 
@@ -142,15 +160,17 @@ export async function imprimirRecibo(conexao: ConexaoImpressora, venda: VendaPar
       0x1d,
       0x21,
       0x00, // fonte normal
-      ...enc.encode(`Retirada: ${sp.quiosqueNome}\n${sp.itens.join("\n")}\n`)
+      ...enc.encode(paraAsciiImpressora(`Retirada: ${sp.quiosqueNome}\n${sp.itens.join("\n")}\n`))
     );
   }
 
   partes.push(
     ...enc.encode(
-      `--------------------------\nPago em dinheiro - Caixa\n${
-        venda.subPedidos.length > 1 ? "Uma retirada por código\n" : ""
-      }Acompanhe seus codigos na Tela de Pedidos\n\n\n`
+      paraAsciiImpressora(
+        `--------------------------\nPago em dinheiro - Caixa\n${
+          venda.subPedidos.length > 1 ? "Uma retirada por codigo\n" : ""
+        }Acompanhe seus codigos na Tela de Pedidos\n\n\n`
+      )
     ),
     0x1d,
     0x56,
