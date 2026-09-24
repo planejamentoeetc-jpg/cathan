@@ -81,9 +81,13 @@ export function CaixaVenda({
   const carregarVendas = useCallback(async () => {
     try {
       const resposta = await fetch(apiUrlVendas, { cache: "no-store" });
-      if (resposta.ok) setVendas(await resposta.json());
+      if (!resposta.ok) return null;
+      const lista: VendaHistorico[] = await resposta.json();
+      setVendas(lista);
+      return lista;
     } catch {
       // silencioso — a lista atualiza de novo no próximo ciclo de polling
+      return null;
     }
   }, [apiUrlVendas]);
 
@@ -194,7 +198,15 @@ export function CaixaVenda({
       setUltimaVenda(dados.subPedidos.map((sp: { codigoRetirada: string }) => sp.codigoRetirada));
       setCarrinho([]);
       setNome("");
-      carregarVendas();
+
+      const listaAtualizada = await carregarVendas();
+      // impressora já conectada -- imprime na hora, sem precisar tocar no
+      // botão "Imprimir recibo" (que continua disponível pra reimprimir ou
+      // pra quem conectou a impressora só depois da venda)
+      if (conexaoImpressora) {
+        const vendaRecemCriada = listaAtualizada?.find((v) => v.id === dados.pedidoId);
+        if (vendaRecemCriada) await imprimir(vendaRecemCriada);
+      }
     } catch {
       setErro("Erro inesperado ao registrar a venda.");
     } finally {
