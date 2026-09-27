@@ -53,11 +53,15 @@ export async function GET(_req: NextRequest, { params }: { params: { pedidoId: s
   return NextResponse.json({
     id: pedido.id,
     criadoEm: pedido.criadoEm,
+    tipoEntrega: pedido.tipoEntrega,
+    enderecoEntrega: pedido.enderecoEntrega,
+    telefoneEntrega: pedido.telefoneEntrega,
     subPedidos: pedido.subPedidos.map((sp) => ({
       id: sp.id,
       status: sp.status,
       codigoRetirada: sp.codigoRetirada,
       rodada: sp.rodada,
+      observacaoCliente: sp.observacaoCliente,
       quiosque: sp.quiosque,
       vocEProximo:
         STATUS_EM_ESPERA.includes(sp.status) && frenteDaFilaPorQuiosque.get(sp.quiosqueId) === sp.id,

@@ -19,7 +19,11 @@ export async function GET(req: NextRequest, { params }: { params: { quiosqueId: 
     where: { quiosqueId: params.quiosqueId, status: { in: STATUS_ATIVOS } },
     orderBy: { criadoEm: "asc" },
     include: {
-      pedido: { include: { cliente: { select: { nome: true } } } },
+      pedido: {
+        include: {
+          cliente: { select: { nome: true } },
+        },
+      },
       itens: { include: { produto: { select: { nome: true, tempoProducaoMinutos: true } } } },
     },
   });
@@ -45,6 +49,9 @@ export async function GET(req: NextRequest, { params }: { params: { quiosqueId: 
           criadoEm: sp.criadoEm,
           clienteNome: sp.pedido.cliente.nome,
           clienteACaminho: sp.clienteACaminhoEm !== null,
+          tipoEntrega: sp.pedido.tipoEntrega,
+          enderecoEntrega: sp.pedido.enderecoEntrega,
+          telefoneEntrega: sp.pedido.telefoneEntrega,
           nomesCriancas,
           duracaoMinutos,
           inicioAproveitamentoEm: sp.inicioAproveitamentoEm,

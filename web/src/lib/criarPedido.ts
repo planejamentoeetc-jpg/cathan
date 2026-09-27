@@ -1,4 +1,4 @@
-import { FormaPagamento, ModalidadeQuiosque, StatusSubPedido } from "@prisma/client";
+import { FormaPagamento, ModalidadeQuiosque, StatusSubPedido, TipoEntrega } from "@prisma/client";
 import { criarSubPedidoComCodigoUnico } from "@/lib/codigoRetirada";
 import { prisma, transacaoComRetry } from "@/lib/prisma";
 
@@ -38,6 +38,9 @@ export async function criarPedidoAPartirDeItensValidados(params: {
   // O checkout do cliente (Pix) continua agrupando por quiosque como sempre
   // (default false) -- não foi pedido mudar esse fluxo.
   umTicketPorProduto?: boolean;
+  tipoEntrega?: TipoEntrega;
+  enderecoEntrega?: string;
+  telefoneEntrega?: string;
 }) {
   const {
     eventoId,
@@ -47,6 +50,9 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     formaPagamento = FormaPagamento.MERCADO_PAGO,
     liberarProducaoAutomaticamente = false,
     umTicketPorProduto = false,
+    tipoEntrega = TipoEntrega.RETIRADA,
+    enderecoEntrega,
+    telefoneEntrega,
   } = params;
 
   const produtoIds = [...new Set(itens.map((i) => i.produtoId))];
@@ -104,7 +110,7 @@ export async function criarPedidoAPartirDeItensValidados(params: {
     });
 
     const pedido = await tx.pedido.create({
-      data: { eventoId, clienteId: cliente.id, formaPagamento },
+      data: { eventoId, clienteId: cliente.id, formaPagamento, tipoEntrega, enderecoEntrega, telefoneEntrega },
     });
 
     const subPedidosCriados = [];

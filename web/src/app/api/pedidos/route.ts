@@ -1,4 +1,4 @@
-import { FormaPagamento, Prisma } from "@prisma/client";
+import { FormaPagamento, Prisma, TipoEntrega } from "@prisma/client";
 import { PedidoInvalidoError, criarPedidoAPartirDeItensValidados } from "@/lib/criarPedido";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,6 +27,11 @@ type CorpoRequisicao = {
   latitude?: number;
   longitude?: number;
   itens: ItemRequisicao[];
+  // "ENTREGA" só é aceito se pelo menos um quiosque do carrinho tiver
+  // entregaHabilitada -- ver validação logo após quiosquesEnvolvidos
+  tipoEntrega?: "RETIRADA" | "ENTREGA";
+  enderecoEntrega?: string;
+  telefoneEntrega?: string;
 };
 
 type RotaPagamento =
@@ -140,6 +145,28 @@ export async function POST(req: NextRequest) {
 
   const quiosquesEnvolvidos = new Map(produtos.map((p) => [p.quiosque.id, p.quiosque]));
 
+  // Entrega só é aceita se ALGUM quiosque do carrinho oferece -- quem não
+  // habilitou continua sendo retirado no balcão mesmo num carrinho misto
+  // (ver criarPedido.ts, que agrupa por quiosque de qualquer forma).
+  const tipoEntrega: TipoEntrega = corpo.tipoEntrega === "ENTREGA" ? "ENTREGA" : "RETIRADA";
+  if (tipoEntrega === "ENTREGA") {
+    const algumaEntregaDisponivel = [...quiosquesEnvolvidos.values()].some((q) => q.entregaHabilitada);
+    if (!algumaEntregaDisponivel) {
+      return NextResponse.json(
+        { erro: "Nenhum estabelecimento deste carrinho oferece entrega." },
+        { status: 400 }
+      );
+    }
+    if (!corpo.enderecoEntrega?.trim() || !corpo.telefoneEntrega?.trim()) {
+      return NextResponse.json(
+        { erro: "Informe o local de entrega e um telefone de contato." },
+        { status: 400 }
+      );
+    }
+  }
+  const enderecoEntrega = tipoEntrega === "ENTREGA" ? corpo.enderecoEntrega!.trim() : undefined;
+  const telefoneEntrega = tipoEntrega === "ENTREGA" ? corpo.telefoneEntrega!.trim() : undefined;
+
   // Restaurante independente que só tem o Mercado Pago próprio conectado
   // (ainda não migrou pro Pagar.me) só pode receber sozinho -- o MP não
   // divide 1 cobrança entre contas diferentes no modelo self-service. Quem já
@@ -195,6 +222,9 @@ export async function POST(req: NextRequest) {
           clienteNome: corpo.clienteNome.trim(),
           clienteCelular: corpo.clienteCelular.trim(),
           itens: itensValidados as unknown as Prisma.InputJsonValue,
+          tipoEntrega,
+          enderecoEntrega,
+          telefoneEntrega,
         },
       });
       const resultado = await criarPedidoAPartirDeItensValidados({
@@ -203,6 +233,9 @@ export async function POST(req: NextRequest) {
         clienteCelular: corpo.clienteCelular.trim(),
         itens: itensValidados,
         formaPagamento: FormaPagamento.DEMONSTRACAO,
+        tipoEntrega,
+        enderecoEntrega,
+        telefoneEntrega,
       });
       await prisma.pedidoPendente.update({
         where: { id: pendente.id },
@@ -383,6 +416,9 @@ export async function POST(req: NextRequest) {
         clienteNome: corpo.clienteNome.trim(),
         clienteCelular: corpo.clienteCelular.trim(),
         itens: itensValidados as unknown as Prisma.InputJsonValue,
+        tipoEntrega,
+        enderecoEntrega,
+        telefoneEntrega,
       },
     });
 

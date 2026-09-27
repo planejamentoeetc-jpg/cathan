@@ -27,6 +27,9 @@ type SubPedidoFila = {
   rodada: number;
   clienteNome: string;
   clienteACaminho: boolean;
+  tipoEntrega: "RETIRADA" | "ENTREGA";
+  enderecoEntrega: string | null;
+  telefoneEntrega: string | null;
   nomesCriancas: string[];
   duracaoMinutos: number;
   inicioAproveitamentoEm: string | null;
@@ -231,6 +234,11 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
           <div className="lista">
             {dados?.pedidos.map((sp) => {
               const acao = mapaAcoes[sp.status];
+              const entrega = sp.tipoEntrega === "ENTREGA";
+              // entrega não tem "código conferido no balcão" -- quem fecha de
+              // verdade é o próprio cliente (confirmar-entrega), este botão
+              // aqui é só um jeito manual de fechar caso ele não confirme
+              const rotuloAcao = entrega && acao?.rota === "entregar" ? "Marcar como entregue" : acao?.rotulo;
               const destaque = sp.status === "PRONTO" || sp.status === "CHAMADO";
               const nomeExibido = ehBrincadeiras
                 ? sp.nomesCriancas[0] ?? sp.clienteNome
@@ -249,6 +257,13 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
                       {ROTULO_STATUS[sp.status]}
                     </span>
                   </div>
+
+                  {entrega && (
+                    <div className="aviso" style={{ marginTop: 8, fontSize: 12.5 }}>
+                      🛵 Entregar em: {sp.enderecoEntrega}
+                      {sp.telefoneEntrega && <> · {sp.telefoneEntrega}</>}
+                    </div>
+                  )}
 
                   {sp.clienteACaminho && (sp.status === "PRONTO" || sp.status === "CHAMADO") && (
                     <div style={{ marginTop: 8 }}>
@@ -302,7 +317,7 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
                       disabled={acaoEmAndamento === sp.id}
                       onClick={() => executarAcao(sp.id, acao.rota)}
                     >
-                      {acaoEmAndamento === sp.id ? "Atualizando…" : acao.rotulo}
+                      {acaoEmAndamento === sp.id ? "Atualizando…" : rotuloAcao}
                     </button>
                   )}
                 </div>

@@ -108,6 +108,7 @@ export default async function LojaDoQuiosque({
             // não pode se misturar com outro restaurante no mesmo carrinho —
             // quem já tem recebedor Pagar.me entra no split N:1 normalmente
             recebeDireto: Boolean(quiosque.mpAccessTokenCifrado) && !quiosque.pagarmeRecipientId,
+            entregaHabilitada: quiosque.entregaHabilitada,
           }}
         />
 

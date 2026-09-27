@@ -132,6 +132,9 @@ export async function POST(req: NextRequest) {
       clienteNome: pedidoPendente.clienteNome,
       clienteCelular: pedidoPendente.clienteCelular,
       itens: itensValidos,
+      tipoEntrega: pedidoPendente.tipoEntrega,
+      enderecoEntrega: pedidoPendente.enderecoEntrega ?? undefined,
+      telefoneEntrega: pedidoPendente.telefoneEntrega ?? undefined,
     });
 
     await prisma.pedidoPendente.update({

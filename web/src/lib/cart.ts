@@ -18,6 +18,9 @@ export type ItemCarrinho = {
   // quiosque com outro. Quem já tem recebedor Pagar.me pode se misturar
   // normalmente (é o split N:1 que o Pagar.me resolve).
   quiosqueRecebeDireto: boolean;
+  // true quando este quiosque oferece entrega no local do cliente, além de
+  // retirar no balcão (ver Quiosque.entregaHabilitada)
+  quiosqueEntregaHabilitada: boolean;
 };
 
 const EVENTO_ATUALIZACAO = "cathan:carrinho-atualizado";

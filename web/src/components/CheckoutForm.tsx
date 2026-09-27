@@ -48,11 +48,17 @@ export function CheckoutForm({
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
   const total = calcularTotal(itens);
+  // só oferece a escolha se pelo menos um quiosque do carrinho aceitar entrega
+  // -- ver Quiosque.entregaHabilitada
+  const algumaEntregaDisponivel = itens.some((i) => i.quiosqueEntregaHabilitada);
 
   const clienteSalvo = lerClienteLocal();
   const [nome, setNome] = useState(clienteSalvo?.nome ?? "");
   const [celular, setCelular] = useState(clienteSalvo?.celular ?? "");
   const [cpf, setCpf] = useState(clienteSalvo?.cpf ?? "");
+  const [tipoEntrega, setTipoEntrega] = useState<"RETIRADA" | "ENTREGA">("RETIRADA");
+  const [enderecoEntrega, setEnderecoEntrega] = useState("");
+  const [telefoneEntrega, setTelefoneEntrega] = useState("");
   // um nome por unidade, por produto (índice 0..quantidade-1)
   const [nomesCriancasPorProduto, setNomesCriancasPorProduto] = useState<Record<string, string[]>>({});
   const [enviando, setEnviando] = useState(false);
@@ -183,6 +189,11 @@ export function CheckoutForm({
       setErro("Seu carrinho está vazio.");
       return;
     }
+    const entregaEscolhida = algumaEntregaDisponivel && tipoEntrega === "ENTREGA";
+    if (entregaEscolhida && (!enderecoEntrega.trim() || !telefoneEntrega.trim())) {
+      setErro("Descreva o local de entrega e informe um telefone de contato.");
+      return;
+    }
 
     setEnviando(true);
     try {
@@ -201,6 +212,9 @@ export function CheckoutForm({
           clienteCpf: cpf.trim(),
           latitude: localizacao?.latitude,
           longitude: localizacao?.longitude,
+          tipoEntrega: entregaEscolhida ? "ENTREGA" : "RETIRADA",
+          enderecoEntrega: entregaEscolhida ? enderecoEntrega.trim() : undefined,
+          telefoneEntrega: entregaEscolhida ? telefoneEntrega.trim() : undefined,
           itens: itens.map((i) => ({
             produtoId: i.produtoId,
             quantidade: i.quantidade,
@@ -470,6 +484,61 @@ export function CheckoutForm({
           />
         </div>
         )}
+
+        {algumaEntregaDisponivel && (
+          <div className="campo">
+            <label>Como você quer receber?</label>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              <button
+                type="button"
+                className={tipoEntrega === "RETIRADA" ? "btn btn-primario" : "btn btn-secundario"}
+                style={{ flex: 1 }}
+                onClick={() => setTipoEntrega("RETIRADA")}
+              >
+                Retirar no balcão
+              </button>
+              <button
+                type="button"
+                className={tipoEntrega === "ENTREGA" ? "btn btn-primario" : "btn btn-secundario"}
+                style={{ flex: 1 }}
+                onClick={() => setTipoEntrega("ENTREGA")}
+              >
+                🛵 Receber no meu local
+              </button>
+            </div>
+
+            {tipoEntrega === "ENTREGA" && (
+              <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                <textarea
+                  value={enderecoEntrega}
+                  onChange={(e) => setEnderecoEntrega(e.target.value)}
+                  placeholder="Descreva o local de entrega (ex.: mesa 12, arquibancada perto do palco...)"
+                  rows={2}
+                  style={{
+                    border: "1.5px solid var(--linha)",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    fontSize: 13,
+                    resize: "none",
+                  }}
+                />
+                <input
+                  type="tel"
+                  value={telefoneEntrega}
+                  onChange={(e) => setTelefoneEntrega(e.target.value)}
+                  placeholder="Telefone de contato"
+                  style={{
+                    border: "1.5px solid var(--linha)",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
         {exigeLocalizacao && (
           <p className="texto-fraco" style={{ marginBottom: 10 }}>
             Este evento exige que você esteja dentro do raio de pedidos. Vamos pedir sua

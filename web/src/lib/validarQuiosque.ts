@@ -6,6 +6,7 @@ export type CamposQuiosque = {
   tipo?: TipoQuiosque;
   cnpj?: string;
   chavePix?: string;
+  entregaHabilitada?: boolean;
 };
 
 export type QuiosqueValidado = {
@@ -14,6 +15,7 @@ export type QuiosqueValidado = {
   tipo: TipoQuiosque;
   cnpj: string | null;
   chavePix: string | null;
+  entregaHabilitada: boolean;
 };
 
 export function validarCamposQuiosque(
@@ -45,6 +47,7 @@ export function validarCamposQuiosque(
       tipo,
       cnpj: tipo === TipoQuiosque.INDEPENDENTE ? cnpj : null,
       chavePix: tipo === TipoQuiosque.INDEPENDENTE ? chavePix : null,
+      entregaHabilitada: Boolean(corpo.entregaHabilitada),
     },
   };
 }

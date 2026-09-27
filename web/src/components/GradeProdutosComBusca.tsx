@@ -20,6 +20,7 @@ type QuiosqueResumo = {
   cor: string;
   modalidade: ModalidadeQuiosque;
   recebeDireto: boolean;
+  entregaHabilitada: boolean;
 };
 
 export function GradeProdutosComBusca({

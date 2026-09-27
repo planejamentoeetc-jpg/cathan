@@ -23,6 +23,7 @@ type SubPedido = {
     mensagemPronto: string | null;
   };
   vocEProximo: boolean;
+  observacaoCliente: string | null;
   itens: {
     id: string;
     nome: string;
@@ -37,6 +38,9 @@ type SubPedido = {
 type Pedido = {
   id: string;
   criadoEm: string;
+  tipoEntrega: "RETIRADA" | "ENTREGA";
+  enderecoEntrega: string | null;
+  telefoneEntrega: string | null;
   subPedidos: SubPedido[];
 };
 
@@ -187,24 +191,49 @@ export default function Acompanhamento() {
     fetch(`/api/sub-pedidos/${subPedidoId}/cliente-a-caminho`, { method: "POST" }).catch(() => {});
   }
 
+  // diferente de confirmarItem (só um aviso, informativo): isso realmente
+  // fecha o sub-pedido (PRONTO -> RETIRADO) no servidor, então o item some
+  // de subPedidosAtivos no próximo carregar() -- ver confirmar-entrega/route.ts
+  async function confirmarEntrega(subPedidoId: string, observacao: string) {
+    await fetch(`/api/sub-pedidos/${subPedidoId}/confirmar-entrega`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ observacao }),
+    }).catch(() => {});
+    await carregar();
+  }
+
+  const isEntrega = pedido?.tipoEntrega === "ENTREGA";
+
   const itensPager: ItemPager[] = prontos.map((sp) => ({
     id: sp.id,
     codigoRetirada: sp.codigoRetirada,
     quiosqueNome: sp.quiosque.nome,
     brincadeira: sp.quiosque.modalidade === "BRINCADEIRAS",
     mensagemPronto: sp.quiosque.mensagemPronto,
+    entrega: isEntrega,
     confirmado: confirmados.includes(sp.id),
   }));
 
   return (
     <main className="tela">
-      <PagerPronto itens={itensPager} onConfirmar={confirmarItem} />
+      <PagerPronto itens={itensPager} onConfirmar={confirmarItem} onConfirmarEntrega={confirmarEntrega} />
 
       <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>
         Acompanhar pedido
       </div>
 
       {erro && <div className="aviso">{erro}</div>}
+
+      {isEntrega && (
+        <div className="cartao" style={{ marginBottom: 12, fontSize: 13 }}>
+          <b style={{ fontFamily: "var(--font-sora)" }}>🛵 Entrega no seu local</b>
+          <div className="texto-fraco" style={{ marginTop: 4 }}>
+            {pedido?.enderecoEntrega}
+            {pedido?.telefoneEntrega && <> · {pedido.telefoneEntrega}</>}
+          </div>
+        </div>
+      )}
 
       <div className="lista">
         {pedido && subPedidosAtivos.length === 0 && (
@@ -232,6 +261,7 @@ export default function Acompanhamento() {
               mensagemPreparando={sp.quiosque.mensagemPreparando}
               mensagemPronto={sp.quiosque.mensagemPronto}
               aguardandoLiberacao={sp.itens.every((item) => item.quantidadeLiberada === 0)}
+              isEntrega={isEntrega}
             />
 
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>

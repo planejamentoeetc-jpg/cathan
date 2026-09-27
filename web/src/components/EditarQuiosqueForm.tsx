@@ -24,6 +24,7 @@ export function EditarQuiosqueForm({
   nomeInicial,
   modalidadeInicial,
   tipoInicial,
+  entregaHabilitadaInicial,
   dicaInicial,
   mensagemPreparandoInicial,
   mensagemProntoInicial,
@@ -35,6 +36,7 @@ export function EditarQuiosqueForm({
   nomeInicial: string;
   modalidadeInicial: ModalidadeQuiosque;
   tipoInicial: TipoQuiosque;
+  entregaHabilitadaInicial: boolean;
   dicaInicial: string;
   mensagemPreparandoInicial: string;
   mensagemProntoInicial: string;
@@ -45,6 +47,7 @@ export function EditarQuiosqueForm({
   const [nome, setNome] = useState(nomeInicial);
   const [modalidade, setModalidade] = useState<ModalidadeQuiosque>(modalidadeInicial);
   const [tipo, setTipo] = useState<TipoQuiosque>(tipoInicial);
+  const [entregaHabilitada, setEntregaHabilitada] = useState(entregaHabilitadaInicial);
   const [dica, setDica] = useState(dicaInicial);
   const [mensagemPreparando, setMensagemPreparando] = useState(mensagemPreparandoInicial);
   const [mensagemPronto, setMensagemPronto] = useState(mensagemProntoInicial);
@@ -70,6 +73,7 @@ export function EditarQuiosqueForm({
           nome: nome.trim(),
           modalidade,
           tipo,
+          entregaHabilitada,
           dica,
           mensagemPreparando,
           mensagemPronto,
@@ -119,6 +123,15 @@ export function EditarQuiosqueForm({
           <option value="INDEPENDENTE">🏢 Independente — empresa própria, recebe direto</option>
         </select>
       </div>
+
+      <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14, fontSize: 13.5 }}>
+        <input
+          type="checkbox"
+          checked={entregaHabilitada}
+          onChange={(e) => setEntregaHabilitada(e.target.checked)}
+        />
+        🛵 Oferece entrega ao cliente (além de retirar no balcão)
+      </label>
 
       <div className="campo">
         <label>Dica pros clientes (aparece na praça do evento e na loja do quiosque)</label>

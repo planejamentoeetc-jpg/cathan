@@ -47,6 +47,16 @@ enum FormaPagamento {
   DEMONSTRACAO
 }
 
+// RETIRADA = cliente busca no balcão (como sempre funcionou). ENTREGA = o
+// quiosque leva até o cliente -- só selecionável quando pelo menos um
+// quiosque do carrinho tem Quiosque.entregaHabilitada = true (ver
+// api/pedidos/route.ts). O status RETIRADO do SubPedido é reaproveitado pros
+// dois casos; a UI só troca o rótulo pra "Entregue" quando for entrega.
+enum TipoEntrega {
+  RETIRADA
+  ENTREGA
+}
+
 enum StatusPedidoPendente {
   PENDENTE
   CONFIRMADO
@@ -241,6 +251,10 @@ model Quiosque {
   // null = usa a % padrão do evento (evento.comissaoPercentual) -- só setado
   // quando o admin negocia uma taxa diferente pra este restaurante específico
   comissaoPercentual    Decimal? @map("comissao_percentual") @db.Decimal(5, 2)
+  // true = o cliente pode escolher receber o pedido no lugar dele em vez de
+  // retirar no balcão (ver TipoEntrega). Aparece como opção no checkout só
+  // quando pelo menos um quiosque do carrinho tem isso ligado.
+  entregaHabilitada  Boolean            @default(false) @map("entrega_habilitada")
   // conteúdo opcional que o próprio quiosque personaliza (cross-sell + mensagens de status)
   dica               String?            @map("dica")
   mensagemPreparando String?            @map("mensagem_preparando")
@@ -322,6 +336,12 @@ model PedidoPendente {
   // Pagar.me em vez do Mercado Pago (ver POST /api/pedidos e o webhook
   // /api/webhooks/pagar-me)
   pagarmeOrderId String?              @map("pagarme_order_id")
+  // escolha de entrega feita no checkout -- copiada pro Pedido quando o
+  // pagamento confirma (ver criarPedido.ts). enderecoEntrega/telefoneEntrega
+  // só vêm preenchidos quando tipoEntrega = ENTREGA.
+  tipoEntrega      TipoEntrega @default(RETIRADA) @map("tipo_entrega")
+  enderecoEntrega  String?     @map("endereco_entrega")
+  telefoneEntrega  String?     @map("telefone_entrega")
   // preenchido quando 1+ item precisou ser removido automaticamente (esgotado/
   // estoque insuficiente) pra ainda assim honrar o resto do pedido já pago, ou
   // quando nada pôde ser honrado (status=FALHOU) -- fica visível pro gestor/
@@ -346,6 +366,9 @@ model Pedido {
   clienteId      String         @map("cliente_id")
   cliente        Cliente        @relation(fields: [clienteId], references: [id], onDelete: Restrict)
   formaPagamento FormaPagamento @default(MERCADO_PAGO) @map("forma_pagamento")
+  tipoEntrega      TipoEntrega @default(RETIRADA) @map("tipo_entrega")
+  enderecoEntrega  String?     @map("endereco_entrega")
+  telefoneEntrega  String?     @map("telefone_entrega")
   criadoEm       DateTime       @default(now()) @map("criado_em")
 
   subPedidos     SubPedido[]
@@ -379,6 +402,11 @@ model SubPedido {
   retiradoPorUsuarioId String?   @map("retirado_por_usuario_id")
   retiradoPorUsuario   Usuario?  @relation("SubPedidosRetirados", fields: [retiradoPorUsuarioId], references: [id], onDelete: SetNull)
   retiradoEm           DateTime? @map("retirado_em")
+  // preenchido só na entrega (não na retirada no balcão): o próprio cliente
+  // confirma que recebeu, com uma observação opcional -- por isso
+  // retiradoPorUsuarioId fica null nesse caso (não foi um Usuario da equipe
+  // que fechou, foi o cliente pelo link do pedido)
+  observacaoCliente    String?   @map("observacao_cliente")
 
   // --- fluxo brincadeiras ---
   chamadoEm              DateTime? @map("chamado_em")

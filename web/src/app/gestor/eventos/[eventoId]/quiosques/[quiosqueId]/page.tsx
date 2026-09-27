@@ -78,6 +78,7 @@ export default async function QuiosqueGestor({
             nomeInicial={quiosque.nome}
             modalidadeInicial={quiosque.modalidade}
             tipoInicial={quiosque.tipo}
+            entregaHabilitadaInicial={quiosque.entregaHabilitada}
             dicaInicial={quiosque.dica ?? ""}
             mensagemPreparandoInicial={quiosque.mensagemPreparando ?? ""}
             mensagemProntoInicial={quiosque.mensagemPronto ?? ""}

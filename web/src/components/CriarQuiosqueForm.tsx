@@ -25,6 +25,7 @@ export function CriarQuiosqueForm({
   const [tipo, setTipo] = useState<TipoQuiosque>(
     modalidadeEvento === "MULTI_ESTABELECIMENTO" ? "INDEPENDENTE" : "DO_EVENTO"
   );
+  const [entregaHabilitada, setEntregaHabilitada] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -41,7 +42,7 @@ export function CriarQuiosqueForm({
       const resposta = await fetch(`/api/eventos/${eventoId}/quiosques`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome: nome.trim(), modalidade, tipo }),
+        body: JSON.stringify({ nome: nome.trim(), modalidade, tipo, entregaHabilitada }),
       });
 
       const dados = await resposta.json();
@@ -105,6 +106,15 @@ export function CriarQuiosqueForm({
           <option value="INDEPENDENTE">🏢 Independente — empresa própria, recebe direto</option>
         </select>
       </div>
+
+      <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14, fontSize: 13.5 }}>
+        <input
+          type="checkbox"
+          checked={entregaHabilitada}
+          onChange={(e) => setEntregaHabilitada(e.target.checked)}
+        />
+        🛵 Oferece entrega ao cliente (além de retirar no balcão)
+      </label>
 
       {tipo === "INDEPENDENTE" && (
         <p className="texto-fraco" style={{ marginBottom: 14 }}>

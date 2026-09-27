@@ -22,6 +22,8 @@ type QuiosqueResumo = {
   modalidade: ModalidadeQuiosque;
   // true quando este quiosque recebe direto na própria conta Mercado Pago
   recebeDireto: boolean;
+  // true quando este quiosque oferece entrega no local do cliente
+  entregaHabilitada: boolean;
 };
 
 function formatarReais(valor: number) {
@@ -62,6 +64,7 @@ export function ProdutoCard({
         quiosqueCor: quiosque.cor,
         quiosqueModalidade: quiosque.modalidade,
         quiosqueRecebeDireto: quiosque.recebeDireto,
+        quiosqueEntregaHabilitada: quiosque.entregaHabilitada,
       },
       quantidade
     );

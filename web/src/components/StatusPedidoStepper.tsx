@@ -9,6 +9,7 @@ export function StatusPedidoStepper({
   mensagemPreparando,
   mensagemPronto,
   aguardandoLiberacao,
+  isEntrega,
 }: {
   status: StatusSubPedido;
   modalidade: ModalidadeQuiosque | string;
@@ -21,6 +22,10 @@ export function StatusPedidoStepper({
   // aparecer como uma etapa própria, antes de "Enviado", senão o cliente lê
   // "Enviado" e acha que o quiosque já está com o pedido em mãos.
   aguardandoLiberacao?: boolean;
+  // true quando é entrega no local do cliente em vez de retirada no balcão --
+  // só troca a mensagem/ícone da etapa PRONTO, o resto do fluxo (RETIRADO
+  // reaproveitado como estado final) continua igual (ver PagerPronto.tsx)
+  isEntrega?: boolean;
 }) {
   if (status === "CANCELADO") {
     return (
@@ -43,8 +48,10 @@ export function StatusPedidoStepper({
 
   const mensagem = aguardandoLiberacao
     ? "Seu pedido está pronto, mas ainda não foi enviado! Toque em \"Mandar pra produção\" abaixo quando quiser."
+    : isEntrega && status === "PRONTO"
+    ? mensagemPronto ?? "Saiu para entrega! Chegando no local que você indicou."
     : mensagemAmigavel({ status, modalidade, vocEProximo, mensagemPreparando, mensagemPronto });
-  const icone = aguardandoLiberacao ? "📤" : vocEProximo ? "⏰" : STATUS_ICONE[status];
+  const icone = aguardandoLiberacao ? "📤" : isEntrega && status === "PRONTO" ? "🛵" : vocEProximo ? "⏰" : STATUS_ICONE[status];
 
   return (
     <div>

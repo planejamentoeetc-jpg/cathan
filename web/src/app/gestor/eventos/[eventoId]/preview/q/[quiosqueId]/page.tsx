@@ -112,6 +112,7 @@ export default async function PreviaLojaDoQuiosque({
             cor: quiosque.cor,
             modalidade: quiosque.modalidade,
             recebeDireto: Boolean(quiosque.mpAccessTokenCifrado) && !quiosque.pagarmeRecipientId,
+            entregaHabilitada: quiosque.entregaHabilitada,
           }}
         />
 
