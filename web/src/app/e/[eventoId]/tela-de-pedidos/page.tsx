@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { Cronometro } from "@/components/Cronometro";
 
 const INTERVALO_POLLING_MS = 3000;
@@ -66,7 +66,7 @@ export default function TelaDePedidos() {
       >
         {quiosques.map((q) => (
           <div key={q.id} className="telao-coluna">
-            <div className="telao-coluna-titulo" style={{ color: q.cor }}>
+            <div className="telao-coluna-titulo" style={{ "--cor-quiosque": q.cor } as CSSProperties}>
               {q.nome}
             </div>
 

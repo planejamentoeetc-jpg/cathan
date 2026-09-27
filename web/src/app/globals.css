@@ -476,7 +476,12 @@ input[type="password"]::-ms-clear {
   font-weight: 800;
   font-size: clamp(13px, 11cqw, 20px);
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  /* cor do quiosque vira só a barrinha de identidade (--cor-quiosque, definida
+     inline pelo componente) -- o nome em si é sempre branco, porque a cor
+     cadastrada pelo quiosque pode ser escura demais pra ler no fundo escuro
+     do telão (aconteceu de verdade: "Caldo Mineiro" ficava ilegível) */
+  border-bottom: 3px solid var(--cor-quiosque, rgba(255, 255, 255, 0.2));
+  color: #fff;
 }
 
 .telao-vazio {
