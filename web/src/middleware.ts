@@ -115,6 +115,9 @@ export async function middleware(req: NextRequest) {
   // modelo de segurança de GET /api/pedidos/[pedidoId] e .../liberar) — não é
   // uma ação de operador de quiosque, não pode exigir a senha do quiosque
   const ehClienteACaminhoPublico = /^\/api\/sub-pedidos\/[^/]+\/cliente-a-caminho$/.test(pathname);
+  // mesmo modelo: o cliente confirma o recebimento da ENTREGA pelo link do
+  // próprio pedido, sem senha de quiosque nenhuma (ver confirmar-entrega/route.ts)
+  const ehConfirmarEntregaPublico = /^\/api\/sub-pedidos\/[^/]+\/confirmar-entrega$/.test(pathname);
   // login/logout do quiosque INDEPENDENTE com senha própria (ver .../entrar
   // e lib/sessaoQuiosque.ts) — precisam ficar públicos como os equivalentes acima
   const ehPaginaLoginQuiosqueProprio = /^\/painel\/[^/]+\/q\/[^/]+\/entrar$/.test(pathname);
@@ -124,6 +127,7 @@ export async function middleware(req: NextRequest) {
     ehPaginaLogin ||
     ehApiLogin ||
     ehClienteACaminhoPublico ||
+    ehConfirmarEntregaPublico ||
     ehPaginaLoginQuiosqueProprio ||
     ehApiLoginOuSairQuiosqueProprio
   ) {
