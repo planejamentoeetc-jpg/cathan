@@ -2,18 +2,22 @@ import { StatusSubPedido } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatarMinutos } from "@/lib/formatarMinutos";
 
+// EM_PRODUCAO fica de fora de propósito: o quiosque só tem 3 ações reais
+// (aceitar, pronto, entregar -- ver FilaQuiosque.tsx/transicaoSubPedido.ts),
+// nunca existe uma transição de verdade pra esse status. Contá-lo aqui deixava
+// esse balde do funil sempre zerado, escondendo os pedidos que estão de fato
+// em produção (status ACEITO) atrás do rótulo "Aceito" -- por isso ACEITO
+// já leva o rótulo "Em produção" abaixo, igual o operador vê na fila.
 const STATUS_ALIMENTACAO = [
   StatusSubPedido.RECEBIDO,
   StatusSubPedido.ACEITO,
-  StatusSubPedido.EM_PRODUCAO,
   StatusSubPedido.PRONTO,
   StatusSubPedido.RETIRADO,
 ] as const;
 
 const LABEL_ALIMENTACAO: Record<string, string> = {
   RECEBIDO: "Recebido",
-  ACEITO: "Aceito",
-  EM_PRODUCAO: "Em produção",
+  ACEITO: "Em produção",
   PRONTO: "Pronto",
   RETIRADO: "Retirado",
 };

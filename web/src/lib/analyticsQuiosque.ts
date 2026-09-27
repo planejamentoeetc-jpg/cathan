@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { SegmentoGrafico, LinhaSla } from "@/lib/analytics";
 
-const STATUS_ALIMENTACAO = ["RECEBIDO", "ACEITO", "EM_PRODUCAO", "PRONTO", "RETIRADO"] as const;
+// mesma lógica de lib/analytics.ts -- EM_PRODUCAO nunca é atingido de verdade
+// (só 3 ações reais: aceitar, pronto, entregar), então fica de fora e ACEITO
+// já leva o rótulo "Em produção" (igual o operador vê na fila)
+const STATUS_ALIMENTACAO = ["RECEBIDO", "ACEITO", "PRONTO", "RETIRADO"] as const;
 const LABEL_ALIMENTACAO: Record<string, string> = {
   RECEBIDO: "Recebido",
-  ACEITO: "Aceito",
-  EM_PRODUCAO: "Em produção",
+  ACEITO: "Em produção",
   PRONTO: "Pronto",
   RETIRADO: "Retirado",
 };
