@@ -7,6 +7,7 @@ import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
 import { AbasQuiosques } from "@/components/AbasQuiosques";
 import { DicaLoja } from "@/components/DicaLoja";
+import { TempoEsperaBadge } from "@/components/TempoEsperaBadge";
 
 // Mesma tela que o cliente vê em /e/[eventoId]/q/[quiosqueId], sem o filtro
 // de recebedor conectado -- ver preview/page.tsx (praça) pro contexto
@@ -75,6 +76,7 @@ export default async function PreviaLojaDoQuiosque({
 
         <div className="loja-cabecalho">
           <h1 className="loja-nome">{quiosque.nome}</h1>
+          <TempoEsperaBadge minutos={quiosque.tempoEsperaMinutos} />
         </div>
 
         {irmaos.length > 1 && (

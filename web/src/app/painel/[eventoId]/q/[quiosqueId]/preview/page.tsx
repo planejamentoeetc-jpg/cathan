@@ -6,6 +6,7 @@ import { IconeModalidade } from "@/components/IconeModalidade";
 import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
 import { DicaLoja } from "@/components/DicaLoja";
+import { TempoEsperaBadge } from "@/components/TempoEsperaBadge";
 
 // Mesma prévia de /gestor/eventos/[eventoId]/preview/q/[quiosqueId], só que
 // pro próprio restaurante ver sem precisar do login de gestor -- mesma tela
@@ -69,6 +70,7 @@ export default async function PreviaLojaQuiosqueProprio({
 
         <div className="loja-cabecalho">
           <h1 className="loja-nome">{quiosque.nome}</h1>
+          <TempoEsperaBadge minutos={quiosque.tempoEsperaMinutos} />
         </div>
 
         <div style={{ marginTop: 14 }}>

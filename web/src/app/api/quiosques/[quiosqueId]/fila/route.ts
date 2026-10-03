@@ -6,7 +6,7 @@ import { verificarAcessoQuiosqueApi } from "@/lib/acessoQuiosqueApi";
 export async function GET(req: NextRequest, { params }: { params: { quiosqueId: string } }) {
   const quiosque = await prisma.quiosque.findUnique({
     where: { id: params.quiosqueId },
-    select: { id: true, nome: true, modalidade: true, tipo: true, senhaHash: true },
+    select: { id: true, nome: true, modalidade: true, tipo: true, senhaHash: true, tempoEsperaMinutos: true },
   });
 
   if (!quiosque) {
@@ -29,7 +29,12 @@ export async function GET(req: NextRequest, { params }: { params: { quiosqueId: 
   });
 
   return NextResponse.json({
-    quiosque: { id: quiosque.id, nome: quiosque.nome, modalidade: quiosque.modalidade },
+    quiosque: {
+      id: quiosque.id,
+      nome: quiosque.nome,
+      modalidade: quiosque.modalidade,
+      tempoEsperaMinutos: quiosque.tempoEsperaMinutos,
+    },
     // itens ainda não liberados pelo cliente ("compra em massa" segurada) nem entram
     // aqui — o quiosque não vê nada até o cliente mandar pra produção. Um sub-pedido
     // sem nenhuma unidade liberada some da fila inteiro.

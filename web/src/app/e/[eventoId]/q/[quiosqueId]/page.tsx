@@ -6,6 +6,7 @@ import { BarraCarrinho } from "@/components/BarraCarrinho";
 import { GradeProdutosComBusca } from "@/components/GradeProdutosComBusca";
 import { AbasQuiosques } from "@/components/AbasQuiosques";
 import { DicaLoja } from "@/components/DicaLoja";
+import { TempoEsperaBadge } from "@/components/TempoEsperaBadge";
 import { SeloCathan } from "@/components/MarcaCathan";
 
 export default async function LojaDoQuiosque({
@@ -73,6 +74,7 @@ export default async function LojaDoQuiosque({
 
         <div className="loja-cabecalho">
           <h1 className="loja-nome">{quiosque.nome}</h1>
+          <TempoEsperaBadge minutos={quiosque.tempoEsperaMinutos} />
         </div>
 
         {irmaos.length > 1 && (

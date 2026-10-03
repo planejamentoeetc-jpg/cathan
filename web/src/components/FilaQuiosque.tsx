@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Cronometro } from "@/components/Cronometro";
+import { TempoEsperaControle } from "@/components/TempoEsperaControle";
 
 const INTERVALO_POLLING_MS = 3000;
 // um blip isolado (rede, banco "acordando") não deveria assustar o operador com um
@@ -37,9 +38,20 @@ type SubPedidoFila = {
 };
 
 type RespostaFila = {
-  quiosque: { id: string; nome: string; modalidade: Modalidade };
+  quiosque: { id: string; nome: string; modalidade: Modalidade; tempoEsperaMinutos: number | null };
   pedidos: SubPedidoFila[];
 };
+
+// soma o tempo de preparo de quem ainda não ficou pronto (como se fosse um de
+// cada vez), arredondado pra cima de 5 em 5 -- é só uma sugestão, quem decide
+// o número que o cliente vê é o operador
+function sugerirTempoEspera(pedidos: SubPedidoFila[]): { minutos: number | null; aguardando: number } {
+  const aguardando = pedidos.filter((p) => p.status === "RECEBIDO" || p.status === "ACEITO");
+  if (aguardando.length === 0) return { minutos: null, aguardando: 0 };
+  const soma = aguardando.reduce((total, p) => total + p.duracaoMinutos, 0);
+  const arredondado = Math.ceil(Math.max(soma, 5) / 5) * 5;
+  return { minutos: Math.min(arredondado, 180), aguardando: aguardando.length };
+}
 
 type ItemBusca = { nome: string; quantidade: number; quantidadeLiberada: number };
 
@@ -168,9 +180,20 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
   const ehBrincadeiras = dados?.quiosque.modalidade === "BRINCADEIRAS";
   const mapaAcoes = ehBrincadeiras ? ACAO_BRINCADEIRAS : ACAO_COMIDA;
   const emBusca = busca.trim().length >= 2;
+  const sugestao = sugerirTempoEspera(dados?.pedidos ?? []);
 
   return (
     <div>
+      {dados && (
+        <TempoEsperaControle
+          quiosqueId={quiosqueId}
+          tempoAtual={dados.quiosque.tempoEsperaMinutos}
+          sugestao={sugestao.minutos}
+          pedidosAguardando={sugestao.aguardando}
+          onAtualizado={carregarFila}
+        />
+      )}
+
       <div className="campo" style={{ marginBottom: 16 }}>
         <label>Buscar um pedido (nome, celular ou código) — inclusive os que ainda não aparecem na fila</label>
         <input

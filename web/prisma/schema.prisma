@@ -255,6 +255,9 @@ model Quiosque {
   // retirar no balcão (ver TipoEntrega). Aparece como opção no checkout só
   // quando pelo menos um quiosque do carrinho tem isso ligado.
   entregaHabilitada  Boolean            @default(false) @map("entrega_habilitada")
+  // tempo de espera atual informado pelo operador na tela da fila, ajustado
+  // conforme o movimento -- null = não mostrar nada pro cliente
+  tempoEsperaMinutos Int?               @map("tempo_espera_minutos")
   // conteúdo opcional que o próprio quiosque personaliza (cross-sell + mensagens de status)
   dica               String?            @map("dica")
   mensagemPreparando String?            @map("mensagem_preparando")

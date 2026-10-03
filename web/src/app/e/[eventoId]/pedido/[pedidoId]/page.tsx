@@ -21,6 +21,7 @@ type SubPedido = {
     modalidade: string;
     mensagemPreparando: string | null;
     mensagemPronto: string | null;
+    tempoEsperaMinutos: number | null;
   };
   vocEProximo: boolean;
   observacaoCliente: string | null;
@@ -263,6 +264,14 @@ export default function Acompanhamento() {
               aguardandoLiberacao={sp.itens.every((item) => item.quantidadeLiberada === 0)}
               isEntrega={isEntrega}
             />
+
+            {sp.quiosque.tempoEsperaMinutos &&
+              (sp.status === "RECEBIDO" || sp.status === "ACEITO") &&
+              sp.itens.some((item) => item.quantidadeLiberada > 0) && (
+                <div className="texto-fraco" style={{ marginTop: 8, fontSize: 13 }}>
+                  ⏱ Tempo de espera estimado neste quiosque: <b>~{sp.quiosque.tempoEsperaMinutos} min</b>
+                </div>
+              )}
 
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
               {sp.itens.map((item) => {

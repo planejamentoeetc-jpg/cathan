@@ -23,6 +23,7 @@ export async function GET(_req: NextRequest, { params }: { params: { pedidoId: s
               modalidade: true,
               mensagemPreparando: true,
               mensagemPronto: true,
+              tempoEsperaMinutos: true,
             },
           },
           itens: {
