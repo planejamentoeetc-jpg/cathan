@@ -4,3 +4,8 @@ web/.next/
 web/next-env.d.ts
 .DS_Store
 Thumbs.db
+
+# Arquivos com senhas em texto puro — nunca subir
+MIGRACAO_URGENTE.txt
+DOCUMENTOS/Dados Importantes.docx
+~$*
