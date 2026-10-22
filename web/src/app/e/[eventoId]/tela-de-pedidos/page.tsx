@@ -1,8 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useState, type CSSProperties } from "react";
 import { Cronometro } from "@/components/Cronometro";
+import { usePollingEconomico } from "@/lib/usePollingEconomico";
+import { AvisoPollingPausado } from "@/components/AvisoPollingPausado";
 
 const INTERVALO_POLLING_MS = 3000;
 
@@ -45,19 +47,17 @@ export default function TelaDePedidos() {
       if (!resposta.ok) return;
       const dados = await resposta.json();
       setQuiosques(dados.quiosques);
+      return dados;
     } catch {
       // silencioso: a próxima rodada de polling tenta de novo
     }
   }, [eventoId]);
 
-  useEffect(() => {
-    carregar();
-    const id = setInterval(carregar, INTERVALO_POLLING_MS);
-    return () => clearInterval(id);
-  }, [carregar]);
+  const { pausado, retomar } = usePollingEconomico(carregar, INTERVALO_POLLING_MS);
 
   return (
     <div className="telao-wrap">
+      <AvisoPollingPausado pausado={pausado} onRetomar={retomar} />
       <div className="telao-titulo">Fila dos quiosques</div>
 
       <div

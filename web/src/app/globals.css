@@ -1189,3 +1189,30 @@ input[type="password"]::-ms-clear {
   color: #fff;
   opacity: 1;
 }
+
+/* usePollingEconomico pausou por inatividade (AvisoPollingPausado) */
+.polling-pausado {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 59, 52, 0.92);
+  color: #fff;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 30px 16px;
+}
+
+.polling-pausado h2 {
+  font-family: var(--font-sora);
+  font-size: 26px;
+}
+
+.polling-pausado p {
+  font-size: 15px;
+  opacity: 0.9;
+  max-width: 340px;
+}

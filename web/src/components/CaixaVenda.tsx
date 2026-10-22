@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { STATUS_LABEL } from "@/lib/statusSubPedido";
+import { usePollingEconomico } from "@/lib/usePollingEconomico";
+import { AvisoPollingPausado } from "@/components/AvisoPollingPausado";
 import {
   conectarImpressora,
   imprimirRecibo,
@@ -91,11 +93,7 @@ export function CaixaVenda({
     }
   }, [apiUrlVendas]);
 
-  useEffect(() => {
-    carregarVendas();
-    const intervalo = setInterval(carregarVendas, INTERVALO_POLLING_MS);
-    return () => clearInterval(intervalo);
-  }, [carregarVendas]);
+  const { pausado: pollingPausado, retomar } = usePollingEconomico(carregarVendas, INTERVALO_POLLING_MS);
 
   function adicionar(quiosque: Quiosque, produto: Produto) {
     setCarrinho((atual) => {
@@ -264,6 +262,7 @@ export function CaixaVenda({
 
   return (
     <>
+      <AvisoPollingPausado pausado={pollingPausado} onRetomar={retomar} />
       <div
         style={{
           display: "flex",

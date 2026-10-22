@@ -8,6 +8,8 @@ import { adicionarPedidoLocal } from "@/lib/meusPedidos";
 import { ItemPager, PagerPronto } from "@/components/PagerPronto";
 import { StatusPedidoStepper } from "@/components/StatusPedidoStepper";
 import { SeloCathan } from "@/components/MarcaCathan";
+import { usePollingEconomico } from "@/lib/usePollingEconomico";
+import { AvisoPollingPausado } from "@/components/AvisoPollingPausado";
 
 type SubPedido = {
   id: string;
@@ -79,9 +81,11 @@ export default function Acompanhamento() {
     try {
       const resposta = await fetch(`/api/pedidos/${pedidoId}`, { cache: "no-store" });
       if (!resposta.ok) throw new Error("Pedido não encontrado.");
-      setPedido(await resposta.json());
+      const dados = await resposta.json();
+      setPedido(dados);
       falhasConsecutivasRef.current = 0;
       setErro(null);
+      return dados;
     } catch (e) {
       falhasConsecutivasRef.current += 1;
       if (falhasConsecutivasRef.current >= 3) {
@@ -94,10 +98,13 @@ export default function Acompanhamento() {
 
   useEffect(() => {
     setConfirmados(lerConfirmados(pedidoId));
-    carregar();
-    const intervalo = setInterval(carregar, INTERVALO_POLLING_MS);
-    return () => clearInterval(intervalo);
-  }, [carregar, pedidoId]);
+  }, [pedidoId]);
+
+  // limite maior que o padrão: o cliente pode esperar bastante por uma
+  // brincadeira com fila longa sem tocar no celular, e não pode perder o pager
+  const { pausado, retomar } = usePollingEconomico(carregar, INTERVALO_POLLING_MS, {
+    pausarAposMs: 60 * 60 * 1000,
+  });
 
   // garante que chegar aqui de qualquer jeito (link direto, "Ver meu pedido",
   // ou já restaurado do checkout) deixa este pedido gravado no histórico local
@@ -218,6 +225,7 @@ export default function Acompanhamento() {
 
   return (
     <main className="tela">
+      <AvisoPollingPausado pausado={pausado} onRetomar={retomar} />
       <PagerPronto itens={itensPager} onConfirmar={confirmarItem} onConfirmarEntrega={confirmarEntrega} />
 
       <div className="topo" style={{ borderRadius: 18, marginBottom: 16 }}>

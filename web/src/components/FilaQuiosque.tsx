@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Cronometro } from "@/components/Cronometro";
 import { TempoEsperaControle } from "@/components/TempoEsperaControle";
+import { usePollingEconomico } from "@/lib/usePollingEconomico";
+import { AvisoPollingPausado } from "@/components/AvisoPollingPausado";
 
 const INTERVALO_POLLING_MS = 3000;
 // um blip isolado (rede, banco "acordando") não deveria assustar o operador com um
@@ -98,7 +100,6 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [acaoEmAndamento, setAcaoEmAndamento] = useState<string | null>(null);
-  const intervaloRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const falhasConsecutivasRef = useRef(0);
 
   // busca ampla (nome, celular ou código) -- ao contrário da fila normal,
@@ -113,9 +114,11 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
     try {
       const resposta = await fetch(`/api/quiosques/${quiosqueId}/fila`, { cache: "no-store" });
       if (!resposta.ok) throw new Error("Não foi possível carregar a fila.");
-      setDados(await resposta.json());
+      const novosDados: RespostaFila = await resposta.json();
+      setDados(novosDados);
       falhasConsecutivasRef.current = 0;
       setErro(null);
+      return novosDados;
     } catch (e) {
       falhasConsecutivasRef.current += 1;
       if (falhasConsecutivasRef.current >= FALHAS_CONSECUTIVAS_PARA_MOSTRAR_ERRO) {
@@ -126,13 +129,7 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
     }
   }, [quiosqueId]);
 
-  useEffect(() => {
-    carregarFila();
-    intervaloRef.current = setInterval(carregarFila, INTERVALO_POLLING_MS);
-    return () => {
-      if (intervaloRef.current) clearInterval(intervaloRef.current);
-    };
-  }, [carregarFila]);
+  const { pausado, retomar } = usePollingEconomico(carregarFila, INTERVALO_POLLING_MS);
 
   useEffect(() => {
     const termo = busca.trim();
@@ -184,6 +181,7 @@ export function FilaQuiosque({ quiosqueId }: { quiosqueId: string }) {
 
   return (
     <div>
+      <AvisoPollingPausado pausado={pausado} onRetomar={retomar} />
       {dados && (
         <TempoEsperaControle
           quiosqueId={quiosqueId}

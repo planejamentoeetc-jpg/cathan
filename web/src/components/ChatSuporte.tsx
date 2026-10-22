@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePollingEconomico } from "@/lib/usePollingEconomico";
+import { AvisoPollingPausado } from "@/components/AvisoPollingPausado";
 
 type Mensagem = {
   id: string;
@@ -30,17 +32,16 @@ export function ChatSuporte({
   const carregar = useCallback(async () => {
     try {
       const resposta = await fetch(apiUrl, { cache: "no-store" });
-      if (resposta.ok) setMensagens(await resposta.json());
+      if (!resposta.ok) return;
+      const lista: Mensagem[] = await resposta.json();
+      setMensagens(lista);
+      return lista;
     } catch {
       // silencioso — atualiza de novo no próximo ciclo
     }
   }, [apiUrl]);
 
-  useEffect(() => {
-    carregar();
-    const intervalo = setInterval(carregar, INTERVALO_POLLING_MS);
-    return () => clearInterval(intervalo);
-  }, [carregar]);
+  const { pausado, retomar } = usePollingEconomico(carregar, INTERVALO_POLLING_MS);
 
   useEffect(() => {
     caixaRef.current?.scrollTo({ top: caixaRef.current.scrollHeight });
@@ -66,6 +67,7 @@ export function ChatSuporte({
 
   return (
     <>
+      <AvisoPollingPausado pausado={pausado} onRetomar={retomar} />
       <div className="chatbox" ref={caixaRef}>
         {mensagens.length === 0 && <p className="texto-fraco">Nenhuma mensagem ainda.</p>}
         {mensagens.map((m) => (
