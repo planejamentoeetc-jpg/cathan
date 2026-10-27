@@ -166,7 +166,9 @@ export function RegistroPedidos({ pedidos }: { pedidos: PedidoRegistro[] }) {
                 <div>
                   <b style={{ fontFamily: "var(--font-sora)" }}>{pedido.clienteNome}</b>
                   <div className="texto-fraco" style={{ fontSize: 12.5 }}>
-                    {pedido.clienteCelular} · {formatarDataHora(pedido.criadoEm)}
+                    {/* chave gerada (caixa-/app-...) quando o cliente não informou celular -- não mostra */}
+                    {/^[\d(+]/.test(pedido.clienteCelular) && <>{pedido.clienteCelular} · </>}
+                    {formatarDataHora(pedido.criadoEm)}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

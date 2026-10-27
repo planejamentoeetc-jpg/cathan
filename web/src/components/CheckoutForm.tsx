@@ -39,11 +39,15 @@ export function CheckoutForm({
   exigeLocalizacao,
   pedidosPausados = false,
   modoDemonstracao = false,
+  pedirContato = true,
 }: {
   eventoId: string;
   exigeLocalizacao: boolean;
   pedidosPausados?: boolean;
   modoDemonstracao?: boolean;
+  // celular + CPF: só quando o Pix pode sair pelo Pagar.me, que exige os dois
+  // do pagador -- ver eventoPodeCobrarPeloPagarMe
+  pedirContato?: boolean;
 }) {
   const itens = useCarrinho(eventoId);
   const grupos = agruparPorQuiosque(itens);
@@ -177,11 +181,15 @@ export function CheckoutForm({
     setErro(null);
     setForaDoRaio(null);
 
-    if (!nome.trim() || !celular.trim() || (!modoDemonstracao && !cpf.trim())) {
-      setErro(modoDemonstracao ? "Informe nome e celular para continuar." : "Informe nome, celular e CPF para continuar.");
+    if (!nome.trim()) {
+      setErro("Informe seu nome para continuar.");
       return;
     }
-    if (!modoDemonstracao && !validarCpf(cpf)) {
+    if (pedirContato && (!celular.trim() || !cpf.trim())) {
+      setErro("Informe nome, celular e CPF para continuar.");
+      return;
+    }
+    if (pedirContato && !validarCpf(cpf)) {
       setErro("CPF inválido — confira os números digitados.");
       return;
     }
@@ -208,8 +216,8 @@ export function CheckoutForm({
         body: JSON.stringify({
           eventoId,
           clienteNome: nome.trim(),
-          clienteCelular: celular.trim(),
-          clienteCpf: cpf.trim(),
+          clienteCelular: pedirContato ? celular.trim() : "",
+          clienteCpf: pedirContato ? cpf.trim() : "",
           latitude: localizacao?.latitude,
           longitude: localizacao?.longitude,
           tipoEntrega: entregaEscolhida ? "ENTREGA" : "RETIRADA",
@@ -462,6 +470,7 @@ export function CheckoutForm({
           <label>Nome</label>
           <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} />
         </div>
+        {pedirContato && (
         <div className="campo">
           <label>Celular</label>
           <input
@@ -471,7 +480,8 @@ export function CheckoutForm({
             placeholder="(00) 00000-0000"
           />
         </div>
-        {!modoDemonstracao && (
+        )}
+        {pedirContato && (
         <div className="campo">
           <label>CPF</label>
           <input

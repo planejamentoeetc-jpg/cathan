@@ -3,11 +3,20 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { SeloCathan } from "@/components/MarcaCathan";
+import { eventoPodeCobrarPeloPagarMe } from "@/lib/dadosPagador";
 
 export default async function Checkout({ params }: { params: { eventoId: string } }) {
   const evento = await prisma.evento.findUnique({
     where: { id: params.eventoId },
-    select: { id: true, nome: true, raioPedidosMetros: true, pedidosPausados: true, modoDemonstracao: true },
+    select: {
+      id: true,
+      nome: true,
+      raioPedidosMetros: true,
+      pedidosPausados: true,
+      modoDemonstracao: true,
+      organizador: { select: { pagarmeRecipientId: true, mpAccessTokenCifrado: true } },
+      quiosques: { select: { pagarmeRecipientId: true } },
+    },
   });
 
   if (!evento) notFound();
@@ -36,6 +45,7 @@ export default async function Checkout({ params }: { params: { eventoId: string 
         modoDemonstracao={evento.modoDemonstracao}
         exigeLocalizacao={evento.raioPedidosMetros !== null}
         pedidosPausados={evento.pedidosPausados}
+        pedirContato={eventoPodeCobrarPeloPagarMe(evento)}
       />
       <SeloCathan />
     </main>

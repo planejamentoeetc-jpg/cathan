@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "JSON inválido." }, { status: 400 });
   }
 
-  if (!corpo.eventoId || !corpo.clienteNome?.trim() || !corpo.clienteCelular?.trim()) {
+  if (!corpo.eventoId || !corpo.clienteNome?.trim()) {
     return NextResponse.json({ erro: "Dados do cliente incompletos." }, { status: 400 });
   }
   if (!Array.isArray(corpo.itens) || corpo.itens.length === 0) {
@@ -73,16 +73,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
   }
 
-  // CPF só é exigido de quem paga de verdade (Pagar.me pede o documento do
-  // comprador em todo pedido); evento de demonstração não cobra nada
-  if (!evento.modoDemonstracao) {
-    if (!corpo.clienteCpf?.trim()) {
-      return NextResponse.json({ erro: "Dados do cliente incompletos." }, { status: 400 });
-    }
-    if (!validarCpf(corpo.clienteCpf)) {
-      return NextResponse.json({ erro: "CPF inválido." }, { status: 400 });
-    }
+  // Celular e CPF só são obrigatórios quando o Pix sai pelo Pagar.me (que
+  // exige os dois do pagador) -- conferido depois de decidirRota(). Pelo
+  // Mercado Pago basta o nome. Se vierem, o CPF ainda precisa ser válido.
+  const clienteCpf = corpo.clienteCpf?.trim() ?? "";
+  if (clienteCpf && !validarCpf(clienteCpf)) {
+    return NextResponse.json({ erro: "CPF inválido." }, { status: 400 });
   }
+  const celularInformado = corpo.clienteCelular?.trim() ?? "";
+  // sem celular informado -- gera uma chave só pra não colidir com o
+  // Cliente.celular único de outro pedido (mesmo padrão da Venda Manual);
+  // não representa contato real
+  const clienteCelular = celularInformado || `app-${crypto.randomUUID()}`;
 
   if (evento.pedidosPausados) {
     return NextResponse.json(
@@ -220,7 +222,7 @@ export async function POST(req: NextRequest) {
         data: {
           eventoId: evento.id,
           clienteNome: corpo.clienteNome.trim(),
-          clienteCelular: corpo.clienteCelular.trim(),
+          clienteCelular,
           itens: itensValidados as unknown as Prisma.InputJsonValue,
           tipoEntrega,
           enderecoEntrega,
@@ -230,7 +232,7 @@ export async function POST(req: NextRequest) {
       const resultado = await criarPedidoAPartirDeItensValidados({
         eventoId: evento.id,
         clienteNome: corpo.clienteNome.trim(),
-        clienteCelular: corpo.clienteCelular.trim(),
+        clienteCelular,
         itens: itensValidados,
         formaPagamento: FormaPagamento.DEMONSTRACAO,
         tipoEntrega,
@@ -410,19 +412,23 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const rota = await decidirRota();
+
+    if (rota.provedor === "pagarme" && (!celularInformado || !clienteCpf)) {
+      return NextResponse.json({ erro: "Informe celular e CPF para pagar este pedido." }, { status: 400 });
+    }
+
     const pedidoPendente = await prisma.pedidoPendente.create({
       data: {
         eventoId: evento.id,
         clienteNome: corpo.clienteNome.trim(),
-        clienteCelular: corpo.clienteCelular.trim(),
+        clienteCelular,
         itens: itensValidados as unknown as Prisma.InputJsonValue,
         tipoEntrega,
         enderecoEntrega,
         telefoneEntrega,
       },
     });
-
-    const rota = await decidirRota();
 
     let copiaECola: string | undefined;
     let qrCodeBase64: string | undefined;
@@ -436,9 +442,9 @@ export async function POST(req: NextRequest) {
           quantidade: item.quantidade,
         })),
         clienteNome: corpo.clienteNome.trim(),
-        clienteDocumento: corpo.clienteCpf,
+        clienteDocumento: clienteCpf,
         clienteEmail: `pedido-${pedidoPendente.id}@cathan.com.br`,
-        clienteCelular: corpo.clienteCelular.trim(),
+        clienteCelular: celularInformado,
         referenciaExterna: pedidoPendente.id,
         divisoes: rota.divisoes,
       });
