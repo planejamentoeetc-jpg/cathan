@@ -1041,6 +1041,33 @@ input[type="password"]::-ms-clear {
   color: var(--cinza);
 }
 
+/* quiosque com logo própria: sem o cartão branco -- a logo aparece sozinha,
+   redonda, como ícone; nome e espera ficam logo abaixo */
+.quiosque-aba-logo {
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+}
+
+.quiosque-aba-logo .quiosque-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #fff;
+  padding: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.quiosque-aba-logo .quiosque-logo img {
+  object-fit: contain;
+}
+
+.com-fundo .quiosque-aba-logo b,
+.com-fundo .quiosque-aba-logo .espera {
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
 /* ===== Loja do quiosque: hero fotográfico + selo circular ===== */
 
 .loja-hero {

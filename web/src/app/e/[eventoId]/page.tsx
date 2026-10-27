@@ -133,7 +133,9 @@ export default async function PracaDoEvento({
                 );
 
                 return (
-                  <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`} className="quiosque-aba">
+                  <Link key={quiosque.id} href={`/e/${evento.id}/q/${quiosque.id}`}
+                    className={quiosque.logoUrl ? "quiosque-aba quiosque-aba-logo" : "quiosque-aba"}
+                  >
                     <div className="quiosque-logo" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
                       {quiosque.logoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element

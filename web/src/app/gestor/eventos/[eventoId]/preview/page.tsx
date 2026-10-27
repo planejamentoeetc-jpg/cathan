@@ -117,7 +117,7 @@ export default async function PreviaPracaDoEvento({ params }: { params: { evento
                   <Link
                     key={quiosque.id}
                     href={`/gestor/eventos/${evento.id}/preview/q/${quiosque.id}`}
-                    className="quiosque-aba"
+                    className={quiosque.logoUrl ? "quiosque-aba quiosque-aba-logo" : "quiosque-aba"}
                   >
                     <div className="quiosque-logo" style={{ background: quiosque.logoUrl ? undefined : quiosque.cor }}>
                       {quiosque.logoUrl ? (
