@@ -430,102 +430,6 @@ input[type="password"]::-ms-clear {
   animation: piscar 1s infinite;
 }
 
-/* ===== Tela de Pedidos (telão) ===== */
-
-.telao-wrap {
-  min-height: 100vh;
-  background: var(--petroleo);
-  color: #fff;
-  padding: 20px;
-  overflow-x: auto;
-  font-family: var(--font-manrope), system-ui, sans-serif;
-}
-
-.telao-titulo {
-  font-family: var(--font-sora);
-  font-weight: 800;
-  font-size: 26px;
-  margin-bottom: 18px;
-}
-
-.telao-colunas {
-  display: grid;
-  /* grid-template-columns vem inline do componente, calculado a partir da
-     quantidade real de quiosques -- sempre divide a largura toda da tela,
-     nunca deixa quiosque escondido fora da área visível */
-  gap: 20px;
-  align-items: start;
-}
-
-.telao-coluna {
-  min-width: 0;
-  /* torna esta coluna uma container query: o tamanho de fonte do código (abaixo)
-     escala com a largura REAL da coluna, não da tela -- essencial porque a
-     largura da coluna muda sozinha conforme a quantidade de quiosques */
-  container-type: inline-size;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.telao-coluna-titulo {
-  font-family: var(--font-sora);
-  font-weight: 800;
-  font-size: clamp(13px, 11cqw, 20px);
-  padding-bottom: 10px;
-  /* cor do quiosque vira só a barrinha de identidade (--cor-quiosque, definida
-     inline pelo componente) -- o nome em si é sempre branco, porque a cor
-     cadastrada pelo quiosque pode ser escura demais pra ler no fundo escuro
-     do telão (aconteceu de verdade: "Caldo Mineiro" ficava ilegível) */
-  border-bottom: 3px solid var(--cor-quiosque, rgba(255, 255, 255, 0.2));
-  color: #fff;
-}
-
-.telao-vazio {
-  color: #7e99a1;
-  font-size: 13px;
-}
-
-.telao-card {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-
-.telao-card .telao-codigo {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: clamp(13px, 10cqw, 22px);
-}
-
-.telao-card .telao-nome {
-  font-size: clamp(11px, 7cqw, 14px);
-  color: #bfd4da;
-}
-
-.telao-card .telao-status {
-  font-size: 12px;
-  margin-top: 4px;
-  opacity: 0.85;
-}
-
-.telao-card-destaque {
-  animation: piscar 1s infinite;
-}
-
-.telao-card-destaque .telao-codigo {
-  font-size: clamp(18px, 18cqw, 40px);
-  line-height: 1.1;
-}
-
-.telao-card-destaque .telao-nome {
-  color: #fff;
-  font-weight: 700;
-}
-
 /* ===== Pager de tela cheia (pedido pronto/chamado) ===== */
 
 @keyframes pager-pulso {
@@ -1242,4 +1146,209 @@ input[type="password"]::-ms-clear {
   font-size: 15px;
   opacity: 0.9;
   max-width: 340px;
+}
+
+/* ===== Tela de Pedidos (telão), estilo fast-food: PREPARANDO | PRONTOS =====
+   Inspirado no telão de pedidos de rede de fast-food: duas colunas de nomes
+   grandes (lê de longe), "Prontos" em cor forte, e uma faixa inferior que
+   convida a pedir pelo celular (QR Code do evento). Tamanhos em vw/vh porque a
+   tela é sempre uma TV em paisagem. */
+
+.telao2 {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  font-family: var(--font-sora), system-ui, sans-serif;
+}
+
+.telao2 h1 {
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(28px, 4.6vw, 96px);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  margin-bottom: 3vh;
+}
+
+.telao2-preparando,
+.telao2-prontos {
+  padding: 4vh 3vw 2vh;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.telao2-preparando {
+  background: var(--neve);
+  color: var(--petroleo);
+}
+
+.telao2-prontos {
+  background: var(--petroleo);
+  color: #fff;
+}
+
+.telao2-prontos h1 {
+  color: #fff;
+}
+
+.telao2-lista {
+  list-style: none;
+  column-count: 2;
+  column-gap: 2.5vw;
+  column-rule: 2px solid rgba(13, 59, 52, 0.15);
+  column-fill: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.telao2-prontos .telao2-lista {
+  column-rule-color: rgba(255, 255, 255, 0.18);
+}
+
+.telao2-nome {
+  break-inside: avoid;
+  text-align: center;
+  padding: 0.9vh 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.telao2-nome-texto {
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(16px, 2.2vw, 48px);
+  line-height: 1.15;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.telao2-prontos .telao2-nome-texto {
+  font-size: clamp(20px, 2.6vw, 60px);
+}
+
+.telao2-detalhe {
+  display: flex;
+  gap: 0.6vw;
+  align-items: center;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: clamp(10px, 1vw, 20px);
+  opacity: 0.75;
+}
+
+.telao2-codigo {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.telao2-quiosque {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35vw;
+}
+
+.telao2-quiosque::before {
+  content: "";
+  width: 0.7vw;
+  height: 0.7vw;
+  min-width: 8px;
+  min-height: 8px;
+  border-radius: 50%;
+  background: var(--cor-quiosque, currentColor);
+}
+
+/* pronto: pulsa em verde sorriso até o cliente retirar */
+.telao2-nome-pulsando .telao2-nome-texto {
+  color: var(--verde-vivo);
+  animation: telao2-pulso 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes telao2-pulso {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.telao2-vazio {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: clamp(14px, 1.4vw, 28px);
+  opacity: 0.6;
+}
+
+.telao2-brincando {
+  border-top: 2px solid rgba(13, 59, 52, 0.15);
+  padding-top: 1.5vh;
+  margin-top: 1vh;
+}
+
+.telao2-brincando h2 {
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(14px, 1.5vw, 30px);
+  margin-bottom: 0.8vh;
+}
+
+.telao2-brincando ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8vh 2vw;
+  font-size: clamp(13px, 1.3vw, 26px);
+}
+
+.telao2-brincando li {
+  display: flex;
+  gap: 0.6vw;
+  align-items: baseline;
+}
+
+.telao2-faixa {
+  grid-column: 1 / -1;
+  background: var(--petroleo-2);
+  border-top: 0.6vh solid var(--verde-vivo);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 2.5vw;
+  padding: 1.6vh 3vw;
+}
+
+.telao2-faixa-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4vh;
+}
+
+.telao2-faixa-texto b {
+  font-weight: 800;
+  font-size: clamp(16px, 2.2vw, 46px);
+}
+
+.telao2-faixa-texto span {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: clamp(12px, 1.2vw, 24px);
+  opacity: 0.85;
+}
+
+.telao2-qr {
+  height: 12vh;
+  min-height: 70px;
+  aspect-ratio: 1 / 1;
+  background: #fff;
+  padding: 0.5vh;
+  border-radius: 8px;
+}
+
+.telao2-marca svg {
+  width: clamp(90px, 9vw, 200px) !important;
 }

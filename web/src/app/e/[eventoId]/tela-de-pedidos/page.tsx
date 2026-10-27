@@ -1,108 +1,19 @@
-"use client";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { gerarQrCodeDataUrl } from "@/lib/qrcode";
+import { TelaoPedidos } from "@/components/TelaoPedidos";
 
-import { useParams } from "next/navigation";
-import { useCallback, useState, type CSSProperties } from "react";
-import { Cronometro } from "@/components/Cronometro";
-import { usePollingEconomico } from "@/lib/usePollingEconomico";
-import { AvisoPollingPausado } from "@/components/AvisoPollingPausado";
+// Telão público (sem login): o servidor só resolve o nome do evento e o QR Code
+// do link do cliente pra faixa inferior; os pedidos vêm por polling no client.
+export default async function TelaDePedidos({ params }: { params: { eventoId: string } }) {
+  const evento = await prisma.evento.findUnique({
+    where: { id: params.eventoId },
+    select: { id: true, nome: true },
+  });
+  if (!evento) notFound();
 
-const INTERVALO_POLLING_MS = 3000;
+  const baseUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  const qrCodeDataUrl = await gerarQrCodeDataUrl(`${baseUrl}/e/${evento.id}`);
 
-type StatusTelao = "RECEBIDO" | "ACEITO" | "PRONTO" | "CHAMADO" | "APROVEITANDO";
-
-type PedidoTelao = {
-  id: string;
-  status: StatusTelao;
-  codigoRetirada: string;
-  rodada: number;
-  clienteNome: string;
-  nomesCriancas: string[];
-  duracaoMinutos: number;
-  inicioAproveitamentoEm: string | null;
-};
-
-type QuiosqueTelao = {
-  id: string;
-  nome: string;
-  cor: string;
-  modalidade: "ALIMENTACAO" | "BEBIDAS" | "BRINCADEIRAS";
-  pedidos: PedidoTelao[];
-};
-
-const ROTULO_STATUS: Record<StatusTelao, string> = {
-  RECEBIDO: "Novo",
-  ACEITO: "Em produção",
-  PRONTO: "Pronto!",
-  CHAMADO: "Chamado!",
-  APROVEITANDO: "Aproveitando",
-};
-
-export default function TelaDePedidos() {
-  const { eventoId } = useParams<{ eventoId: string }>();
-  const [quiosques, setQuiosques] = useState<QuiosqueTelao[]>([]);
-
-  const carregar = useCallback(async () => {
-    try {
-      const resposta = await fetch(`/api/eventos/${eventoId}/tela-de-pedidos`, { cache: "no-store" });
-      if (!resposta.ok) return;
-      const dados = await resposta.json();
-      setQuiosques(dados.quiosques);
-      return dados;
-    } catch {
-      // silencioso: a próxima rodada de polling tenta de novo
-    }
-  }, [eventoId]);
-
-  const { pausado, retomar } = usePollingEconomico(carregar, INTERVALO_POLLING_MS);
-
-  return (
-    <div className="telao-wrap">
-      <AvisoPollingPausado pausado={pausado} onRetomar={retomar} />
-      <div className="telao-titulo">Fila dos quiosques</div>
-
-      <div
-        className="telao-colunas"
-        style={{ gridTemplateColumns: `repeat(${Math.max(quiosques.length, 1)}, minmax(0, 1fr))` }}
-      >
-        {quiosques.map((q) => (
-          <div key={q.id} className="telao-coluna">
-            <div className="telao-coluna-titulo" style={{ "--cor-quiosque": q.cor } as CSSProperties}>
-              {q.nome}
-            </div>
-
-            {q.pedidos.length === 0 && <div className="telao-vazio">Sem pedidos na fila</div>}
-
-            {q.pedidos.map((p) => {
-              const destaque = p.status === "PRONTO" || p.status === "CHAMADO";
-              const nomeExibido =
-                q.modalidade === "BRINCADEIRAS" ? p.nomesCriancas[0] ?? p.clienteNome : p.clienteNome;
-
-              return (
-                <div key={p.id} className={`telao-card ${destaque ? "telao-card-destaque" : ""}`}>
-                  <div className="telao-codigo">{p.codigoRetirada}</div>
-                  <div className="telao-nome">
-                    {nomeExibido}
-                    {p.rodada > 1 && ` · ${p.rodada}ª retirada`}
-                  </div>
-                  <div className="telao-status">{ROTULO_STATUS[p.status]}</div>
-
-                  {p.status === "APROVEITANDO" && p.inicioAproveitamentoEm && (
-                    <div className="telao-status">
-                      <Cronometro
-                        inicioEm={p.inicioAproveitamentoEm}
-                        duracaoMinutos={p.duracaoMinutos}
-                        className="mono"
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-
-        {quiosques.length === 0 && <p className="telao-vazio">Nenhum quiosque cadastrado neste evento.</p>}
-      </div>
-    </div>
-  );
+  return <TelaoPedidos eventoId={evento.id} eventoNome={evento.nome} qrCodeDataUrl={qrCodeDataUrl} />;
 }
